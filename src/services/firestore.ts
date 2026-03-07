@@ -301,10 +301,10 @@ export async function salvarEnderecoDefault(
 }
 
 const AGENTE_DOC = doc(db, 'Agentes', 'AgenteVendas');
-const AGENTE_VENDAS_USER_DOC = (userId: string) => doc(db, 'agenteVendas', userId);
-const CONVERSAS_COL = (userId: string) => collection(db, 'agenteVendas', userId, 'conversas');
-const CONVERSA_DOC = (userId: string, conversaId: string) => doc(db, 'agenteVendas', userId, 'conversas', conversaId);
-const MENSAGENS_COL = (userId: string, conversaId: string) => collection(db, 'agenteVendas', userId, 'conversas', conversaId, 'mensagens');
+const AGENTE_VENDAS_USER_DOC = (userId: string) => doc(db, 'Agentes', 'AgenteVendas', userId);
+const CONVERSAS_COL = (userId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, 'conversas');
+const CONVERSA_DOC = (userId: string, conversaId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, 'conversas', conversaId);
+const MENSAGENS_COL = (userId: string, conversaId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, 'conversas', conversaId, 'mensagens');
 
 export type StatusConversa =
   | 'ativa'

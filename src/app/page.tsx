@@ -115,6 +115,11 @@ function detectarContexto(texto: string): string[] {
   return Array.from(termos);
 }
 
+/**
+ * Retorna termos de busca relevantes com base no horário e dia da semana,
+ * usados como recomendação inicial quando não há dados de comportamento do cliente.
+ */
+
 function variantesToken(token: string): string[] {
   const t = normalizar(token);
   const vars = new Set<string>([t]);
@@ -512,6 +517,10 @@ function limparMarkdownBasico(texto: string): string {
   return texto
     .replace(/\*\*/g, "")
     .replace(/^\s*[-*]\s+/gm, "- ")
+    // Remove linhas de confirmação de adição ao carrinho geradas pela IA
+    .split('\n')
+    .filter(linha => !/adicionei|coloquei|adicionado|colocado/i.test(linha) || !/carrinho/i.test(linha))
+    .join('\n')
     .trim();
 }
 
@@ -1618,7 +1627,7 @@ const AgentePage: React.FC = () => {
           }]);
         }
 
-        const displayText = limparMarkdownBasico(rawText.replace(/\[[^\]]*(?:\]|$)/g, "").trim());
+        const displayText = limparMarkdownBasico(rawText.replace(/\[[^\]]*(?:\]|$)/g, ""));
         setMensagens(prev =>
           prev.map(m => m.id === tempId ? { ...m, content: displayText || "..." } : m)
         );
@@ -1706,18 +1715,17 @@ const AgentePage: React.FC = () => {
       const forcarPedido = pendingOrderConfirmRef.current && !resultado.shouldCreateOrder;
 
       // Substituir mensagem temporária pela versão final com cards
-      // Se cleanText for vazio (agente só emitiu tags), remove o placeholder silenciosamente
       const cleanTextFormatado = limparMarkdownBasico(resultado.cleanText);
-      if (cleanTextFormatado) {
+      const temCards = produtosParaExibir.length > 0;
+
+      if (cleanTextFormatado || temCards) {
         setMensagens(prev =>
           prev.map(m =>
             m.id === tempId
               ? {
                   ...m,
                   content:      cleanTextFormatado,
-                  produtosCard: produtosParaExibir.length > 0
-                    ? produtosParaExibir
-                    : undefined,
+                  produtosCard: temCards ? produtosParaExibir : undefined,
                   suggestions:  resultado.suggestions.length > 0
                     ? resultado.suggestions
                     : undefined,
@@ -1726,6 +1734,7 @@ const AgentePage: React.FC = () => {
           )
         );
       } else {
+        // Sem texto e sem cards: remove o placeholder silenciosamente
         setMensagens(prev => prev.filter(m => m.id !== tempId));
       }
 
