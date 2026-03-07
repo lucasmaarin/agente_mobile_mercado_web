@@ -2027,6 +2027,7 @@ const AgentePage: React.FC = () => {
                       fill
                       alt={item.name}
                       sizes="80px"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }}
                     />
                   </div>
                   <div className={styles.agProdutoContent}>
@@ -2156,6 +2157,7 @@ const AgentePage: React.FC = () => {
                                   fill
                                   className={styles.produtoCardImg}
                                   sizes="96px"
+                                  onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }}
                                 />
                                 <ZoomIn
                                   size={14}
