@@ -37,7 +37,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push('/Agente');
+        router.push('/');
         return;
       }
       setIsCheckingAuth(false);

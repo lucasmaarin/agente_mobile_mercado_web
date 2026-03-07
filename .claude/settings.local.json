@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sed 's|from \"\"./Agente.module.css\"\"|from \"\"./Agente/Agente.module.css\"\"|' \"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/Agente/page.tsx\")",
+      "Bash(\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/page.tsx\")"
+    ]
+  }
+}
