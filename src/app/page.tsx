@@ -63,6 +63,58 @@ const ALIASES_BUSCA: Record<string, string[]> = {
   file:     ['file', 'peito'],
 };
 
+/**
+ * Mapa de situações/contextos → termos de produto relevantes.
+ * Usado quando o cliente descreve uma situação em vez de citar um produto diretamente.
+ */
+const CONTEXTOS_SITUACIONAIS: Record<string, string[]> = {
+  'churrasco':        ['carne', 'frango', 'linguica', 'carvao', 'cerveja', 'refrigerante', 'maionese', 'pao'],
+  'cafe da manha':    ['pao', 'manteiga', 'cafe', 'leite', 'ovo', 'queijo', 'presunto', 'iogurte', 'suco'],
+  'cafe':             ['cafe', 'cappuccino', 'achocolatado', 'leite', 'pao', 'biscoito'],
+  'almoco':           ['arroz', 'feijao', 'carne', 'frango', 'macarrao', 'legume', 'verdura', 'tempero'],
+  'jantar':           ['massa', 'carne', 'frango', 'legume', 'molho', 'vinho'],
+  'lanche':           ['pao', 'queijo', 'presunto', 'refrigerante', 'suco', 'biscoito', 'iogurte'],
+  'macarronada':      ['macarrao', 'molho', 'queijo', 'presunto', 'carne'],
+  'bolo':             ['farinha', 'ovo', 'manteiga', 'acucar', 'chocolate', 'fermento', 'leite'],
+  'doce':             ['chocolate', 'biscoito', 'bolo', 'sorvete', 'gelatina', 'pudim'],
+  'sobremesa':        ['chocolate', 'sorvete', 'biscoito', 'pudim', 'gelatina', 'iogurte'],
+  'festa':            ['refrigerante', 'cerveja', 'salgadinho', 'biscoito', 'suco', 'chocolate'],
+  'aniversario':      ['refrigerante', 'cerveja', 'salgadinho', 'biscoito', 'suco', 'chocolate', 'bolo'],
+  'crianca':          ['leite', 'iogurte', 'biscoito', 'suco', 'achocolatado'],
+  'bebe':             ['leite', 'iogurte', 'papa', 'suco'],
+  'doente':           ['laranja', 'limao', 'mel', 'cha', 'suco', 'vitamina'],
+  'gripe':            ['laranja', 'limao', 'mel', 'cha', 'suco', 'vitamina'],
+  'dieta':            ['frango', 'atum', 'ovo', 'iogurte', 'aveia', 'fruta', 'verdura', 'light'],
+  'emagrecer':        ['frango', 'atum', 'ovo', 'iogurte', 'aveia', 'fruta', 'verdura', 'light'],
+  'academia':         ['frango', 'ovo', 'atum', 'aveia', 'banana', 'proteina'],
+  'musculacao':       ['frango', 'ovo', 'atum', 'aveia', 'banana', 'proteina'],
+  'calor':            ['agua', 'suco', 'refrigerante', 'cerveja', 'sorvete', 'isotônico'],
+  'frio':             ['cha', 'cafe', 'chocolate quente', 'sopa', 'caldo'],
+  'sopa':             ['caldo', 'legume', 'macarrao', 'feijao', 'tempero'],
+  'feijoada':         ['feijao preto', 'carne seca', 'linguica', 'arroz', 'laranja', 'farofa'],
+  'farofa':           ['farinha mandioca', 'manteiga', 'ovo', 'linguica'],
+  'pizza':            ['queijo mussarela', 'molho tomate', 'presunto', 'azeitona'],
+  'vitamina':         ['banana', 'morango', 'leite', 'aveia', 'mel', 'iogurte'],
+  'suco':             ['laranja', 'limao', 'uva', 'manga', 'abacaxi', 'suco'],
+  'cerveja':          ['cerveja'],
+  'bebida':           ['agua', 'suco', 'refrigerante', 'cerveja', 'vinho', 'cha', 'isotônico'],
+  'estoque':          ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
+  'compras do mes':   ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite', 'macarrao'],
+  'mercadoria basica':['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
+};
+
+/** Detecta situações contextuais na mensagem e retorna termos de busca relevantes */
+function detectarContexto(texto: string): string[] {
+  const t = normalizar(texto);
+  const termos = new Set<string>();
+  for (const [contexto, keywords] of Object.entries(CONTEXTOS_SITUACIONAIS)) {
+    if (t.includes(normalizar(contexto))) {
+      keywords.forEach(k => termos.add(k));
+    }
+  }
+  return Array.from(termos);
+}
+
 function variantesToken(token: string): string[] {
   const t = normalizar(token);
   const vars = new Set<string>([t]);
@@ -230,17 +282,36 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   }).filter(({ score }) => score > 0);
 
   const garantidos = new Set<string>();
-  for (const w of palavrasBase) {
-    comScore
-      .filter(({ produto: p }) => {
-        const nomeN = normalizar(p.name);
-        const subcatN = normalizar(p.subcategory);
-        const catN = normalizar(p.category);
-        return nomeN.includes(w) || subcatN.includes(w) || catN.includes(w);
+
+  // Produtos que combinam TODAS as palavras-chave (nome de produto composto, ex: "macarrão parafuso")
+  const matchamTodos = palavrasBase.length >= 2
+    ? comScore.filter(({ produto: p }) => {
+        const alvo = `${normalizar(p.name)} ${normalizar(p.subcategory)} ${normalizar(p.category)} ${normalizar(p.description || '')}`;
+        return palavrasBase.every((w) => alvo.includes(w));
       })
+    : [];
+
+  if (matchamTodos.length > 0) {
+    // Há produtos que casam com o nome composto → garante só eles
+    matchamTodos
       .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
+      .slice(0, 6)
       .forEach(({ produto: p }) => garantidos.add(p.id));
+  } else {
+    // Nenhum produto cobre todas as palavras → trata como lista de itens distintos
+    // (ex: "macarrão, ovos, toddy") e garante top-3 por palavra
+    for (const w of palavrasBase) {
+      comScore
+        .filter(({ produto: p }) => {
+          const nomeN   = normalizar(p.name);
+          const subcatN = normalizar(p.subcategory);
+          const catN    = normalizar(p.category);
+          return nomeN.includes(w) || subcatN.includes(w) || catN.includes(w);
+        })
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .forEach(({ produto: p }) => garantidos.add(p.id));
+    }
   }
 
   const ordenados = comScore.sort((a, b) => b.score - a.score);
@@ -1464,20 +1535,34 @@ const AgentePage: React.FC = () => {
             // Confirmação curta ("sim", "1", "pode"): reutiliza últimos produtos mostrados
             produtosFoco = ultimosProdutosMostradosRef.current;
           } else {
-            // Busca sem resultados diretos: fornece amostra por categoria para o agente
-            // ter IDs reais e não inventar produtos
-            const porCategoria = new Map<string, Produto[]>();
-            for (const p of produtos) {
-              const cat = p.categoryId || p.category;
-              if (!porCategoria.has(cat)) porCategoria.set(cat, []);
-              porCategoria.get(cat)!.push(p);
+            // Tenta detectar contexto situacional (ex: "vou fazer um churrasco")
+            const termosContexto = detectarContexto(texto);
+            if (termosContexto.length > 0) {
+              const porContexto: Produto[] = [];
+              const ids = new Set<string>();
+              for (const termo of termosContexto) {
+                for (const p of filtrarProdutos(termo, produtos).slice(0, 4)) {
+                  if (!ids.has(p.id)) { ids.add(p.id); porContexto.push(p); }
+                }
+                if (porContexto.length >= 20) break;
+              }
+              produtosFoco = porContexto.slice(0, 20);
+              produtosMatchDireto = produtosFoco;
+            } else {
+              // Sem contexto detectado: amostra por categoria para o agente ter IDs reais
+              const porCategoria = new Map<string, Produto[]>();
+              for (const p of produtos) {
+                const cat = p.categoryId || p.category;
+                if (!porCategoria.has(cat)) porCategoria.set(cat, []);
+                porCategoria.get(cat)!.push(p);
+              }
+              const amostra: Produto[] = [];
+              for (const prods of porCategoria.values()) {
+                amostra.push(...prods.slice(0, 3));
+                if (amostra.length >= 20) break;
+              }
+              produtosFoco = amostra.slice(0, 20);
             }
-            const amostra: Produto[] = [];
-            for (const prods of porCategoria.values()) {
-              amostra.push(...prods.slice(0, 3));
-              if (amostra.length >= 20) break;
-            }
-            produtosFoco = amostra.slice(0, 20);
           }
         }
       }
