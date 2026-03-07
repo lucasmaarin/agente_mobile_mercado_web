@@ -300,11 +300,14 @@ export async function salvarEnderecoDefault(
   }
 }
 
+// Estrutura: Agentes/AgenteVendas/{userId}/{conversaId}/mensagens
+// {userId} é o nome da subcoleção (não um documento direto)
+// Dados do usuário ficam em Agentes/AgenteVendas/{userId}/dados
 const AGENTE_DOC = doc(db, 'Agentes', 'AgenteVendas');
-const AGENTE_VENDAS_USER_DOC = (userId: string) => doc(db, 'Agentes', 'AgenteVendas', userId);
-const CONVERSAS_COL = (userId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, 'conversas');
-const CONVERSA_DOC = (userId: string, conversaId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, 'conversas', conversaId);
-const MENSAGENS_COL = (userId: string, conversaId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, 'conversas', conversaId, 'mensagens');
+const AGENTE_VENDAS_USER_DOC = (userId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, 'dados');
+const CONVERSAS_COL = (userId: string) => collection(db, 'Agentes', 'AgenteVendas', userId);
+const CONVERSA_DOC = (userId: string, conversaId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, conversaId);
+const MENSAGENS_COL = (userId: string, conversaId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, conversaId, 'mensagens');
 
 export type StatusConversa =
   | 'ativa'
