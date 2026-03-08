@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "Bash(sed 's|from \"\"./Agente.module.css\"\"|from \"\"./Agente/Agente.module.css\"\"|' \"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/Agente/page.tsx\")",
-      "Bash(\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/page.tsx\")"
+      "Bash(\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/page.tsx\")",
+      "Bash(mkdir -p \"C:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/login\")",
+      "Bash(cp \"C:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/page.tsx\" \"C:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx\")",
+      "Bash(npx tsc --noEmit)",
+      "Bash(mkdir -p \"c:/Users/lucas/Desktop/mobile_mercado/painel-admin/src/app/api/adicionar-estabelecimento\")",
+      "Bash(mkdir -p \"c:/Users/lucas/Desktop/mobile_mercado/painel-admin/src/app/sucesso\")",
+      "Bash(mkdir -p \"c:/Users/lucas/Desktop/mobile_mercado/painel-admin/src/components\")",
+      "Bash(npm install)",
+      "Bash(node -e \":*)",
+      "Bash(npm install resend)"
     ]
   }
 }

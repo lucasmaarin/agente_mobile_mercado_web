@@ -1,10 +1,6 @@
 services:
   - type: web
     name: agente-mobile
-    env: static
+    env: node
     buildCommand: npm install && npm run build
-    staticPublishPath: out
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    startCommand: npm start

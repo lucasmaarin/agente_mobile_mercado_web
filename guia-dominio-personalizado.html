@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guia — Domínio Personalizado com Agente Móbile</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #1e293b;
+      background: #fff;
+      padding: 48px 60px;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    /* CAPA */
+    .capa {
+      text-align: center;
+      padding: 60px 0 48px;
+      border-bottom: 3px solid #3632f8;
+      margin-bottom: 48px;
+    }
+    .capa .logo {
+      font-size: 28px;
+      font-weight: 800;
+      color: #3632f8;
+      letter-spacing: -0.5px;
+    }
+    .capa h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 16px;
+      line-height: 1.3;
+    }
+    .capa p {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    /* SEÇÕES */
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #3632f8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 36px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e0e0ff;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 20px 0 8px;
+    }
+
+    p { margin-bottom: 10px; }
+
+    /* PASSOS NUMERADOS */
+    .steps { counter-reset: step; padding-left: 0; list-style: none; }
+    .steps li {
+      counter-increment: step;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 16px;
+      align-items: flex-start;
+    }
+    .steps li::before {
+      content: counter(step);
+      min-width: 28px;
+      height: 28px;
+      background: #3632f8;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* CÓDIGO / DESTAQUE */
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 12.5px;
+      color: #3632f8;
+    }
+
+    .code-block {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      margin: 10px 0 16px;
+      white-space: pre;
+    }
+    .code-block .comment { color: #64748b; }
+    .code-block .key     { color: #7dd3fc; }
+    .code-block .val     { color: #86efac; }
+
+    /* TABELA */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 20px;
+      font-size: 13px;
+    }
+    th {
+      background: #3632f8;
+      color: #fff;
+      text-align: left;
+      padding: 9px 14px;
+      font-weight: 600;
+    }
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* ALERTAS */
+    .alert {
+      border-left: 4px solid;
+      border-radius: 0 6px 6px 0;
+      padding: 12px 16px;
+      margin: 14px 0;
+      font-size: 13px;
+    }
+    .alert-info  { border-color: #3632f8; background: #eef2ff; color: #3730a3; }
+    .alert-warn  { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+    .alert-ok    { border-color: #10b981; background: #ecfdf5; color: #065f46; }
+
+    .alert strong { display: block; margin-bottom: 2px; }
+
+    /* DIVISÃO DE RESPONSABILIDADE */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .card {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .card.blue  { border-color: #3632f8; background: #eef2ff; }
+    .card.green { border-color: #10b981; background: #ecfdf5; }
+    .card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+    .card.blue  h4 { color: #3632f8; }
+    .card.green h4 { color: #059669; }
+    .card ul { padding-left: 18px; font-size: 13px; line-height: 1.9; }
+
+    /* DIAGRAMA */
+    .diagrama {
+      background: #0f172a;
+      color: #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 2;
+      margin: 16px 0;
+      text-align: center;
+    }
+    .diagrama .arrow { color: #7dd3fc; }
+    .diagrama .label { color: #94a3b8; font-size: 11px; }
+
+    /* RODAPÉ */
+    footer {
+      margin-top: 60px;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    /* PRINT */
+    @media print {
+      body { padding: 24px 32px; }
+      h2 { page-break-before: auto; }
+      .no-break { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CAPA -->
+  <div class="capa">
+    <div class="logo">Agente Móbile</div>
+    <h1>Guia de Configuração de Domínio Personalizado</h1>
+    <p>Passo a passo para mascarar a rota do agente com domínio próprio do estabelecimento</p>
+  </div>
+
+  <!-- VISÃO GERAL -->
+  <h2>Visão Geral</h2>
+  <p>
+    Cada estabelecimento recebe uma rota padrão na plataforma Agente Móbile.
+    Se o estabelecimento quiser que o agente responda pelo <strong>domínio próprio dele</strong>
+    (ex: <code>royal.com.br</code>), ele mesmo configura o apontamento de DNS e o mascaramento de URL.
+    Você, como dono da plataforma, não precisa tocar em nenhum domínio.
+  </p>
+
+  <div class="diagrama">
+    <div><span style="color:#7dd3fc">Usuario acessa</span>   →   royal.com.br</div>
+    <div><span class="arrow">↓ Cloudflare reescreve</span></div>
+    <div><span style="color:#86efac">Servidor recebe</span>  →   agente-mobile.onrender.com<span style="color:#f9a8d4">/royal</span></div>
+    <div class="label">O usuário vê apenas "royal.com.br" — o /royal nunca aparece</div>
+  </div>
+
+  <!-- DIVISÃO DE RESPONSABILIDADES -->
+  <h2>Quem faz o quê</h2>
+  <div class="cards">
+    <div class="card blue">
+      <h4>Você (dono da plataforma)</h4>
+      <ul>
+        <li>Mantém o app no Render</li>
+        <li>Fornece a URL padrão ao cliente:<br><code>agente-mobile.onrender.com/royal</code></li>
+        <li>Não mexe em domínio nenhum</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h4>Cliente (dono do estabelecimento)</h4>
+      <ul>
+        <li>Tem o domínio no registro.br</li>
+        <li>Configura o Cloudflare</li>
+        <li>Faz o apontamento de DNS</li>
+        <li>Cria a regra de mascaramento</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="alert alert-warn">
+    <strong>Importante</strong>
+    O domínio é propriedade do cliente. Você só fornece a URL da rota. Todo o restante é responsabilidade e custo dele.
+  </div>
+
+  <!-- PRÉ-REQUISITOS -->
+  <h2>Pré-requisitos</h2>
+  <table>
+    <tr><th>Item</th><th>Quem precisa ter</th><th>Onde obter</th></tr>
+    <tr><td>Domínio registrado</td><td>Cliente</td><td>registro.br (já tem)</td></tr>
+    <tr><td>Conta no Cloudflare</td><td>Cliente</td><td>cloudflare.com — gratuito</td></tr>
+    <tr><td>URL da plataforma</td><td>Você fornece ao cliente</td><td>Dashboard do Render</td></tr>
+    <tr><td>Slug/ID do estabelecimento</td><td>Você fornece ao cliente</td><td>Ex: <code>royal</code></td></tr>
+  </table>
+
+  <!-- PARTE 1 -->
+  <h2>Parte 1 — Criar conta e adicionar domínio no Cloudflare</h2>
+
+  <ul class="steps">
+    <li>
+      Acesse <strong>cloudflare.com</strong> e crie uma conta gratuita com o e-mail do estabelecimento.
+    </li>
+    <li>
+      No painel, clique em <strong>"Add a Site"</strong> (ou "Adicionar um site").
+    </li>
+    <li>
+      Digite o domínio: <code>royal.com.br</code> e clique em <strong>Continue</strong>.
+    </li>
+    <li>
+      Selecione o plano <strong>Free (gratuito)</strong> e clique em <strong>Continue</strong>.
+    </li>
+    <li>
+      O Cloudflare vai importar os registros DNS existentes automaticamente. Revise e clique em <strong>Continue</strong>.
+    </li>
+    <li>
+      O Cloudflare vai exibir <strong>2 nameservers</strong> no formato:
+      <div class="code-block"><span class="val">aria.ns.cloudflare.com
+bob.ns.cloudflare.com</span></div>
+      <strong>Anote esses dois valores</strong> — você vai precisar deles no passo seguinte.
+    </li>
+  </ul>
+
+  <!-- PARTE 2 -->
+  <h2>Parte 2 — Apontar DNS do registro.br para o Cloudflare</h2>
+
+  <ul class="steps">
+    <li>
+      Acesse <strong>registro.br</strong>, faça login e clique no domínio <code>royal.com.br</code>.
+    </li>
+    <li>
+      Procure a opção <strong>"Alterar servidores DNS"</strong> ou <strong>"Editar DNS"</strong>.
+    </li>
+    <li>
+      Remova os servidores DNS atuais e substitua pelos dois do Cloudflare:
+      <div class="code-block"><span class="key">Servidor 1:</span> <span class="val">aria.ns.cloudflare.com</span>
+<span class="key">Servidor 2:</span> <span class="val">bob.ns.cloudflare.com</span></div>
+    </li>
+    <li>
+      Salve as alterações. A propagação pode levar de <strong>5 minutos a 24 horas</strong>.
+    </li>
+  </ul>
+
+  <div class="alert alert-info">
+    <strong>Como saber se propagou?</strong>
+    Volte ao Cloudflare — a barra de status do domínio ficará verde com a mensagem <em>"Active"</em>.
+  </div>
+
+  <!-- PARTE 3 -->
+  <h2>Parte 3 — Configurar DNS no Cloudflare para apontar ao Render</h2>
+
+  <ul class="steps">
+    <li>
+      No painel do Cloudflare, clique em <strong>DNS → Records → Add Record</strong>.
+    </li>
+    <li>
+      Preencha o formulário conforme abaixo:
+      <table style="margin-top:10px">
+        <tr><th>Campo</th><th>Valor</th></tr>
+        <tr><td>Tipo</td><td><code>CNAME</code></td></tr>
+        <tr><td>Nome</td><td><code>@</code> (domínio raiz) ou <code>www</code></td></tr>
+        <tr><td>Destino (Target)</td><td><code>agente-mobile.onrender.com</code></td></tr>
+        <tr><td>Proxy</td><td>✅ Ativado (ícone de nuvem laranja)</td></tr>
+        <tr><td>TTL</td><td>Auto</td></tr>
+      </table>
+    </li>
+    <li>
+      Clique em <strong>Save</strong>.
+    </li>
+  </ul>
+
+  <div class="alert alert-warn">
+    <strong>Atenção — Proxy ativado é obrigatório</strong>
+    O ícone de nuvem precisa estar <strong>laranja</strong> (proxy ativo). Sem isso, a regra de mascaramento de URL não vai funcionar.
+  </div>
+
+  <!-- PARTE 4 -->
+  <h2>Parte 4 — Criar a regra de mascaramento de URL</h2>
+  <p>Esta é a etapa que faz o <code>/royal</code> desaparecer da URL do usuário final.</p>
+
+  <ul class="steps">
+    <li>
+      No Cloudflare, acesse o menu <strong>Rules → Transform Rules</strong>.
+    </li>
+    <li>
+      Clique na aba <strong>"URL Rewrite"</strong> e depois em <strong>"Create Rule"</strong>.
+    </li>
+    <li>
+      Dê um nome à regra, ex: <code>Mascarar rota royal</code>.
+    </li>
+    <li>
+      Em <strong>"When incoming requests match..."</strong>, configure:
+      <div class="code-block"><span class="key">Campo:</span>    <span class="val">Hostname</span>
+<span class="key">Operador:</span> <span class="val">equals</span>
+<span class="key">Valor:</span>    <span class="val">royal.com.br</span></div>
+    </li>
+    <li>
+      Em <strong>"Then..."</strong> → <strong>Path</strong> → selecione <strong>Rewrite to → Dynamic</strong> e use a expressão:
+      <div class="code-block">concat("/royal", http.request.uri.path)</div>
+    </li>
+    <li>
+      Clique em <strong>Deploy</strong> (ou Save and Deploy).
+    </li>
+  </ul>
+
+  <div class="alert alert-ok">
+    <strong>Resultado esperado</strong>
+    A partir deste momento, qualquer acesso a <code>royal.com.br</code> será servido pela rota
+    <code>agente-mobile.onrender.com/royal</code> — sem que o usuário veja o <code>/royal</code> na barra de endereço.
+  </div>
+
+  <!-- PARTE 5 -->
+  <h2>Parte 5 — Verificar se está funcionando</h2>
+
+  <ul class="steps">
+    <li>
+      Acesse <code>royal.com.br</code> no navegador em aba anônima.
+    </li>
+    <li>
+      Deve abrir a tela de login do Agente Móbile — com a URL mostrando apenas <code>royal.com.br</code>.
+    </li>
+    <li>
+      Se exibir erro <strong>SSL</strong>: aguarde até 10 minutos. O Cloudflare gera o certificado automaticamente.
+    </li>
+    <li>
+      Se a página não abrir: verifique se o proxy (nuvem laranja) está ativo no registro DNS e se a regra de URL Rewrite foi salva com <em>Deploy</em>.
+    </li>
+  </ul>
+
+  <!-- REFERÊNCIA RÁPIDA -->
+  <h2>Referência rápida</h2>
+  <table>
+    <tr><th>O que o usuário digita</th><th>O que o servidor recebe</th></tr>
+    <tr><td><code>royal.com.br</code></td><td><code>agente-mobile.onrender.com/royal</code></td></tr>
+    <tr><td><code>royal.com.br/login</code></td><td><code>agente-mobile.onrender.com/royal/login</code></td></tr>
+    <tr><td><code>outro.com.br</code></td><td><code>agente-mobile.onrender.com/outro-id</code></td></tr>
+  </table>
+
+  <div class="alert alert-info">
+    <strong>Cada novo estabelecimento repete o processo</strong>
+    As Partes 1 a 5 são feitas uma vez por domínio. Você apenas fornece o slug correto
+    (ex: <code>/padaria-center</code>) e o cliente configura o domínio dele.
+  </div>
+
+  <!-- RODAPÉ -->
+  <footer>
+    Agente Móbile — Guia de Domínio Personalizado &nbsp;|&nbsp;
+    Configuração realizada pelo próprio estabelecimento &nbsp;|&nbsp;
+    Suporte: cloudflare.com/help
+  </footer>
+
+</body>
+</html>

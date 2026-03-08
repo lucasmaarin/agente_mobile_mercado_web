@@ -23,7 +23,11 @@ declare global {
   }
 }
 
-const Login: React.FC = () => {
+interface LoginProps {
+  redirectTo?: string;
+}
+
+const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
@@ -37,7 +41,7 @@ const Login: React.FC = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push('/');
+        router.push(redirectTo);
         return;
       }
       setIsCheckingAuth(false);

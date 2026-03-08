@@ -17,7 +17,6 @@ import {
 import { db } from '@/lib/firebase';
 import { Produto, CartItem, CustomerData, FlowState, EnderecoSalvo } from '@/lib/buildSystemPrompt';
 
-const COMPANY_ID = 'estabelecimento-teste';
 export const DELIVERY_PRICE = 5.00;
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -32,8 +31,8 @@ function gerarOrderNumber(): string {
   return String(Math.floor(Math.random() * 999999 + 1)).padStart(6, '0');
 }
 
-export async function getProducts(): Promise<Produto[]> {
-  const ref = collection(db, 'estabelecimentos', COMPANY_ID, 'Products');
+export async function getProducts(companyId: string): Promise<Produto[]> {
+  const ref = collection(db, 'estabelecimentos', companyId, 'Products');
   const q = query(
     ref,
     where('isActive', '==', true),
@@ -64,6 +63,7 @@ export async function getProducts(): Promise<Produto[]> {
 }
 
 export async function createOrder(
+  companyId: string,
   customerData: CustomerData,
   cart: CartItem[],
   clientId: string,
@@ -75,7 +75,7 @@ export async function createOrder(
   const orderNumber = gerarOrderNumber();
 
   const clientRef  = doc(db, `Users/${clientId}`);
-  const companyRef = doc(db, `estabelecimentos/${COMPANY_ID}`);
+  const companyRef = doc(db, `estabelecimentos/${companyId}`);
 
   let valueBack: number | null = null;
   if (customerData.changeAmount && customerData.changeAmount !== '') {
@@ -92,7 +92,7 @@ export async function createOrder(
     observations:          null,
     clientRef,
     companyRef,
-    productRef: doc(db, `estabelecimentos/${COMPANY_ID}/Products/${item.id}`),
+    productRef: doc(db, `estabelecimentos/${companyId}/Products/${item.id}`),
     product: {
       id:           item.id,
       name:         item.name,
@@ -191,23 +191,24 @@ export async function createOrder(
   return { id: ref.id, orderNumber, total };
 }
 
-const SHOPPING_CART_PATH = (userId: string) =>
-  `Users/${userId}/ShoppingCart/${COMPANY_ID}/Items`;
+const SHOPPING_CART_PATH = (companyId: string, userId: string) =>
+  `Users/${userId}/ShoppingCart/${companyId}/Items`;
 
 export async function sincronizarItemCarrinho(
+  companyId: string,
   userId: string,
   item: CartItem
 ): Promise<void> {
   const now        = Timestamp.now();
   const clientRef  = doc(db, `Users/${userId}`);
-  const companyRef = doc(db, `estabelecimentos/${COMPANY_ID}`);
-  const itemRef    = doc(db, SHOPPING_CART_PATH(userId), item.id);
+  const companyRef = doc(db, `estabelecimentos/${companyId}`);
+  const itemRef    = doc(db, SHOPPING_CART_PATH(companyId, userId), item.id);
 
   await setDoc(itemRef, {
     id:        item.id,
     quantity:  item.quantity,
     clientId:  userId,
-    companyId: COMPANY_ID,
+    companyId: companyId,
     clientRef,
     companyRef,
     product: {
@@ -233,14 +234,15 @@ export async function sincronizarItemCarrinho(
 }
 
 export async function removerItemCarrinhoFirestore(
+  companyId: string,
   userId: string,
   productId: string
 ): Promise<void> {
-  await deleteDoc(doc(db, SHOPPING_CART_PATH(userId), productId));
+  await deleteDoc(doc(db, SHOPPING_CART_PATH(companyId, userId), productId));
 }
 
-export async function limparCarrinhoFirestore(userId: string): Promise<void> {
-  const snap = await getDocs(collection(db, SHOPPING_CART_PATH(userId)));
+export async function limparCarrinhoFirestore(companyId: string, userId: string): Promise<void> {
+  const snap = await getDocs(collection(db, SHOPPING_CART_PATH(companyId, userId)));
   await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
 }
 
