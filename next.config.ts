@@ -6,7 +6,6 @@ const DOMAIN_SLUGS: Record<string, string> = {
   // 'royal.com.br':            'royal',
   // 'zerograu.com.br':         'zerograu',
   // 'padaria-center.com.br':   'padaria-center',
-  'https://royal.dev.br/': 'jqqjhtcc2zw1tuzmqzgf', // Zero Grau
 };
 
 const nextConfig: NextConfig = {
