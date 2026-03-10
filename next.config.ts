@@ -1,13 +1,5 @@
 import type { NextConfig } from "next";
-
-// Mapeamento: domínio do cliente → slug do estabelecimento
-// Adicione uma linha por cliente e redeploy no Render
-const DOMAIN_SLUGS: Record<string, string> = {
-  // 'royal.com.br':            'royal',
-  // 'zerograu.com.br':         'zerograu',
-  // 'padaria-center.com.br':   'padaria-center',
-  'royal.dev.br': 'jqqjhtcc2zw1tuzmqzgf', // Zero Grau
-};
+import { DOMAIN_SLUGS } from "./src/config/dominios";
 
 const nextConfig: NextConfig = {
   images: {
