@@ -253,7 +253,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
               >
                 <div className={styles.googleIcon}>
                   <Image
-                    src="/icons/login/google.png"
+                    src="/google.png"
                     alt="Google"
                     width={20}
                     height={20}
@@ -269,7 +269,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
               >
                 <div className={styles.appleIcon}>
                   <Image
-                    src="/icons/login/apple.png"
+                    src="/apple.png"
                     alt="Apple"
                     width={20}
                     height={20}

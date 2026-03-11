@@ -2110,7 +2110,7 @@ const AgentePage: React.FC = () => {
           </p>
           <button
             className={styles.loginButton}
-            onClick={() => (window.location.href = "/Login")}
+            onClick={() => (window.location.href = `/${companyId}/login`)}
           >
             Fazer Login
           </button>

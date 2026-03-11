@@ -13,7 +13,8 @@
       "Bash(node -e \":*)",
       "Bash(npm install resend)",
       "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/painel-admin/.env*)",
-      "Read(//c/Users/lucas/Desktop/mobile_mercado/painel-admin/**)"
+      "Read(//c/Users/lucas/Desktop/mobile_mercado/painel-admin/**)",
+      "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/public/*.png)"
     ]
   }
 }
