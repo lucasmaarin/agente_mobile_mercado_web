@@ -2050,11 +2050,6 @@ const AgentePage: React.FC = () => {
       setCarrinho(novoCart);
       sincronizarDiffCarrinho(cartAntes, novoCart);
       setItemUnicoQtdState(null);
-      await salvarRespostaAgente(
-        `Adicionei ${qtd}x ${produto.name} ao carrinho! 🛒`,
-        [produto],
-        ["Finalizar pedido 🛒"]
-      );
       return;
     }
 
@@ -2256,18 +2251,7 @@ const AgentePage: React.FC = () => {
                     <span style={{ color: "green" }}>R$ {formatarPrecoCarrinho(DELIVERY_PRICE)}</span>
                   </dt>
                 </div>
-                <div className={styles.agFinalizar}>
-                  <button
-                    className={styles.agFinalizarBtn}
-                    onClick={() => {
-                      setMostrarCarrinho(false);
-                      enviarMensagem("Finalizar pedido 🛒");
-                    }}
-                  >
-                    <p>Finalizar carrinho</p>
-                    <span>R$ {formatarPrecoCarrinho(totalCarrinho + DELIVERY_PRICE)}</span>
-                  </button>
-                </div>
+
               </dl>
             </div>
           )}

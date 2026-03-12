@@ -230,8 +230,6 @@ export async function sincronizarItemCarrinho(
     createdAt: now,
     updatedAt: now,
   }, { merge: true });
-
-  await updateDoc(itemRef, { updatedAt: now, quantity: item.quantity });
 }
 
 export async function removerItemCarrinhoFirestore(
