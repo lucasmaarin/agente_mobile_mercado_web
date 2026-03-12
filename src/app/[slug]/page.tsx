@@ -10,7 +10,6 @@ import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
 import Header from "@/components/Header/Header";
 
-import OpenAI from "openai";
 import {
   FLOW_STATES,
   FlowState,
@@ -793,6 +792,13 @@ const AgentePage: React.FC = () => {
     };
   }, []);
 
+  // -------- Registrar Service Worker --------
+  useEffect(() => {
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    }
+  }, []);
+
   // -------- Autenticação --------
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
@@ -949,10 +955,12 @@ const AgentePage: React.FC = () => {
   const transcreverAudio = async (blob: Blob) => {
     setTranscrevendo(true);
     try {
-      const openai = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY, dangerouslyAllowBrowser: true });
       const file = new File([blob], 'audio.webm', { type: blob.type });
-      const result = await openai.audio.transcriptions.create({ file, model: 'whisper-1', language: 'pt' });
-      if (result.text.trim()) setInputText(result.text.trim());
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/transcribe', { method: 'POST', body: form });
+      const data = await res.json();
+      if (data.text?.trim()) setInputText(data.text.trim());
     } catch (e) {
       console.error('Erro ao transcrever áudio:', e);
     } finally {
@@ -1632,11 +1640,6 @@ const AgentePage: React.FC = () => {
         mensagens: ex.mensagens.map((m) => ({ role: m.role, content: m.content })),
       }));
 
-      const openai = new OpenAI({
-        apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
-        dangerouslyAllowBrowser: true,
-      });
-
       // Prompt construído com o estado de trabalho atualizado
       const systemPrompt = buildSystemPrompt(
         produtosFoco,
@@ -1655,30 +1658,35 @@ const AgentePage: React.FC = () => {
       let rawText = "";
       let streamStarted = false;
 
-      const stream = await openai.chat.completions.create({
-        model:       "gpt-4o-mini",
-        messages:    [{ role: "system", content: systemPrompt }, ...historico],
-        temperature: 0.7,
-        max_tokens:  350,
-        stream:      true,
+      const chatRes = await fetch('/api/chat', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ messages: historico, systemPrompt }),
       });
 
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta?.content ?? "";
+      if (!chatRes.ok || !chatRes.body) {
+        throw new Error(`Erro na API de chat: ${chatRes.status}`);
+      }
+
+      const reader  = chatRes.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const delta = decoder.decode(value, { stream: true });
         if (!delta) continue;
         rawText += delta;
 
         if (!streamStarted) {
           streamStarted = true;
-          // NÃO libera o input aqui — setEnviando(false) fica no finally,
-          // após setCarrinho, para evitar race condition com cart vazio
           setMensagens(prev => [...prev, {
             id: tempId, role: "assistant" as const,
             content: "", timestamp: new Date(),
           }]);
         }
 
-        const displayText = limparMarkdownBasico(rawText.replace(/\[[^\]]*(?:\]|$)/g, ""));
+        const displayText = limparMarkdownBasico(rawText.replace(/[[^]]*(?:]|$)/g, ""));
         setMensagens(prev =>
           prev.map(m => m.id === tempId ? { ...m, content: displayText || "..." } : m)
         );
@@ -1814,6 +1822,27 @@ const AgentePage: React.FC = () => {
           wCustomerData = { ...wCustomerData, name: nomeCliente };
           setCustomerData(wCustomerData);
           const orderResult = await createOrder(companyId, wCustomerData, wCart, userDocId, nomeCliente);
+
+          // Subscrever notificações push para este cliente
+          if ("serviceWorker" in navigator && "PushManager" in window) {
+            try {
+              const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+              if (vapidKey) {
+                const reg = await navigator.serviceWorker.ready;
+                const sub = await reg.pushManager.subscribe({
+                  userVisibleOnly: true,
+                  applicationServerKey: vapidKey,
+                });
+                await fetch("/api/push/inscrever", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ userId: userDocId, subscription: sub }),
+                });
+              }
+            } catch {
+              // Push não crítico — ignora silenciosamente
+            }
+          }
 
           // Registrar na conversa
           if (cid) {

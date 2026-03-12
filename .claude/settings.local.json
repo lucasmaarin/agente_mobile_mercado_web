@@ -14,7 +14,9 @@
       "Bash(npm install resend)",
       "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/painel-admin/.env*)",
       "Read(//c/Users/lucas/Desktop/mobile_mercado/painel-admin/**)",
-      "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/public/*.png)"
+      "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/public/*.png)",
+      "Bash(npm install:*)",
+      "Bash(grep -n \"^import OpenAI\\\\|from ''openai''\\\\|from \"\"openai\"\"\" \"src/app/[slug]/page.tsx\")"
     ]
   }
 }

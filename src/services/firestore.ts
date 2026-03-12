@@ -4,6 +4,7 @@ import {
   query,
   where,
   getDocs,
+  getDoc,
   addDoc,
   updateDoc,
   setDoc,
@@ -539,4 +540,64 @@ export async function carregarExemplosAtivos(): Promise<ExemploConversa[]> {
   const q = query(EXEMPLOS_COL(), where('ativo', '==', true));
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as ExemploConversa);
+}
+
+// ─── Pedidos (PurchaseRequests) ───────────────────────────────────────────────
+
+export interface Pedido {
+  id: string;
+  orderNumber: string;
+  clientName: string;
+  clientId: string;
+  total: number;
+  currentPurchaseStatus: string;
+  createdAt: Timestamp;
+  address: {
+    fullAddress: string;
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+  };
+  productsCart: Array<{ product: { name: string }; quantity: number }>;
+  estimatedTimeDelivery?: { intervalMinutes: number };
+}
+
+export async function buscarPedidosPorEstabelecimento(
+  companyId: string,
+  limite = 50
+): Promise<Pedido[]> {
+  const companyRef = doc(db, `estabelecimentos/${companyId}`);
+  const q = query(
+    collection(db, 'PurchaseRequests'),
+    where('companyReference', '==', companyRef),
+    orderBy('createdAt', 'desc'),
+    limit(limite)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.data() as Pedido);
+}
+
+export async function atualizarStatusPedido(
+  pedidoId: string,
+  status: string
+): Promise<void> {
+  const ref = doc(db, 'PurchaseRequests', pedidoId);
+  const snap = await getDoc(ref);
+  const statusListAtual: unknown[] = snap.data()?.statusList ?? [];
+  await updateDoc(ref, {
+    currentPurchaseStatus: status,
+    updatedAt: Timestamp.now(),
+    statusList: [...statusListAtual, { purchaseStatus: status, createdAt: Timestamp.now() }],
+  });
+}
+
+// ─── Push Subscriptions ───────────────────────────────────────────────────────
+
+export async function buscarPushSubscription(
+  clientId: string
+): Promise<{ endpoint: string; keys: { p256dh: string; auth: string } } | null> {
+  const snap = await getDoc(doc(db, 'Users', clientId, 'pushSubscription', 'default'));
+  if (!snap.exists()) return null;
+  return snap.data() as { endpoint: string; keys: { p256dh: string; auth: string } };
 }
