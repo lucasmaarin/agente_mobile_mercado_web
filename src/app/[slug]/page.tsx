@@ -746,6 +746,7 @@ const AgentePage: React.FC = () => {
 
   // --- Recuperação de carrinho ao recarregar
   const [cartRecoveryPending, setCartRecoveryPending] = useState(false);
+  const [headerOffset, setHeaderOffset] = useState(136);
 
   // --- Tour onboarding
   const [tourEtapa, setTourEtapa]     = useState<number | null>(null);
@@ -2156,11 +2157,13 @@ const AgentePage: React.FC = () => {
   // RENDER
   // ============================================================
   return (
-    <div className={styles.container}>
+    <div className={styles.container} style={{ paddingTop: headerOffset }}>
       <Header
         logoUrl={logoEstabelecimento ?? undefined}
         cartTotal={totalCarrinho}
+        cartCount={qtdItens}
         onAbrirCarrinho={() => setMostrarCarrinho(true)}
+        onTotalHeightChange={setHeaderOffset}
       />
 
       {/* Barra de progresso do checkout */}
@@ -2270,6 +2273,9 @@ const AgentePage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Chat wrapper — fundo arredondado */}
+      <div className={styles.chatWrapper}>
 
       {/* Mensagens */}
       <div className={styles.messagesContainer}>
@@ -2559,39 +2565,6 @@ const AgentePage: React.FC = () => {
         </div>
       )}
 
-      {/* Botão flutuante arrastável do carrinho */}
-      <button
-        className={styles.floatingCartBtn}
-        style={btnCartPos ? { left: btnCartPos.x, top: btnCartPos.y, bottom: "auto", right: "auto" } : {}}
-        onMouseDown={(e) => {
-          isDraggingCartRef.current = true;
-          dragMovedCartRef.current  = false;
-          dragOffsetCartRef.current = {
-            x: e.clientX - (btnCartPos?.x ?? window.innerWidth - 80),
-            y: e.clientY - (btnCartPos?.y ?? window.innerHeight - 150),
-          };
-          e.preventDefault();
-        }}
-        onTouchStart={(e) => {
-          isDraggingCartRef.current = true;
-          dragMovedCartRef.current  = false;
-          dragOffsetCartRef.current = {
-            x: e.touches[0].clientX - (btnCartPos?.x ?? window.innerWidth - 80),
-            y: e.touches[0].clientY - (btnCartPos?.y ?? window.innerHeight - 150),
-          };
-          e.preventDefault();
-        }}
-        onClick={() => {
-          if (!dragMovedCartRef.current) setMostrarCarrinho((v) => !v);
-          dragMovedCartRef.current = false;
-        }}
-        aria-label="Ver carrinho"
-      >
-        <ShoppingCart size={24} />
-        {qtdItens > 0 && (
-          <span className={styles.floatingCartBadge}>{qtdItens}</span>
-        )}
-      </button>
 
       {/* Input */}
       <div className={styles.inputContainer}>
@@ -2632,6 +2605,8 @@ const AgentePage: React.FC = () => {
           )}
         </button>
       </div>
+
+      </div>{/* /chatWrapper */}
     </div>
   );
 };

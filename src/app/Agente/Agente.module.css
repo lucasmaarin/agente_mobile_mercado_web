@@ -5,13 +5,22 @@
 .container {
   height: 100vh;
   height: 100dvh;
-  background-color: #f5f5f7;
+  background-color: #ffffff;   /* branco atrás do chat */
   font-family: inherit;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  /* ~102px header (topRow+cartStrip) + ~34px faixa info */
-  padding-top: 136px;
+  /* padding-top definido dinamicamente via inline style no page.tsx */
+  padding-top: 136px; /* fallback inicial */
+}
+
+.chatWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #f5f5f7;   /* fundo do chat */
+  border-radius: 26px 26px 0 0; /* topo arredondado igual ao bottom do header */
 }
 
 /* ========================================= */
@@ -144,6 +153,7 @@
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
+  background-color: #f5f5f7;
   padding: 16px 12px;
   display: flex;
   flex-direction: column;

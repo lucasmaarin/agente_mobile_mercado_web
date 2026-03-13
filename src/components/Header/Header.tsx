@@ -18,31 +18,42 @@ export interface InfoEstabelecimento {
 interface HeaderProps {
   logoUrl?: string;
   cartTotal?: number;
+  cartCount?: number;
   onAbrirCarrinho?: () => void;
   info?: InfoEstabelecimento;
   corPrimaria?: string;
+  onTotalHeightChange?: (h: number) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({
   logoUrl,
   cartTotal = 0,
+  cartCount = 0,
   onAbrirCarrinho,
   info,
-  corPrimaria = "#1a56c4",
+  corPrimaria = "#1C30C7",
+  onTotalHeightChange,
 }) => {
   const [menuAberto, setMenuAberto] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
+  const infoStripRef = useRef<HTMLDivElement>(null);
   const [headerHeight, setHeaderHeight] = useState(102);
+  const [infoStripHeight, setInfoStripHeight] = useState(28);
 
   useEffect(() => {
-    if (!headerRef.current) return;
-    const obs = new ResizeObserver(() => {
-      setHeaderHeight(headerRef.current!.offsetHeight);
-    });
-    obs.observe(headerRef.current);
-    setHeaderHeight(headerRef.current.offsetHeight);
+    const update = () => {
+      const hh = headerRef.current?.offsetHeight ?? 102;
+      const ih = infoStripRef.current?.offsetHeight ?? 28;
+      setHeaderHeight(hh);
+      setInfoStripHeight(ih);
+      onTotalHeightChange?.(hh + 2 + ih);
+    };
+    const obs = new ResizeObserver(update);
+    if (headerRef.current) obs.observe(headerRef.current);
+    if (infoStripRef.current) obs.observe(infoStripRef.current);
+    update();
     return () => obs.disconnect();
-  }, []);
+  }, [onTotalHeightChange]);
 
   const handleLogout = async () => {
     try {
@@ -53,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const corStrip = `color-mix(in srgb, ${corPrimaria} 75%, white)`;
+  const corStrip = corPrimaria === "#1C30C7" ? "#314DD9" : `color-mix(in srgb, ${corPrimaria} 75%, white)`;
 
   const infoFinal: InfoEstabelecimento = {
     aberto: true,
@@ -74,12 +85,12 @@ const Header: React.FC<HeaderProps> = ({
           <div className={styles.logoArea}>
             <div className={styles.logoWrapper}>
               <Image
-                src={logoUrl || "/logo.png"}
+                src={logoUrl || "/logo_vidal.png"}
                 alt="Logo"
                 fill
                 className={styles.logoImg}
                 sizes="72px"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}
+                onError={(e) => { (e.target as HTMLImageElement).src = "/logo_vidal.png"; }}
               />
             </div>
           </div>
@@ -96,17 +107,25 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* Menu */}
           <div className={styles.menuArea}>
+            <img
+              src="/ofertas.svg"
+              alt="ofertas"
+              className={styles.ofertasImg}
+              width={34}
+              height={34}
+            />
             <button
               className={styles.menuButton}
               onClick={() => setMenuAberto((v) => !v)}
               aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
             >
-              <span className={styles.menuLabel}>MENU</span>
-              <span className={`${styles.menuIcon} ${menuAberto ? styles.menuIconOpen : ""}`}>
-                <span className={styles.bar} />
-                <span className={styles.bar} />
-                <span className={styles.bar} />
-              </span>
+              <img
+                src="/hamburguer.svg"
+                alt="menu"
+                className={styles.menuIconImg}
+                width={26}
+                height={19}
+              />
             </button>
           </div>
         </div>
@@ -119,15 +138,16 @@ const Header: React.FC<HeaderProps> = ({
             onClick={onAbrirCarrinho}
           >
             <ShoppingCart size={12} />
-            <span>CARRINHO DE COMPRAS</span>
+            <span>SUAS COMPRAS (<span className={styles.cartCountNum}>{cartCount > 99 ? "+99" : cartCount}</span>)</span>
           </button>
         </div>
       </header>
 
       {/* Faixa info colada abaixo do header */}
       <div
+        ref={infoStripRef}
         className={styles.infoStripOuter}
-        style={{ top: headerHeight }}
+        style={{ top: headerHeight + 2 }}
       >
         <div className={styles.infoStrip}>
           {infoFinal.aberto === false ? (
@@ -142,12 +162,12 @@ const Header: React.FC<HeaderProps> = ({
           )}
           <span className={styles.infoDivider} />
           <span className={styles.infoItem}>
-            <Clock size={12} />
+            <Clock size={14} />
             {infoFinal.tempoMin} a {infoFinal.tempoMax} min
           </span>
           <span className={styles.infoDivider} />
           <span className={styles.infoItem}>
-            <Truck size={12} />
+            <Truck size={14} />
             {infoFinal.taxaEntrega === 0
               ? "Grátis"
               : `R$ ${infoFinal.taxaEntrega!.toFixed(2).replace(".", ",")}`}
@@ -156,7 +176,7 @@ const Header: React.FC<HeaderProps> = ({
             <>
               <span className={styles.infoDivider} />
               <span className={styles.infoItem}>
-                {infoFinal.avaliacao.toFixed(1)}
+                <span className={styles.ratingText}>{infoFinal.avaliacao.toFixed(1)}</span>
                 <Star size={12} className={styles.starIcon} />
               </span>
             </>
