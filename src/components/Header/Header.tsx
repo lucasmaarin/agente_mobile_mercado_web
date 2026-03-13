@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const corStrip = corPrimaria === "#1C30C7" ? "#314DD9" : `color-mix(in srgb, ${corPrimaria} 75%, white)`;
+  const corStrip = corPrimaria === "#1C30C7" ? "#314DD9" : corPrimaria;
 
   const infoFinal: InfoEstabelecimento = {
     aberto: true,
