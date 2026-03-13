@@ -50,6 +50,14 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return () => unsubscribe();
   }, [router]);
 
+  const formatPhoneInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 11);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+  };
+
   const setupRecaptcha = (): RecaptchaVerifier => {
     if (window.recaptchaVerifier) {
       return window.recaptchaVerifier;
@@ -73,7 +81,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
       const formattedPhone = validatePhone(phoneNumber);
       if (!formattedPhone) {
-        setError("Número de telefone inválido. Use o formato (DDD) + número.");
+        setError("Número inválido. Digite o DDD + número, ex: (11) 99999-9999.");
         setIsLoading(false);
         return;
       }
@@ -85,8 +93,16 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       setError("");
 
     } catch (error: unknown) {
-      console.error("Erro ao enviar código:", error);
-      setError("Erro ao enviar código de verificação. Verifique o número e tente novamente.");
+      const code = (error as { code?: string })?.code;
+      if (code === 'auth/too-many-requests') {
+        setError("Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.");
+      } else if (code === 'auth/invalid-phone-number') {
+        setError("Número de telefone inválido. Confira o DDD e os dígitos.");
+      } else if (code === 'auth/quota-exceeded') {
+        setError("Limite de SMS atingido. Tente novamente mais tarde.");
+      } else {
+        setError("Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.");
+      }
 
       if (typeof window !== 'undefined' && window.recaptchaVerifier) {
         window.recaptchaVerifier.clear();
@@ -107,8 +123,14 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       await confirmationResult.confirm(verificationCode);
       setIsVerificationModalOpen(false);
     } catch (error: unknown) {
-      console.error("Erro na verificação:", error);
-      alert("Código de verificação inválido. Tente novamente.");
+      const code = (error as { code?: string })?.code;
+      if (code === 'auth/invalid-verification-code') {
+        setError("Código incorreto. Verifique o SMS e tente novamente.");
+      } else if (code === 'auth/code-expired') {
+        setError("Código expirado. Solicite um novo código.");
+      } else {
+        setError("Não foi possível verificar o código. Tente novamente.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -120,8 +142,10 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: unknown) {
-      console.error("Erro no login com Google:", error);
-      alert("Erro ao fazer login com Google. Tente novamente.");
+      const code = (error as { code?: string })?.code;
+      if (code !== 'auth/popup-closed-by-user') {
+        setError("Não foi possível entrar com o Google. Tente novamente.");
+      }
       setIsLoading(false);
     }
   };
@@ -132,8 +156,10 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     try {
       await signInWithPopup(auth, appleProvider);
     } catch (error: unknown) {
-      console.error("Erro no login com Apple:", error);
-      alert("Erro ao fazer login com Apple. Tente novamente.");
+      const code = (error as { code?: string })?.code;
+      if (code !== 'auth/popup-closed-by-user') {
+        setError("Não foi possível entrar com a Apple. Tente novamente.");
+      }
       setIsLoading(false);
     }
   };
@@ -223,7 +249,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
                   type="tel"
                   placeholder="(11) 99999-9999"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onChange={(e) => setPhoneNumber(formatPhoneInput(e.target.value))}
                   className={styles.phoneInput}
                   disabled={isLoading}
                 />
