@@ -34,6 +34,7 @@ import {
   sincronizarItemCarrinho,
   removerItemCarrinhoFirestore,
   limparCarrinhoFirestore,
+  buscarLogoEstabelecimento,
   ExemploConversa,
   DELIVERY_PRICE,
 } from "@/services/firestore";
@@ -720,6 +721,7 @@ const AgentePage: React.FC = () => {
   const [produtos, setProdutos]               = useState<Produto[]>([]);
   const [indiceCategoria, setIndiceCategoria] = useState<string>('');
   const [carrinho, setCarrinho]               = useState<CartItem[]>([]);
+  const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
   const [flowState, setFlowState]             = useState<FlowState>(FLOW_STATES.BROWSING);
   const [customerData, setCustomerData]       = useState<CustomerData>({});
 
@@ -822,6 +824,13 @@ const AgentePage: React.FC = () => {
     });
     return () => unsub();
   }, []);
+
+  // -------- Logo do estabelecimento --------
+  useEffect(() => {
+    buscarLogoEstabelecimento(companyId)
+      .then((url) => { if (url) setLogoEstabelecimento(url); })
+      .catch(() => {});
+  }, [companyId]);
 
   // -------- Carregar produtos + exemplos ativos + endereço salvo --------
   useEffect(() => {
@@ -2148,7 +2157,11 @@ const AgentePage: React.FC = () => {
   // ============================================================
   return (
     <div className={styles.container}>
-      <Header />
+      <Header
+        logoUrl={logoEstabelecimento ?? undefined}
+        cartTotal={totalCarrinho}
+        onAbrirCarrinho={() => setMostrarCarrinho(true)}
+      />
 
       {/* Barra de progresso do checkout */}
       {flowState !== FLOW_STATES.BROWSING && (

@@ -4,11 +4,14 @@
 
 .container {
   height: 100vh;
+  height: 100dvh;
   background-color: #f5f5f7;
   font-family: inherit;
   display: flex;
   flex-direction: column;
-  padding-top: 12vh;
+  overflow: hidden;
+  /* ~102px header (topRow+cartStrip) + ~34px faixa info */
+  padding-top: 136px;
 }
 
 /* ========================================= */
@@ -146,15 +149,12 @@
   flex-direction: column;
   gap: 10px;
   scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .messagesContainer::-webkit-scrollbar {
-  width: 4px;
-}
-
-.messagesContainer::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+  display: none;
 }
 
 /* ========================================= */
@@ -279,8 +279,11 @@
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
+  /* Empurra acima da barra do navegador no iOS */
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
   background-color: #fff;
   border-top: 1px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
 .messageInput {

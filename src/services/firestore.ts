@@ -32,6 +32,13 @@ function gerarOrderNumber(): string {
   return String(Math.floor(Math.random() * 999999 + 1)).padStart(6, '0');
 }
 
+export async function buscarLogoEstabelecimento(companyId: string): Promise<string | null> {
+  const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
+  if (!snap.exists()) return null;
+  const data = snap.data() as Record<string, unknown>;
+  return (data.imageUrl ?? data.logoUrl ?? data.logo ?? data.image ?? null) as string | null;
+}
+
 export async function getProducts(companyId: string): Promise<Produto[]> {
   const ref = collection(db, 'estabelecimentos', companyId, 'Products');
   const q = query(

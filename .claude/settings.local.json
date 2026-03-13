@@ -17,7 +17,15 @@
       "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/public/*.png)",
       "Bash(npm install:*)",
       "Bash(grep -n \"^import OpenAI\\\\|from ''openai''\\\\|from \"\"openai\"\"\" \"src/app/[slug]/page.tsx\")",
-      "Bash(grep -n \"inalizar\\\\|finalizar\" src/app/[slug]/page.tsx)"
+      "Bash(grep -n \"inalizar\\\\|finalizar\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"chatHeader\\\\|messagesContainer\\\\|inputArea\\\\|agInput\\\\|container\\\\|chatContainer\\\\|chatWrapper\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"chatHeader\\\\|chatContainer\\\\|inputArea\\\\|agInputArea\\\\|agChatWrapper\\\\|chatWrapper\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"chatHeader\\\\|inputRow\\\\|inputContainer\\\\|agInput\\\\|inputArea\\\\|sendButton\\\\|micButton\\\\|suggestionsRow\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"buscarLogoEstabelecimento\\\\|logoEstabelecimento\\\\|<Header\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"import.*firestore\\\\|getProducts\\\\|buscarConversa\\\\|totalCarrinho\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"const \\\\[carrinho\\\\|const \\\\[produtos\\\\|const \\\\[flowState\\\\|const \\\\[mensagens\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"totalCarrinho\" src/app/[slug]/page.tsx)",
+      "Bash(grep -n \"Header logoUrl\" src/app/[slug]/page.tsx)"
     ]
   }
 }

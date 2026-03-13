@@ -1,71 +1,303 @@
+/* ════════════════════════════════════════
+   VARIÁVEIS — edite aqui para personalizar
+   ════════════════════════════════════════ */
 .header {
+  /* Preço */
+  --price-symbol-color: #4ade80;   /* cor do "R$" */
+  --price-value-color:  #ffffff;   /* cor do valor numérico */
+  --price-symbol-size:  22px;      /* tamanho do "R$" */
+  --price-value-size:   22px;      /* tamanho do valor numérico */
+
+  /* Logo */
+  --logo-width:         60px;
+  --logo-height:        45px;
+
+  /* Hambúrguer */
+  --bar-width:          24px;
+  --bar-height:         2.5px;
+  --bar-gap:            5px;       /* espaço entre as barras */
+
+  /* Carrinho (pill) */
+  --cart-font-size:     10px;
+
+  /* "MENU" label */
+  --menu-label-size:    8px;
+
+  /* Info strip */
+  --info-strip-width:   90%;
+  --info-strip-max:     400px;
+  --info-open-color:    #4ade80;   /* "Aberto" */
+  --info-closed-color:  #dc2626;   /* "Fechado" */
+  --info-item-color:    #4ade80;   /* ícones e textos (relógio, entrega) */
+  --star-color:         #f59e0b;   /* estrela de avaliação */
+
+/* ════════════════════════════════════════ */
+
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
   width: 100%;
-  height: 12vh;
-  background-color: #f7f7f9;
-  padding: 15px 20px;
   position: absolute;
   top: 0;
   left: 0;
   z-index: 100;
-  border-bottom: 1px solid #e5e7eb;
+  box-sizing: border-box;
+  padding-top: max(0px, env(safe-area-inset-top));
 }
 
+/* ── Linha topo: logo | preço | menu ── */
+.topRow {
+  display: flex;
+  align-items: center;
+  padding: 4px 14px 14px;   /* menos topo, mais base */
+  gap: 8px;
+  align-items: flex-end;    /* itens alinhados à base */
+}
+
+/* ── Logo ── */
 .logoArea {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-shrink: 0;
 }
 
-.logoText {
-  font-size: 18px;
+.logoWrapper {
+  position: relative;
+  top: 15px;
+  width: var(--logo-width);
+  height: var(--logo-height);
+}
+
+.logoImg {
+  object-fit: contain;
+}
+
+/* ── Preço ── */
+.priceArea {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.priceRow {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.priceSymbol {
+  font-size: var(--price-symbol-size);
   font-weight: 700;
-  color: #3632f8;
+  color: var(--price-symbol-color);
+  line-height: 1;
 }
 
-.userArea {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.priceValue {
+  font-size: var(--price-value-size);
+  font-weight: 800;
+  color: var(--price-value-color);
+  letter-spacing: -0.5px;
+  line-height: 1;
 }
 
-.greeting {
-  font-size: 14px;
-  font-weight: 600;
-  color: #374151;
-}
-
-.logoutButton {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #6b7280;
+/* ── Botão carrinho (pill curto, centralizado) ── */
+.cartStrip {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px;
-  border-radius: 50%;
-  transition: background 0.15s, color 0.15s;
+  gap: 5px;
+  padding: 5px 18px;
+  border: none;
+  cursor: pointer;
+  font-size: var(--cart-font-size);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 0.06em;
+  border-radius: 20px 20px 0 0;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+  width: fit-content;
 }
 
-.logoutButton:hover {
-  background-color: #fee2e2;
+.cartStrip:active {
+  opacity: 0.8;
+}
+
+/* ── Menu ── */
+.menuArea {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 52px;
+}
+
+.menuButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;  /* "MENU" alinhado à esquerda */
+  gap: 4px;
+  padding: 4px 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.menuLabel {
+  font-size: 6px;           /* menor — edite aqui */
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+/* Hambúrguer animado */
+.menuIcon {
+  display: flex;
+  flex-direction: column;
+  gap: var(--bar-gap);
+  width: var(--bar-width);
+}
+
+.bar {
+  display: block;
+  width: var(--bar-width);
+  height: var(--bar-height);
+  background: #fff;
+  border-radius: 2px;
+  transform-origin: center;
+  transition: transform 0.25s ease, opacity 0.2s ease, width 0.25s ease;
+}
+
+.menuIconOpen .bar:nth-child(1) {
+  transform: translateY(7.5px) rotate(45deg);
+}
+.menuIconOpen .bar:nth-child(2) {
+  opacity: 0;
+  width: 0;
+}
+.menuIconOpen .bar:nth-child(3) {
+  transform: translateY(-7.5px) rotate(-45deg);
+}
+
+/* ── Wrapper do strip (colado na base do header) ── */
+.cartStripWrapper {
+  display: flex;
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+/* ── Faixa info — diretamente abaixo do header ── */
+.infoStripOuter {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 99;
+  /* top é calculado inline via style */
+}
+
+.infoStrip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;        /* espaço entre grupos — edite aqui */
+  padding: 7px 20px;
+  background: #fff;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: var(--info-strip-max);
+  width: var(--info-strip-width);
+}
+
+.infoGroup {
+  display: flex;
+  align-items: center;
+  gap: 3px;         /* espaço entre "Aberto" e "até XX:XX" — edite aqui */
+}
+
+.infoAberto {
+  color: #4ade80;   /* "Aberto" verde — edite aqui */
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.infoAbertoSuffix {
+  color: #111;      /* "até 20:00" preto — edite aqui */
+  font-weight: 400;
+  font-size: 10px;
+}
+
+.infoFechado {
+  color: #dc2626;   /* vermelho — edite aqui */
+  font-weight: 700;
+  font-size: 10px;
+}
+
+.infoDivider {
+  display: none;
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: 2px;         /* espaço ícone ↔ texto — edite aqui */
+  color: #111;      /* texto dos itens preto — edite aqui */
+  font-weight: 400;
+  font-size: 10px;  /* tamanho fonte itens — edite aqui */
+}
+
+.infoItem svg {
+  color: #4ade80;   /* ícones verdes — edite aqui */
+}
+
+.infoItem .starIcon,
+.starIcon {
+  color: #f59e0b !important;   /* amarelo — edite aqui */
+  fill: #f59e0b !important;
+}
+
+/* ── Backdrop ── */
+.menuBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+}
+
+/* ── Dropdown ── */
+.menuDropdown {
+  position: fixed;
+  right: 12px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  z-index: 200;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
   color: #ef4444;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
 }
 
-@media (max-width: 768px) {
-  .header {
-    height: 8vh;
-    padding: 12px 16px;
-  }
-
-  .logoText {
-    font-size: 16px;
-  }
-
-  .greeting {
-    font-size: 13px;
-  }
+.menuItem:active {
+  background-color: #fef2f2;
 }
