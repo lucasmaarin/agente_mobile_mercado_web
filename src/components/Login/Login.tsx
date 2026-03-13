@@ -50,15 +50,16 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return () => unsubscribe();
   }, [router]);
 
-  const setupRecaptcha = () => {
-    if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': () => {
-          // reCAPTCHA resolvido
-        }
-      });
+  const setupRecaptcha = (): RecaptchaVerifier => {
+    if (window.recaptchaVerifier) {
+      return window.recaptchaVerifier;
     }
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      'size': 'invisible',
+      'callback': () => {}
+    });
+    window.recaptchaVerifier = verifier;
+    return verifier;
   };
 
   const handlePhoneLogin = async () => {
@@ -68,12 +69,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     setError("");
 
     try {
-      setupRecaptcha();
-      const appVerifier = window.recaptchaVerifier;
-
-      if (!appVerifier) {
-        throw new Error('Erro ao configurar reCAPTCHA');
-      }
+      const appVerifier = setupRecaptcha();
 
       const formattedPhone = validatePhone(phoneNumber);
       if (!formattedPhone) {
