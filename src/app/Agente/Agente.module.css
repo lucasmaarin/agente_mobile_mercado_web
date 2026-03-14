@@ -406,21 +406,25 @@
 .produtosCarousel {
   display: flex;
   flex-direction: row;
+  align-items: stretch;
   gap: 10px;
   overflow-x: auto;
-  scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 6px;
-  /* esconde scrollbar mas mantém scroll */
   scrollbar-width: none;
+  user-select: none;
+  cursor: grab;
+}
+.produtosCarousel:active {
+  cursor: grabbing;
 }
 .produtosCarousel::-webkit-scrollbar {
   display: none;
 }
 
 .produtoCarouselItem {
-  flex: 0 0 260px;
-  scroll-snap-align: start;
+  flex: 0 0 240px;
+  display: flex;
 }
 
 .produtoCard {
@@ -437,6 +441,13 @@
   min-width: 0;
   width: 100%;
   justify-content: space-between;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+/* Card com item no carrinho — fundo azul claro + borda azul */
+.produtoCardAtivo {
+  background: #eef0ff;
+  border-color: #3632f8;
 }
 
 .produtoCardAddBtn {
@@ -454,7 +465,7 @@
   align-items: center;
   justify-content: center;
   transition: background 0.15s, color 0.15s;
-  box-shadow: 0 1px 4px rgba(54,50,248,0.12);
+  box-shadow: 0 1px 4px rgba(54, 50, 248, 0.12);
 }
 
 .produtoCardAddBtn:hover {

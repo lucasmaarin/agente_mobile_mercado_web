@@ -80,6 +80,16 @@ export async function atualizarNomeUsuario(docId: string, nome: string): Promise
   });
 }
 
+export async function atualizarDadosUsuario(
+  docId: string,
+  dados: { nomeCompleto?: string; cpf?: string; telefone?: string }
+): Promise<void> {
+  await updateDoc(doc(db, 'Users', docId), {
+    ...dados,
+    updateAt: Timestamp.now(),
+  });
+}
+
 export async function buscarFormasPagamento(companyId: string): Promise<string[]> {
   const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
   if (!snap.exists()) return [];

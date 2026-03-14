@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic, Settings } from "lucide-react";
+import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic } from "lucide-react";
 import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
@@ -39,6 +39,7 @@ import {
   buscarFormasPagamento,
   criarUsuarioNovo,
   atualizarNomeUsuario,
+  atualizarDadosUsuario,
   criarOuObterUsuarioConvidado,
   GUEST_USER_DOC_ID,
   ExemploConversa,
@@ -724,6 +725,8 @@ const AgentePage: React.FC = () => {
   const [user, setUser]           = useState<User | null>(null);
   const [userDocId, setUserDocId] = useState<string | null>(null);
   const [nomeCliente, setNomeCliente] = useState("Cliente");
+  const [userCpf, setUserCpf]     = useState('');
+  const [userPhone, setUserPhone] = useState('');
   const [authLoading, setAuthLoading] = useState(true);
 
   // --- Endereço salvo pelo agente
@@ -789,7 +792,8 @@ const AgentePage: React.FC = () => {
     const saved = localStorage.getItem('testConfig_carouselEnabled');
     return saved === null ? true : saved === 'true';
   });
-  const [showTestSettings, setShowTestSettings] = useState(false);
+
+  const carouselDragRef   = useRef<{ el: HTMLDivElement; startX: number; scrollLeft: number; dragging: boolean } | null>(null);
   const mediaRecorderRef  = useRef<MediaRecorder | null>(null);
   const audioChunksRef    = useRef<Blob[]>([]);
 
@@ -866,6 +870,8 @@ const AgentePage: React.FC = () => {
             setUserDocId(d.id);
             const nome = montarNomeCompletoUsuario(data, currentUser);
             setNomeCliente(nome);
+            setUserCpf(data?.cpf ?? '');
+            setUserPhone(data?.telefone ?? currentUser.phoneNumber ?? '');
             if (!nome || nome === 'Cliente') {
               setFlowState(FLOW_STATES.COLLECTING_NAME);
             }
@@ -2215,6 +2221,28 @@ const AgentePage: React.FC = () => {
         cartCount={qtdItens}
         onAbrirCarrinho={() => setMostrarCarrinho(true)}
         onTotalHeightChange={setHeaderOffset}
+        nomeCliente={nomeCliente}
+        userCpf={userCpf}
+        userPhone={userPhone}
+        enderecoSalvo={enderecoSalvo}
+        onSalvarPerfil={async ({ nome, cpf, telefone }) => {
+          if (!userDocId) return;
+          await atualizarDadosUsuario(userDocId, { nomeCompleto: nome, cpf, telefone });
+          setNomeCliente(nome);
+          setUserCpf(cpf);
+          setUserPhone(telefone);
+        }}
+        onSalvarEndereco={async (end) => {
+          if (!userDocId) return;
+          await salvarEnderecoDefault(userDocId, end);
+          setEnderecoSalvo(end);
+        }}
+        isGuestMode={isGuestMode}
+        carouselEnabled={carouselEnabled}
+        onCarouselChange={(val) => {
+          setCarouselEnabled(val);
+          localStorage.setItem('testConfig_carouselEnabled', String(val));
+        }}
       />
 
       {/* Barra de progresso do checkout */}
@@ -2363,22 +2391,45 @@ const AgentePage: React.FC = () => {
 
               {/* Cards de produto */}
               {msg.produtosCard && msg.produtosCard.length > 0 && (
-                {(() => { const useCarousel = carouselEnabled && msg.produtosCard.length > 2; return (
-                <div className={useCarousel ? styles.produtosCarousel : styles.produtosCardWrapper}>
+                <div
+                  className={
+                    carouselEnabled && msg.produtosCard.length > 2
+                      ? styles.produtosCarousel
+                      : styles.produtosCardWrapper
+                  }
+                  ref={carouselEnabled && msg.produtosCard.length > 2 ? (el) => {
+                    if (!el) return;
+                    const onDown = (e: MouseEvent) => {
+                      carouselDragRef.current = { el, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft, dragging: true };
+                      el.style.cursor = 'grabbing';
+                    };
+                    const onMove = (e: MouseEvent) => {
+                      const d = carouselDragRef.current;
+                      if (!d || !d.dragging || d.el !== el) return;
+                      e.preventDefault();
+                      el.scrollLeft = d.scrollLeft - (e.pageX - el.offsetLeft - d.startX);
+                    };
+                    const onUp = () => {
+                      if (carouselDragRef.current?.el === el) { carouselDragRef.current!.dragging = false; el.style.cursor = 'grab'; }
+                    };
+                    el.style.cursor = 'grab';
+                    el.addEventListener('mousedown', onDown);
+                    window.addEventListener('mousemove', onMove);
+                    window.addEventListener('mouseup', onUp);
+                  } : undefined}
+                >
                   {msg.produtosCard.map((produto) => {
                     const emCarrinho = carrinho.find(i => i.id === produto.id);
                     const estoquebaixo = produto.stock >= 1 && produto.stock < 10;
-                    const useCarouselItem = carouselEnabled && msg.produtosCard!.length > 2;
+                    const isCarouselItem = carouselEnabled && msg.produtosCard!.length > 2;
+                    const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: produto.name, price: produto.price });
                     return (
-                      <div key={produto.id} className={useCarouselItem ? styles.produtoCarouselItem : styles.produtoCardRow}>
-                        <div className={styles.produtoCard}>
+                      <div key={produto.id} className={isCarouselItem ? styles.produtoCarouselItem : styles.produtoCardRow}>
+                        <div className={`${styles.produtoCard} ${emCarrinho ? styles.produtoCardAtivo : ''}`}>
                           <div
                             className={styles.produtoCardImgWrapper}
-                            onClick={() =>
-                              produto.image &&
-                              setImagemAmpliada({ src: produto.image, name: produto.name, price: produto.price })
-                            }
-                            title={produto.image ? "Clique para ampliar" : undefined}
+                            onClick={abrirModal}
+                            title="Clique para ampliar"
                           >
                             {produto.image ? (
                               <>
@@ -2397,7 +2448,7 @@ const AgentePage: React.FC = () => {
                             )}
                           </div>
                           <div className={styles.produtoCardInfo}>
-                            <p className={styles.produtoCardName}>{produto.name}</p>
+                            <p className={styles.produtoCardName} onClick={abrirModal} style={{ cursor: 'pointer' }}>{produto.name}</p>
                             <p className={styles.produtoCardPrice}>R$ {produto.price.toFixed(2)}</p>
                             <div className={styles.produtoCardBadges}>
                               {produto.unityType && (
@@ -2438,7 +2489,6 @@ const AgentePage: React.FC = () => {
                     );
                   })}
                 </div>
-                ); })()}
               )}
 
               {/* Chips de recuperação de carrinho */}
@@ -2508,7 +2558,7 @@ const AgentePage: React.FC = () => {
                     </div>
                   )}
                   {/* Chips de texto para outros estados */}
-                  {quickReplies.length > 0 && (!msg.suggestions || msg.suggestions.length === 0) && (
+                  {quickReplies.length > 0 && (
                     <div className={styles.selectionChips}>
                       {quickReplies.map((label) => (
                         <button
@@ -2573,13 +2623,24 @@ const AgentePage: React.FC = () => {
               <X size={18} />
             </button>
             <div className={styles.lightboxImgWrapper}>
-              <Image
-                src={imagemAmpliada.src}
-                alt={imagemAmpliada.name}
-                fill
-                className={styles.lightboxImg}
-                sizes="400px"
-              />
+              {imagemAmpliada.src && imagemAmpliada.src !== '/prodSemImg.svg' ? (
+                <Image
+                  src={imagemAmpliada.src}
+                  alt={imagemAmpliada.name}
+                  fill
+                  className={styles.lightboxImg}
+                  sizes="400px"
+                  onError={() => setImagemAmpliada(prev => prev ? { ...prev, src: '/prodSemImg.svg' } : null)}
+                />
+              ) : (
+                <Image
+                  src="/prodSemImg.svg"
+                  alt={imagemAmpliada.name}
+                  fill
+                  className={styles.lightboxImg}
+                  sizes="400px"
+                />
+              )}
             </div>
             <p className={styles.lightboxName}>{imagemAmpliada.name}</p>
             <p className={styles.lightboxPrice}>R$ {imagemAmpliada.price.toFixed(2)}</p>
@@ -2588,33 +2649,6 @@ const AgentePage: React.FC = () => {
       )}
 
       {/* Painel de configurações (apenas modo teste) */}
-      {isGuestMode && (
-        <>
-          <button
-            className={styles.testSettingsBtn}
-            onClick={() => setShowTestSettings(v => !v)}
-            title="Configurações de teste"
-          >
-            <Settings size={18} />
-          </button>
-          {showTestSettings && (
-            <div className={styles.testSettingsPanel}>
-              <p className={styles.testSettingsTitle}>⚙️ Configurações de Teste</p>
-              <label className={styles.testSettingsRow}>
-                <span>Carrossel horizontal de produtos</span>
-                <input
-                  type="checkbox"
-                  checked={carouselEnabled}
-                  onChange={(e) => {
-                    setCarouselEnabled(e.target.checked);
-                    localStorage.setItem('testConfig_carouselEnabled', String(e.target.checked));
-                  }}
-                />
-              </label>
-            </div>
-          )}
-        </>
-      )}
 
       {/* Tour onboarding */}
       {tourEtapa !== null && (

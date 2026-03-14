@@ -303,41 +303,229 @@
 }
 
 /* ── Backdrop ── */
-.menuBackdrop {
+.settingsBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 150;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 500;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
 }
 
-/* ── Dropdown ── */
-.menuDropdown {
+/* ── Settings panel (slide-in from right) ── */
+.settingsPanel {
   position: fixed;
-  right: 12px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  z-index: 200;
-  min-width: 160px;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 92%;
+  max-width: 420px;
+  background: #f9fafb;
+  z-index: 600;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
-.menuItem {
+.settingsPanelOpen {
+  transform: translateX(0);
+}
+
+/* ── Panel header ── */
+.settingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.settingsTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.settingsClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.settingsClose:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* ── Scrollable body ── */
+.settingsBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 20px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Section ── */
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0 20px;
+}
+
+.settingsSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.settingsSectionTitle svg {
+  color: #3632f8;
+}
+
+.settingsDivider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 4px 0 20px;
+  flex-shrink: 0;
+}
+
+/* ── Fields ── */
+.settingsField {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.settingsFieldRow {
+  display: flex;
+  gap: 10px;
+}
+
+.settingsLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.settingsInput {
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.88rem;
+  color: #111827;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.settingsInput:focus {
+  border-color: #3632f8;
+}
+
+/* ── Save row ── */
+.settingsSaveRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.settingsFeedback {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.settingsSaveBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: none;
+  background: #3632f8;
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.settingsSaveBtn:hover:not(:disabled) {
+  background: #2b28d6;
+}
+
+.settingsSaveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Toggle row (test settings) ── */
+.settingsToggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.settingsToggleLabel {
+  font-size: 0.88rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+.settingsCheckbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #3632f8;
+  flex-shrink: 0;
+}
+
+/* ── Logout ── */
+.settingsLogoutBtn {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
   padding: 14px 16px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
+  border-radius: 12px;
+  border: 1.5px solid #fee2e2;
+  background: #fff;
   color: #ef4444;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 4px;
 }
 
-.menuItem:active {
-  background-color: #fef2f2;
+.settingsLogoutBtn:hover {
+  background: #fef2f2;
 }
