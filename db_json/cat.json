@@ -1,0 +1,590 @@
+{
+  "success": true,
+  "data": {
+    "type": "collection_all",
+    "path": "estabelecimentos/*/ProductCategories",
+    "name": "ProductCategories",
+    "establishments_queried": 3,
+    "establishments_failed": [],
+    "total_unique": 55,
+    "count": 55,
+    "documents": [
+      {
+        "id": "4L2YfeXuT5o0xoRavk7L",
+        "fields": {
+          "order": 0,
+          "name": "Churrasco",
+          "id": "4L2YfeXuT5o0xoRavk7L",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2F4L2YfeXuT5o0xoRavk7L_1647562528890.svg?alt=media&token=655d30f6-949e-4409-a2b0-52bcdb5cb206",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9hMpOzINQZLVhsfBQwAi",
+        "fields": {
+          "order": 0,
+          "name": "Promos",
+          "id": "9hMpOzINQZLVhsfBQwAi",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2F9hMpOzINQZLVhsfBQwAi_1762037839620.png?alt=media&token=f5993e93-6547-423d-b6f6-910b0f6e4be4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ChK9lH0vlKvaBJyL4ItB",
+        "fields": {
+          "order": 0,
+          "isActive": true,
+          "id": "ChK9lH0vlKvaBJyL4ItB",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FChK9lH0vlKvaBJyL4ItB_1710350869624.svg?alt=media&token=797bb505-0781-4d27-990d-61b365afb101",
+          "name": "Brinquedos"
+        }
+      },
+      {
+        "id": "KfmNz06cADwmzQI6UvSf",
+        "fields": {
+          "order": 0,
+          "isActive": false,
+          "id": "KfmNz06cADwmzQI6UvSf",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FKfmNz06cADwmzQI6UvSf_1753620335623.webp?alt=media&token=b26382cc-0708-4c71-a5db-28288a1b5c89",
+          "name": "Dúvidas"
+        }
+      },
+      {
+        "id": "ativo_imobilizado",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "ativo_imobilizado",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fativo_imobilizado.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "ATIVO IMOBILIZADO"
+        }
+      },
+      {
+        "id": "bazar",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "bazar",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fbazar.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "BAZAR"
+        }
+      },
+      {
+        "id": "bebidas",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "bebidas",
+          "name": "BEBIDAS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fbebidas.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "biscoitos",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "biscoitos",
+          "name": "BISCOITOS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fbiscoitos.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cereais",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "cereais",
+          "name": "CEREAIS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fcereais.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "conservas",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "conservas",
+          "name": "CONSERVAS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fconservas.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "escolar",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "escolar",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fescolar.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "ESCOLAR"
+        }
+      },
+      {
+        "id": "flv",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "flv",
+          "name": "FLV",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fflv.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "frente_de_caixa",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "frente_de_caixa",
+          "name": "FRENTE DE CAIXA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fhortifruti_1643822014410.svg?alt=media&token=87e6c2ad-aa09-4690-9e6f-d8befab3e83d\" caso nao tenha imagem da categoria",
+          "isActive": true
+        }
+      },
+      {
+        "id": "frios_e_laticinios",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "frios_e_laticinios",
+          "name": "FRIOS E LATICINIOS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Ffrios_e_laticinios.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ilhas_e_congelados",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "ilhas_e_congelados",
+          "name": "ILHAS E CONGELADOS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Filhas_e_congelados.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "leite_longa_vida",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "leite_longa_vida",
+          "name": "LEITE LONGA VIDA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fleite_longa_vida.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "limpeza",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "limpeza",
+          "name": "LIMPEZA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Flimpeza.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "massas",
+          "name": "MASSAS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fmassas.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "matinal",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "matinal",
+          "name": "MATINAL",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fmatinal.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "mercearia",
+        "fields": {
+          "order": 0,
+          "isActive": true,
+          "id": "mercearia",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fmercearia_1647556001840.svg?alt=media&token=910725a6-05b6-4cd1-b6f0-fd89e25fea6c",
+          "name": "Mercearia"
+        }
+      },
+      {
+        "id": "natal",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "natal",
+          "name": "NATAL",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fhortifruti_1643822014410.svg?alt=media&token=87e6c2ad-aa09-4690-9e6f-d8befab3e83d\" caso nao tenha imagem da categoria",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ovos_pascoa",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "ovos_pascoa",
+          "name": "OVOS PASCOA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fovos_pascoa.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "padaria",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "padaria",
+          "name": "PADARIA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fpadaria.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "perfumaria_higiene_pessoal",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "perfumaria_higiene_pessoal",
+          "name": "PERFUMARIA/HIGIENE PESSOAL",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fperfumaria_higiene_pessoal.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "pet",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "pet",
+          "name": "PET",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fpet.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "remedios",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "remedios",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fremedios.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "REMEDIOS"
+        }
+      },
+      {
+        "id": "rrTytc0HNPpCeXX2KW52",
+        "fields": {
+          "order": 0,
+          "isActive": false,
+          "id": "rrTytc0HNPpCeXX2KW52",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FrrTytc0HNPpCeXX2KW52_1753396157303.svg?alt=media&token=13d11222-692b-48de-950c-9d6278a873e9",
+          "name": "Sem fotos"
+        }
+      },
+      {
+        "id": "sorvetes",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "sorvetes",
+          "name": "SORVETES",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fsorvetes.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "tabacaria",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "tabacaria",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Ftabacaria.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "TABACARIA"
+        }
+      },
+      {
+        "id": "todos",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "todos",
+          "name": "TODOS",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Ftodos.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "uso_da_loja",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "uso_da_loja",
+          "isActive": false,
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fuso_da_loja.svg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+          "name": "USO DA LOJA"
+        }
+      },
+      {
+        "id": "4VJL4Je2Kk9fGXoH5Huw",
+        "fields": {
+          "order": 0,
+          "name": "Biscoito",
+          "id": "4VJL4Je2Kk9fGXoH5Huw",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2F4VJL4Je2Kk9fGXoH5Huw_1647563300611.svg?alt=media&token=539988df-a5eb-42e9-8e7d-48f87cbca86f",
+          "isActive": true
+        }
+      },
+      {
+        "id": "93OpBNqbtNLreJOvysUF",
+        "fields": {
+          "order": 0,
+          "name": "Laticínios",
+          "id": "93OpBNqbtNLreJOvysUF",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2F93OpBNqbtNLreJOvysUF_1647533948076.svg?alt=media&token=028ccc28-8cf5-416a-ab67-2a0547504edc",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Gxl7MlJm2Xva4azNur9R",
+        "fields": {
+          "order": 0,
+          "name": "Salgadinho",
+          "id": "Gxl7MlJm2Xva4azNur9R",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FGxl7MlJm2Xva4azNur9R_1647556984272.svg?alt=media&token=d8df534b-444a-4115-b743-3fffa036dc7f",
+          "isActive": true
+        }
+      },
+      {
+        "id": "H4oUStBC1tKGbiONE0kq",
+        "fields": {
+          "order": 0,
+          "name": "Naturais",
+          "id": "H4oUStBC1tKGbiONE0kq",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FH4oUStBC1tKGbiONE0kq_1647534519937.svg?alt=media&token=cc32504a-6c3b-41d5-99d4-09116a1f84ab",
+          "isActive": true
+        }
+      },
+      {
+        "id": "NJBuIlFYOgXmbMRbJFsh",
+        "fields": {
+          "order": 0,
+          "name": "Congelados",
+          "id": "NJBuIlFYOgXmbMRbJFsh",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FNJBuIlFYOgXmbMRbJFsh_1647564876823.svg?alt=media&token=9115365e-f8a4-4d50-bebd-75c50b34f066",
+          "isActive": true
+        }
+      },
+      {
+        "id": "PcnQsRLfIHbfJju4Jt9y",
+        "fields": {
+          "order": 0,
+          "name": "Frios",
+          "id": "PcnQsRLfIHbfJju4Jt9y",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FPcnQsRLfIHbfJju4Jt9y_1647557027762.svg?alt=media&token=0c0b4d74-4818-4d55-ad07-3cac47bf834b",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Q7TlMRwK1DcXybCa44PY",
+        "fields": {
+          "order": 0,
+          "name": "Pães & Bolos",
+          "id": "Q7TlMRwK1DcXybCa44PY",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FQ7TlMRwK1DcXybCa44PY_1710352108337.svg?alt=media&token=db4764f7-1bbd-4bb4-84e2-4d36a13e12e0",
+          "isActive": true
+        }
+      },
+      {
+        "id": "TNb0sHqTOLNuvxLtLKk5",
+        "fields": {
+          "order": 0,
+          "name": "Animais",
+          "id": "TNb0sHqTOLNuvxLtLKk5",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FTNb0sHqTOLNuvxLtLKk5_1647558260771.svg?alt=media&token=7bfc71ab-6648-48cb-abde-7d4818d72eca",
+          "isActive": true
+        }
+      },
+      {
+        "id": "acougue",
+        "fields": {
+          "order": 0,
+          "name": "Açougue",
+          "id": "acougue",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Facougue.svg?alt=media&token=313de0d6-41b0-4303-8083-c41b2e7bbc23",
+          "isActive": true
+        }
+      },
+      {
+        "id": "farinaceos",
+        "fields": {
+          "order": 0,
+          "name": "Farináceos",
+          "id": "farinaceos",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Ffarinaceos_1647561159540.svg?alt=media&token=89608214-a652-477a-b0aa-ceda99d20fd8",
+          "isActive": true
+        }
+      },
+      {
+        "id": "g9NEgrhPZDKwFVKQ8ahL",
+        "fields": {
+          "order": 0,
+          "name": "Temperos ",
+          "id": "g9NEgrhPZDKwFVKQ8ahL",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fg9NEgrhPZDKwFVKQ8ahL_1647563884558.svg?alt=media&token=5dff7363-878e-4446-bd1d-42661d489b7a",
+          "isActive": true
+        }
+      },
+      {
+        "id": "gRZ08KY5SYQs7DHjJBDJ",
+        "fields": {
+          "order": 0,
+          "name": "Refrescos",
+          "id": "gRZ08KY5SYQs7DHjJBDJ",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FgRZ08KY5SYQs7DHjJBDJ_1647559490879.svg?alt=media&token=cbf38a79-4686-4def-a267-96e1b539723f",
+          "isActive": true
+        }
+      },
+      {
+        "id": "higiene",
+        "fields": {
+          "order": 0,
+          "name": "Higiene",
+          "id": "higiene",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fhigiene_1647561858062.svg?alt=media&token=6f05d3d7-27f1-4565-a38d-25afe3288260",
+          "isActive": true
+        }
+      },
+      {
+        "id": "hortifruti",
+        "fields": {
+          "order": 0,
+          "name": "Hortifruti",
+          "id": "hortifruti",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fhortifruti_1647531673404.svg?alt=media&token=5ddb0a83-ff3e-4501-b44c-2cd67112e14c",
+          "isActive": true
+        }
+      },
+      {
+        "id": "lZP2iBskINtpOVxncQtA",
+        "fields": {
+          "order": 0,
+          "name": "Carnes",
+          "id": "lZP2iBskINtpOVxncQtA",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FlZP2iBskINtpOVxncQtA_1647565256232.svg?alt=media&token=dec1d548-0843-4340-b6e8-314d5207595a",
+          "isActive": true
+        }
+      },
+      {
+        "id": "o5Q1ZGtwxm9ComBNiMYV",
+        "fields": {
+          "order": 0,
+          "name": "Lanchonete",
+          "id": "o5Q1ZGtwxm9ComBNiMYV",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fo5Q1ZGtwxm9ComBNiMYV_1645733195495.svg?alt=media&token=0f4b0d7f-c01c-4ae7-80d0-953cd5a652f5",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ocbODuL4gh1SQNI9MUMn",
+        "fields": {
+          "order": 0,
+          "name": "Gulodices",
+          "id": "ocbODuL4gh1SQNI9MUMn",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FocbODuL4gh1SQNI9MUMn_1647533627111.svg?alt=media&token=0f8a1600-f21b-455e-ac73-5d501936af49",
+          "isActive": true
+        }
+      },
+      {
+        "id": "outros",
+        "fields": {
+          "order": 0,
+          "autoImported": true,
+          "id": "outros",
+          "name": "Outros",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Foutros_1647564290522.svg?alt=media&token=a75a0029-6848-4cf7-a80b-7be7a08e3aa4",
+          "isActive": true
+        }
+      },
+      {
+        "id": "peixes",
+        "fields": {
+          "order": 0,
+          "name": "Frios",
+          "id": "peixes",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fpeixes_1647527052627.svg?alt=media&token=3e6f7acf-5afa-4d33-adc0-bd5d3c42d040",
+          "isActive": true
+        }
+      },
+      {
+        "id": "tBQebPhJCvz3scbEaYGu",
+        "fields": {
+          "order": 0,
+          "name": "Fármacos",
+          "id": "tBQebPhJCvz3scbEaYGu",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FtBQebPhJCvz3scbEaYGu_1647565351737.svg?alt=media&token=f015c58f-fd7d-420a-a85f-4ec1c6c34d82",
+          "isActive": true
+        }
+      },
+      {
+        "id": "u0Yzu9DRwcchumGYl8R4",
+        "fields": {
+          "order": 0,
+          "name": "Grãos",
+          "id": "u0Yzu9DRwcchumGYl8R4",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fu0Yzu9DRwcchumGYl8R4_1647533807276.svg?alt=media&token=1864209d-bad2-4e49-bfe9-b8a6d39bedc5",
+          "isActive": true
+        }
+      },
+      {
+        "id": "utilidades",
+        "fields": {
+          "order": 0,
+          "name": "Utilidades",
+          "id": "utilidades",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Futilidades_1647533534722.svg?alt=media&token=6af5538d-a8e6-43be-bbaf-357ea4e26701",
+          "isActive": true
+        }
+      },
+      {
+        "id": "xNSx6EUWUnkwxXiy4jh0",
+        "fields": {
+          "order": 0,
+          "name": "Abatedouro",
+          "id": "xNSx6EUWUnkwxXiy4jh0",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2FxNSx6EUWUnkwxXiy4jh0_1710352524167.svg?alt=media&token=9a2c9472-cc02-4b5f-b51a-9558672ad365",
+          "isActive": true
+        }
+      },
+      {
+        "id": "z2Iv1xs8ve9uhaV4xgOL",
+        "fields": {
+          "order": 0,
+          "name": "Sobremesa",
+          "id": "z2Iv1xs8ve9uhaV4xgOL",
+          "icon": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/categoriasProdutos%2Fz2Iv1xs8ve9uhaV4xgOL_1647565131701.svg?alt=media&token=d6635e1f-6c2f-4458-b6e7-97689298d2c7",
+          "isActive": true
+        }
+      }
+    ]
+  }
+}

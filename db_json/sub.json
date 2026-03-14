@@ -1,0 +1,4522 @@
+{
+  "success": true,
+  "data": {
+    "type": "collection_all",
+    "path": "estabelecimentos/*/ProductSubcategories",
+    "name": "ProductSubcategories",
+    "establishments_queried": 3,
+    "establishments_failed": [],
+    "total_unique": 403,
+    "count": 403,
+    "documents": [
+      {
+        "id": "0bZ58kb59vC4KFxDJX9h",
+        "fields": {
+          "name": "Ketchup/Mostarda",
+          "id": "0bZ58kb59vC4KFxDJX9h",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0pNu96PvdWabZgSigPOM",
+        "fields": {
+          "name": "Molhos Salada",
+          "id": "0pNu96PvdWabZgSigPOM",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "1F0uI4Vur8BmU9WvaeeB",
+        "fields": {
+          "name": "Torradas",
+          "id": "1F0uI4Vur8BmU9WvaeeB",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3C8nAKY8C2SH4M07g7sQ",
+        "fields": {
+          "name": "Temperos",
+          "id": "3C8nAKY8C2SH4M07g7sQ",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3meLa69ALn2FpA6l5wha",
+        "fields": {
+          "name": "Feijão",
+          "id": "3meLa69ALn2FpA6l5wha",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "58o1isPrgis9qq17c14Z",
+        "fields": {
+          "name": "Produtos Variados",
+          "id": "58o1isPrgis9qq17c14Z",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "6Gpl7D1ld94elJeIxLIM",
+        "fields": {
+          "name": "Maionese",
+          "id": "6Gpl7D1ld94elJeIxLIM",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "7wEKWGv3zjlOes8INag3",
+        "fields": {
+          "name": "Pipoca de Microondas",
+          "id": "7wEKWGv3zjlOes8INag3",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8NZGnQn8xnXxsKOjdLjc",
+        "fields": {
+          "name": "Fermento",
+          "id": "8NZGnQn8xnXxsKOjdLjc",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8yyiNGA5QAgPHmFRzBp1",
+        "fields": {
+          "name": "Ovo de Páscoa",
+          "id": "8yyiNGA5QAgPHmFRzBp1",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9E4Fg8AQaB9NGcVIIRLq",
+        "fields": {
+          "isActive": true,
+          "id": "9E4Fg8AQaB9NGcVIIRLq",
+          "updateAt": "2025-10-04T22:49:04.528000+00:00",
+          "categoryId": "ChK9lH0vlKvaBJyL4ItB",
+          "createAt": "2025-10-04T22:49:04.528000+00:00",
+          "name": "Brinquedos Modernos e Variados"
+        }
+      },
+      {
+        "id": "9FGjG8dA0Wg7CDe04hJt",
+        "fields": {
+          "name": "Palmito e Champignon",
+          "id": "9FGjG8dA0Wg7CDe04hJt",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9iCNMLNxGnBulq8PjSY3",
+        "fields": {
+          "name": "Pão de Alho",
+          "id": "9iCNMLNxGnBulq8PjSY3",
+          "updateAt": "2025-09-02T07:56:20.054000+00:00",
+          "categoryId": "4L2YfeXuT5o0xoRavk7L",
+          "createAt": "2025-09-02T07:56:20.054000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9pNCjCDtDEXtVO5momuf",
+        "fields": {
+          "name": "Misturas Prontas",
+          "id": "9pNCjCDtDEXtVO5momuf",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9vjpwjIMSPY6gSI0IL1H",
+        "fields": {
+          "name": "Hortifruti",
+          "id": "9vjpwjIMSPY6gSI0IL1H",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "BDiywe54uqEKpJG7r6WS",
+        "fields": {
+          "name": "Macarrão Instantâneo",
+          "id": "BDiywe54uqEKpJG7r6WS",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "C0rMpiFQqwhekniy85uC",
+        "fields": {
+          "name": "Mais procurados",
+          "id": "C0rMpiFQqwhekniy85uC",
+          "updateAt": "2025-07-26T20:19:48.550000+00:00",
+          "categoryId": "remedios",
+          "createAt": "2025-07-26T20:19:48.550000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Cu0ygKyewwywtiqX7WsG",
+        "fields": {
+          "name": "Azeite",
+          "id": "Cu0ygKyewwywtiqX7WsG",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DRTjw30hpraZWQgJCro5",
+        "fields": {
+          "name": "Sopa Pronta",
+          "id": "DRTjw30hpraZWQgJCro5",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "EnzL0GvNbpCr8LKn2ylC",
+        "fields": {
+          "name": "Biscoitos",
+          "id": "EnzL0GvNbpCr8LKn2ylC",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "G1fOTdGypO0q00XaPNPF",
+        "fields": {
+          "name": "Condimentos",
+          "id": "G1fOTdGypO0q00XaPNPF",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HUijBYWWNE7xbvkxDMZd",
+        "fields": {
+          "name": "Papel Toalha/Guardanapo",
+          "id": "HUijBYWWNE7xbvkxDMZd",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HczoWLyYczCweXkwKm7p",
+        "fields": {
+          "name": "Arroz",
+          "id": "HczoWLyYczCweXkwKm7p",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "IpeCUT0kFZoMUuJugCdJ",
+        "fields": {
+          "name": "Mais Itens",
+          "id": "IpeCUT0kFZoMUuJugCdJ",
+          "updateAt": "2025-09-02T07:56:20.054000+00:00",
+          "categoryId": "4L2YfeXuT5o0xoRavk7L",
+          "createAt": "2025-09-02T07:56:20.054000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "KplUqL0TuNy1LBhnHLZt",
+        "fields": {
+          "name": "Churrasco",
+          "id": "KplUqL0TuNy1LBhnHLZt",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "MH7J73HyMe9Rn60rYHIg",
+        "fields": {
+          "name": "Açúcar",
+          "id": "MH7J73HyMe9Rn60rYHIg",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Nc32lmol8xd4XG7uTYAV",
+        "fields": {
+          "name": "Dia a Dia",
+          "id": "Nc32lmol8xd4XG7uTYAV",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OwiLhDbCPWbZVvEAYinJ",
+        "fields": {
+          "name": "sem fotos",
+          "id": "OwiLhDbCPWbZVvEAYinJ",
+          "updateAt": "2025-07-25T01:42:12.224000+00:00",
+          "categoryId": "rrTytc0HNPpCeXX2KW52",
+          "createAt": "2025-07-25T01:42:12.224000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QYMYZJoHQVJnXjqXsXmC",
+        "fields": {
+          "name": "Filtros de Café",
+          "id": "QYMYZJoHQVJnXjqXsXmC",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "RaB8H9a93VNqjkFBIPmt",
+        "fields": {
+          "name": "Kit para Churrasco",
+          "id": "RaB8H9a93VNqjkFBIPmt",
+          "updateAt": "2025-09-02T07:56:20.054000+00:00",
+          "categoryId": "4L2YfeXuT5o0xoRavk7L",
+          "createAt": "2025-09-02T07:56:20.054000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "S0G0hPEpo3S6kP4OjPUM",
+        "fields": {
+          "name": "Chocolate",
+          "id": "S0G0hPEpo3S6kP4OjPUM",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "S0vBLpOG7ZaocXyE5ffk",
+        "fields": {
+          "name": "Mercearia",
+          "id": "S0vBLpOG7ZaocXyE5ffk",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "TVdzP5PNpl1tOWgyuBhl",
+        "fields": {
+          "name": "Chocolate em barras",
+          "id": "TVdzP5PNpl1tOWgyuBhl",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "VFa8q52BYLqu9AKr4p0M",
+        "fields": {
+          "name": "Atomatado",
+          "id": "VFa8q52BYLqu9AKr4p0M",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "VOuc2WkgBDP3kGVcULFK",
+        "fields": {
+          "name": "Refresco em pó",
+          "id": "VOuc2WkgBDP3kGVcULFK",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "XDHnsRzAxPfvYl2IQFJB",
+        "fields": {
+          "name": "Milho Verde",
+          "id": "XDHnsRzAxPfvYl2IQFJB",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "YEaQKmNqf2nAmhun8uWX",
+        "fields": {
+          "name": "Batata Palha",
+          "id": "YEaQKmNqf2nAmhun8uWX",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZrXWoj6AFT0OpiIeAz4T",
+        "fields": {
+          "name": "Dúvidas",
+          "id": "ZrXWoj6AFT0OpiIeAz4T",
+          "updateAt": "2025-07-27T12:47:20.287000+00:00",
+          "categoryId": "KfmNz06cADwmzQI6UvSf",
+          "createAt": "2025-07-27T12:47:20.287000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "achocolatado_em_pó",
+        "fields": {
+          "createdAt": "2025-07-19T02:42:15.146000+00:00",
+          "name": "Achocolatado em Pó",
+          "id": "achocolatado_em_pó",
+          "categoryId": "mercearia",
+          "updatedAt": "2025-07-19T02:42:50.344000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "acucares",
+        "fields": {
+          "name": "ACUCARES",
+          "autoImported": true,
+          "id": "acucares",
+          "updateAt": "2025-12-09T13:18:57.689000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-12-09T13:18:57.689000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "adocantes",
+        "fields": {
+          "name": "Adoçantes",
+          "id": "adocantes",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "agua_de_coco",
+        "fields": {
+          "name": "AGUA DE COCO",
+          "autoImported": true,
+          "id": "agua_de_coco",
+          "updateAt": "2025-08-11T14:25:26.718000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-08-11T14:25:26.718000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "agua_mineral",
+        "fields": {
+          "name": "AGUA MINERAL",
+          "autoImported": true,
+          "id": "agua_mineral",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "alimentacao_infantil",
+        "fields": {
+          "isActive": true,
+          "id": "alimentacao_infantil",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "ALIMENTACAO INFANTIL"
+        }
+      },
+      {
+        "id": "amidoDeMilho",
+        "fields": {
+          "name": "Amido de milho",
+          "id": "amidoDeMilho",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "aperitivos",
+        "fields": {
+          "name": "APERITIVOS",
+          "autoImported": true,
+          "id": "aperitivos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "arroz",
+        "fields": {
+          "name": "ARROZ",
+          "autoImported": true,
+          "id": "arroz",
+          "updateAt": "2025-12-09T13:18:57.689000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-12-09T13:18:57.689000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "atomatados",
+        "fields": {
+          "name": "ATOMATADOS",
+          "autoImported": true,
+          "id": "atomatados",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "automotivos",
+        "fields": {
+          "isActive": true,
+          "id": "automotivos",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "AUTOMOTIVOS"
+        }
+      },
+      {
+        "id": "azeitona",
+        "fields": {
+          "name": "Azeitona",
+          "id": "azeitona",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "b88jKH4HacTpT4Vddbfh",
+        "fields": {
+          "name": "Molhos diversos",
+          "id": "b88jKH4HacTpT4Vddbfh",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "batata_palha",
+        "fields": {
+          "name": "BATATA PALHA",
+          "autoImported": true,
+          "id": "batata_palha",
+          "updateAt": "2025-06-21T03:30:10.521000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:30:10.521000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "bebidas_quentes_aperitivas",
+        "fields": {
+          "isActive": true,
+          "id": "bebidas_quentes_aperitivas",
+          "updateAt": "2025-08-21T17:51:22.111000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-08-21T17:51:22.111000+00:00",
+          "name": "BEBIDAS QUENTES/APERITIVAS"
+        }
+      },
+      {
+        "id": "bebidas_tonicas_energeticas",
+        "fields": {
+          "name": "BEBIDAS TONICAS/ENERGETICAS",
+          "autoImported": true,
+          "id": "bebidas_tonicas_energeticas",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "biscoito_salgado",
+        "fields": {
+          "name": "BISCOITO SALGADO",
+          "autoImported": true,
+          "id": "biscoito_salgado",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "biscoitos",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "biscoitos_doces",
+        "fields": {
+          "name": "BISCOITOS DOCES",
+          "autoImported": true,
+          "id": "biscoitos_doces",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "biscoitos",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "biscoitos_doces_e_salgados",
+        "fields": {
+          "name": "BISCOITOS DOCES E SALGADOS",
+          "autoImported": true,
+          "id": "biscoitos_doces_e_salgados",
+          "updateAt": "2025-08-11T14:25:26.718000+00:00",
+          "categoryId": "biscoitos",
+          "createAt": "2025-08-11T14:25:26.718000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "biscoitos_salgados",
+        "fields": {
+          "name": "BISCOITOS SALGADOS",
+          "autoImported": true,
+          "id": "biscoitos_salgados",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "biscoitos",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "bomboniere",
+        "fields": {
+          "isActive": true,
+          "id": "bomboniere",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "BOMBONIERE"
+        }
+      },
+      {
+        "id": "bombons",
+        "fields": {
+          "name": "Bombons",
+          "id": "bombons",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "brinquedos",
+        "fields": {
+          "name": "BRINQUEDOS",
+          "autoImported": true,
+          "id": "brinquedos",
+          "updateAt": "2025-10-06T12:30:19.780000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-06T12:30:19.780000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cafe",
+        "fields": {
+          "name": "Café/Cappuccino",
+          "id": "cafe",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "casa",
+        "fields": {
+          "isActive": true,
+          "id": "casa",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "CASA"
+        }
+      },
+      {
+        "id": "cerveja",
+        "fields": {
+          "name": "CERVEJA",
+          "autoImported": true,
+          "id": "cerveja",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cha_pronto",
+        "fields": {
+          "name": "CHA PRONTO",
+          "autoImported": true,
+          "id": "cha_pronto",
+          "updateAt": "2025-06-21T03:30:10.542000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-06-21T03:30:10.542000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "churrasco",
+        "fields": {
+          "isActive": true,
+          "id": "churrasco",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "CHURRASCO"
+        }
+      },
+      {
+        "id": "cigarro_e_fumo",
+        "fields": {
+          "name": "CIGARRO E FUMO",
+          "autoImported": true,
+          "id": "cigarro_e_fumo",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "tabacaria",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "conservas_enlatados",
+        "fields": {
+          "name": "CONSERVAS/ENLATADOS",
+          "autoImported": true,
+          "id": "conservas_enlatados",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cortes_bovinos",
+        "fields": {
+          "name": "CORTES BOVINOS",
+          "autoImported": true,
+          "id": "cortes_bovinos",
+          "updateAt": "2025-08-11T14:25:26.718000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-08-11T14:25:26.718000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cortes_fran",
+        "fields": {
+          "name": "CORTES FRAN",
+          "autoImported": true,
+          "id": "cortes_fran",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cuidados",
+        "fields": {
+          "name": "CUIDADOS",
+          "autoImported": true,
+          "id": "cuidados",
+          "updateAt": "2025-06-21T03:30:10.542000+00:00",
+          "categoryId": "pet",
+          "createAt": "2025-06-21T03:30:10.542000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "culinaria_doce",
+        "fields": {
+          "isActive": true,
+          "id": "culinaria_doce",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "CULINARIA DOCE"
+        }
+      },
+      {
+        "id": "derivados_de_carnes",
+        "fields": {
+          "name": "DERIVADOS DE CARNES",
+          "autoImported": true,
+          "id": "derivados_de_carnes",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "descartaveis",
+        "fields": {
+          "isActive": true,
+          "id": "descartaveis",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "DESCARTAVEIS"
+        }
+      },
+      {
+        "id": "desnatado",
+        "fields": {
+          "name": "DESNATADO",
+          "autoImported": true,
+          "id": "desnatado",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "leite_longa_vida",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "dnYsG0uStHONv2z2bLur",
+        "fields": {
+          "name": "Enlatados",
+          "id": "dnYsG0uStHONv2z2bLur",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "doces",
+        "fields": {
+          "isActive": true,
+          "id": "doces",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "DOCES"
+        }
+      },
+      {
+        "id": "docesSobremesas",
+        "fields": {
+          "name": "Doces e sobremesas",
+          "id": "docesSobremesas",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "eletroportateis_e_domesticos",
+        "fields": {
+          "isActive": true,
+          "id": "eletroportateis_e_domesticos",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "ELETROPORTATEIS E DOMESTICOS"
+        }
+      },
+      {
+        "id": "embutidos",
+        "fields": {
+          "name": "EMBUTIDOS",
+          "autoImported": true,
+          "id": "embutidos",
+          "updateAt": "2025-11-12T14:12:25.456000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-11-12T14:12:25.456000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "encartelados_e_ferramentas",
+        "fields": {
+          "isActive": true,
+          "id": "encartelados_e_ferramentas",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "ENCARTELADOS E FERRAMENTAS"
+        }
+      },
+      {
+        "id": "equipamentos_eletricos",
+        "fields": {
+          "name": "EQUIPAMENTOS ELETRICOS",
+          "autoImported": true,
+          "id": "equipamentos_eletricos",
+          "updateAt": "2025-06-21T03:30:10.542000+00:00",
+          "categoryId": "ativo_imobilizado",
+          "createAt": "2025-06-21T03:30:10.542000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "espumantes",
+        "fields": {
+          "name": "ESPUMANTES",
+          "autoImported": true,
+          "id": "espumantes",
+          "updateAt": "2025-10-17T18:51:27.270000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-10-17T18:51:27.270000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "farinaceos",
+        "fields": {
+          "name": "FARINACEOS",
+          "autoImported": true,
+          "id": "farinaceos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "feijao",
+        "fields": {
+          "name": "FEIJAO",
+          "autoImported": true,
+          "id": "feijao",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "festas",
+        "fields": {
+          "isActive": true,
+          "id": "festas",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "FESTAS"
+        }
+      },
+      {
+        "id": "frios",
+        "fields": {
+          "name": "FRIOS",
+          "autoImported": true,
+          "id": "frios",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "frutas",
+        "fields": {
+          "name": "FRUTAS",
+          "autoImported": true,
+          "id": "frutas",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "flv",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "frutos_do_mar",
+        "fields": {
+          "name": "FRUTOS DO MAR",
+          "autoImported": true,
+          "id": "frutos_do_mar",
+          "updateAt": "2025-06-21T03:30:29.678000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-06-21T03:30:29.678000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "graos",
+        "fields": {
+          "name": "GRAOS",
+          "autoImported": true,
+          "id": "graos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "hamburguer",
+        "fields": {
+          "name": "HAMBURGUER",
+          "autoImported": true,
+          "id": "hamburguer",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "higiene_bucal",
+        "fields": {
+          "name": "HIGIENE BUCAL",
+          "autoImported": true,
+          "id": "higiene_bucal",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "iogurtes_danones",
+        "fields": {
+          "name": "IOGURTES/DANONES",
+          "autoImported": true,
+          "id": "iogurtes_danones",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "isqueiros_e_fosforos",
+        "fields": {
+          "name": "ISQUEIROS E FOSFOROS",
+          "autoImported": true,
+          "id": "isqueiros_e_fosforos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "tabacaria",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "jardinagem",
+        "fields": {
+          "isActive": true,
+          "id": "jardinagem",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "JARDINAGEM"
+        }
+      },
+      {
+        "id": "kibon",
+        "fields": {
+          "name": "KIBON",
+          "autoImported": true,
+          "id": "kibon",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "sorvetes",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "lacticinios",
+        "fields": {
+          "name": "Lacticínios",
+          "id": "lacticinios",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "lampadas_e_iluminacao_em_geral",
+        "fields": {
+          "isActive": true,
+          "id": "lampadas_e_iluminacao_em_geral",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "LAMPADAS E ILUMINACAO EM GERAL"
+        }
+      },
+      {
+        "id": "leite_integral",
+        "fields": {
+          "name": "LEITE INTEGRAL",
+          "autoImported": true,
+          "id": "leite_integral",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "leite_longa_vida",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "leite_pasteurizado",
+        "fields": {
+          "name": "LEITE PASTEURIZADO",
+          "autoImported": true,
+          "id": "leite_pasteurizado",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "macarrao_instantaneo",
+        "fields": {
+          "name": "MACARRAO INSTANTANEO",
+          "autoImported": true,
+          "id": "macarrao_instantaneo",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "massas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "maionese",
+        "fields": {
+          "name": "MAIONESE",
+          "autoImported": true,
+          "id": "maionese",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "manteigas",
+        "fields": {
+          "name": "MANTEIGAS",
+          "autoImported": true,
+          "id": "manteigas",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "margarinas",
+        "fields": {
+          "name": "MARGARINAS",
+          "autoImported": true,
+          "id": "margarinas",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas",
+        "fields": {
+          "name": "Massas",
+          "id": "massas",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas_c_ovos",
+        "fields": {
+          "name": "MASSAS C/ OVOS",
+          "autoImported": true,
+          "id": "massas_c_ovos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "massas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas_e_derivados",
+        "fields": {
+          "name": "MASSAS E DERIVADOS",
+          "autoImported": true,
+          "id": "massas_e_derivados",
+          "updateAt": "2025-06-21T03:30:31.527000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:30:31.527000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas_para_lasanha",
+        "fields": {
+          "name": "MASSAS PARA LASANHA",
+          "autoImported": true,
+          "id": "massas_para_lasanha",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "massas",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "massas_semola",
+        "fields": {
+          "name": "MASSAS SEMOLA",
+          "autoImported": true,
+          "id": "massas_semola",
+          "updateAt": "2025-06-21T03:30:29.678000+00:00",
+          "categoryId": "massas",
+          "createAt": "2025-06-21T03:30:29.678000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "moveis",
+        "fields": {
+          "name": "MOVEIS",
+          "autoImported": true,
+          "id": "moveis",
+          "updateAt": "2025-06-21T03:30:10.521000+00:00",
+          "categoryId": "ativo_imobilizado",
+          "createAt": "2025-06-21T03:30:10.521000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "nc0LHNtYTtwsfTfd6aDT",
+        "fields": {
+          "name": "Bolos",
+          "id": "nc0LHNtYTtwsfTfd6aDT",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "nestle",
+        "fields": {
+          "name": "NESTLE",
+          "autoImported": true,
+          "id": "nestle",
+          "updateAt": "2025-06-21T03:30:29.600000+00:00",
+          "categoryId": "sorvetes",
+          "createAt": "2025-06-21T03:30:29.600000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "oleo",
+        "fields": {
+          "name": "Óleo",
+          "id": "oleo",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "oleos",
+        "fields": {
+          "name": "OLEOS",
+          "autoImported": true,
+          "id": "oleos",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ovos_pascoa",
+        "fields": {
+          "name": "OVOS PASCOA",
+          "autoImported": true,
+          "id": "ovos_pascoa",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "ovos_pascoa",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "pE6DrTcVmRX2LVRYmGEt",
+        "fields": {
+          "name": "Carvão",
+          "id": "pE6DrTcVmRX2LVRYmGEt",
+          "updateAt": "2025-09-02T07:56:20.054000+00:00",
+          "categoryId": "4L2YfeXuT5o0xoRavk7L",
+          "createAt": "2025-09-02T07:56:20.054000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "padaria_industrial",
+        "fields": {
+          "name": "PADARIA INDUSTRIAL",
+          "autoImported": true,
+          "id": "padaria_industrial",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "padaria",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "padaria_propria",
+        "fields": {
+          "name": "PADARIA PROPRIA",
+          "autoImported": true,
+          "id": "padaria_propria",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "padaria",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "papelaria",
+        "fields": {
+          "isActive": true,
+          "id": "papelaria",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "PAPELARIA"
+        }
+      },
+      {
+        "id": "pratos_prontos",
+        "fields": {
+          "name": "PRATOS PRONTOS",
+          "autoImported": true,
+          "id": "pratos_prontos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "ilhas_e_congelados",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "preparo_p_cafe_matinal",
+        "fields": {
+          "isActive": true,
+          "id": "preparo_p_cafe_matinal",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "PREPARO P/ CAFE MATINAL"
+        }
+      },
+      {
+        "id": "prepparos_para_cafe_da_manha",
+        "fields": {
+          "isActive": true,
+          "id": "prepparos_para_cafe_da_manha",
+          "updateAt": "2025-12-19T17:55:52.297000+00:00",
+          "categoryId": "matinal",
+          "createAt": "2025-12-19T17:55:52.297000+00:00",
+          "name": "PREPPAROS PARA CAFE DA MANHA"
+        }
+      },
+      {
+        "id": "produtosNaturais",
+        "fields": {
+          "name": "Produtos Naturais",
+          "id": "produtosNaturais",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_femininos",
+        "fields": {
+          "name": "PRODUTOS FEMININOS",
+          "autoImported": true,
+          "id": "produtos_femininos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_gerais_p_casa",
+        "fields": {
+          "name": "PRODUTOS GERAIS P/ CASA",
+          "autoImported": true,
+          "id": "produtos_gerais_p_casa",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "limpeza",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_infantis",
+        "fields": {
+          "name": "PRODUTOS INFANTIS",
+          "autoImported": true,
+          "id": "produtos_infantis",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_masculinos",
+        "fields": {
+          "name": "PRODUTOS MASCULINOS",
+          "autoImported": true,
+          "id": "produtos_masculinos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_p_banheiro",
+        "fields": {
+          "name": "PRODUTOS P/ BANHEIRO",
+          "autoImported": true,
+          "id": "produtos_p_banheiro",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "limpeza",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_p_cabelo",
+        "fields": {
+          "name": "PRODUTOS P/ CABELO",
+          "autoImported": true,
+          "id": "produtos_p_cabelo",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_p_cozinha",
+        "fields": {
+          "name": "PRODUTOS P/ COZINHA",
+          "autoImported": true,
+          "id": "produtos_p_cozinha",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "limpeza",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_p_o_corpo",
+        "fields": {
+          "name": "PRODUTOS P/ O CORPO",
+          "autoImported": true,
+          "id": "produtos_p_o_corpo",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "perfumaria_higiene_pessoal",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "produtos_p_roupas",
+        "fields": {
+          "name": "PRODUTOS P/ ROUPAS",
+          "autoImported": true,
+          "id": "produtos_p_roupas",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "limpeza",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "queijo_ralado",
+        "fields": {
+          "name": "QUEIJO RALADO",
+          "autoImported": true,
+          "id": "queijo_ralado",
+          "updateAt": "2025-06-21T03:30:29.600000+00:00",
+          "categoryId": "massas",
+          "createAt": "2025-06-21T03:30:29.600000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "racoes_e_aperitivos",
+        "fields": {
+          "name": "RACOES E APERITIVOS",
+          "autoImported": true,
+          "id": "racoes_e_aperitivos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "pet",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "refrigerantes",
+        "fields": {
+          "isActive": true,
+          "id": "refrigerantes",
+          "updateAt": "2025-08-21T17:51:22.111000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-08-21T17:51:22.111000+00:00",
+          "name": "REFRIGERANTES"
+        }
+      },
+      {
+        "id": "requeijao",
+        "fields": {
+          "name": "REQUEIJAO",
+          "autoImported": true,
+          "id": "requeijao",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "frios_e_laticinios",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "sal",
+        "fields": {
+          "name": "SAL",
+          "autoImported": true,
+          "id": "sal",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "salgadinhos",
+        "fields": {
+          "name": "Salgadinhos",
+          "id": "salgadinhos",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "sardinhaAtumCia",
+        "fields": {
+          "name": "Sardinha/Atum",
+          "id": "sardinhaAtumCia",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "semi_desnatado",
+        "fields": {
+          "name": "SEMI-DESNATADO",
+          "autoImported": true,
+          "id": "semi_desnatado",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "leite_longa_vida",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "sorvetes_acais_e_polpas",
+        "fields": {
+          "name": "SORVETES/ACAIS E POLPAS",
+          "autoImported": true,
+          "id": "sorvetes_acais_e_polpas",
+          "updateAt": "2025-06-21T03:29:54.467000+00:00",
+          "categoryId": "sorvetes",
+          "createAt": "2025-06-21T03:29:54.467000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "sucos",
+        "fields": {
+          "isActive": true,
+          "id": "sucos",
+          "updateAt": "2025-08-21T17:51:22.111000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-08-21T17:51:22.111000+00:00",
+          "name": "SUCOS"
+        }
+      },
+      {
+        "id": "temperos_condimentos",
+        "fields": {
+          "name": "TEMPEROS/CONDIMENTOS",
+          "autoImported": true,
+          "id": "temperos_condimentos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "temperos_molhos",
+        "fields": {
+          "name": "TEMPEROS/MOLHOS",
+          "autoImported": true,
+          "id": "temperos_molhos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "conservas",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "textil_calcados_acessorios",
+        "fields": {
+          "isActive": true,
+          "id": "textil_calcados_acessorios",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "TEXTIL/CALCADOS/ACESSORIOS"
+        }
+      },
+      {
+        "id": "todos",
+        "fields": {
+          "name": "TODOS",
+          "autoImported": true,
+          "id": "todos",
+          "updateAt": "2025-06-21T03:29:53.964000+00:00",
+          "categoryId": "cereais",
+          "createAt": "2025-06-21T03:29:53.964000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "uqB897hsbzJNMWJEiffN",
+        "fields": {
+          "name": "Conservas",
+          "id": "uqB897hsbzJNMWJEiffN",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "uso_interno",
+        "fields": {
+          "name": "USO INTERNO",
+          "autoImported": true,
+          "id": "uso_interno",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "uso_da_loja",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "utensilios_p_cozinha",
+        "fields": {
+          "isActive": true,
+          "id": "utensilios_p_cozinha",
+          "updateAt": "2025-10-04T22:38:28.815000+00:00",
+          "categoryId": "bazar",
+          "createAt": "2025-10-04T22:38:28.815000+00:00",
+          "name": "UTENSILIOS P/ COZINHA"
+        }
+      },
+      {
+        "id": "vendas_por_impulso",
+        "fields": {
+          "name": "VENDAS POR IMPULSO",
+          "autoImported": true,
+          "id": "vendas_por_impulso",
+          "updateAt": "2025-09-23T01:50:03.550000+00:00",
+          "categoryId": "frente_de_caixa",
+          "createAt": "2025-09-23T01:50:03.550000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "verduras",
+        "fields": {
+          "name": "VERDURAS",
+          "autoImported": true,
+          "id": "verduras",
+          "updateAt": "2025-09-17T17:16:54.995000+00:00",
+          "categoryId": "flv",
+          "createAt": "2025-09-17T17:16:54.995000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "vilela",
+        "fields": {
+          "name": "VILELA",
+          "autoImported": true,
+          "id": "vilela",
+          "updateAt": "2025-06-21T03:30:10.542000+00:00",
+          "categoryId": "sorvetes",
+          "createAt": "2025-06-21T03:30:10.542000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "vinagre",
+        "fields": {
+          "name": "Vinagre",
+          "id": "vinagre",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "vinhos",
+        "fields": {
+          "isActive": true,
+          "id": "vinhos",
+          "updateAt": "2025-08-21T17:51:22.111000+00:00",
+          "categoryId": "bebidas",
+          "createAt": "2025-08-21T17:51:22.111000+00:00",
+          "name": "VINHOS"
+        }
+      },
+      {
+        "id": "wafer",
+        "fields": {
+          "name": "Wafer",
+          "id": "wafer",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "xWPXQKAFbOQ4xdod9yG0",
+        "fields": {
+          "name": "Água Mineral",
+          "id": "xWPXQKAFbOQ4xdod9yG0",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "zero_lactose",
+        "fields": {
+          "name": "ZERO-LACTOSE",
+          "autoImported": true,
+          "id": "zero_lactose",
+          "updateAt": "2025-06-21T03:29:54.410000+00:00",
+          "categoryId": "leite_longa_vida",
+          "createAt": "2025-06-21T03:29:54.410000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "zm7BaN8gCQPuDnaO4E83",
+        "fields": {
+          "name": "Pães",
+          "id": "zm7BaN8gCQPuDnaO4E83",
+          "updateAt": "2025-07-08T22:37:47.648000+00:00",
+          "categoryId": "mercearia",
+          "createAt": "2025-07-08T22:37:47.648000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "conservas_sobremesas_a_granel",
+        "fields": {
+          "name": "CONSERVAS/SOBREMESAS A GRANEL",
+          "autoImported": true,
+          "categoryId": "frios_e_laticinios",
+          "updateAt": "2026-02-12T19:19:17.015000+00:00",
+          "id": "conservas_sobremesas_a_granel",
+          "createAt": "2026-02-12T19:19:17.015000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0RdbVSpAFSRS6WFoPtpm",
+        "fields": {
+          "name": "Cerveja Lata",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "0RdbVSpAFSRS6WFoPtpm",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0YVuyGSVBGIkQxRodAFv",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "0YVuyGSVBGIkQxRodAFv",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0ZoBFIwvInk1pjMHMCdF",
+        "fields": {
+          "name": "Frutas",
+          "categoryId": "hortifruti",
+          "updateAt": "2026-02-15T04:20:04.954000+00:00",
+          "id": "0ZoBFIwvInk1pjMHMCdF",
+          "createAt": "2026-02-15T04:20:04.954000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0pXbfFgvCsTIyZrVAPsK",
+        "fields": {
+          "name": "Hambúrgueres",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "0pXbfFgvCsTIyZrVAPsK",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0vqhZVGVFuOJw5L43V4d",
+        "fields": {
+          "name": "Recheados",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "0vqhZVGVFuOJw5L43V4d",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "0yOrFM3UvDvBXCUEGBYy",
+        "fields": {
+          "name": "Molho em Garrafa",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "0yOrFM3UvDvBXCUEGBYy",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "1VcbixYgCTG5GYM5kIae",
+        "fields": {
+          "name": "Manteiga/Margarina",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "1VcbixYgCTG5GYM5kIae",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "1dZRgGcyYYSKN2jZ1fkr",
+        "fields": {
+          "name": "Variados",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "1dZRgGcyYYSKN2jZ1fkr",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "1xdmyCL5Uc2zpNO8mUfe",
+        "fields": {
+          "name": "Refrigerante Lata",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "1xdmyCL5Uc2zpNO8mUfe",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "2LAQvqtnrMI9CaaMTKyz",
+        "fields": {
+          "name": "Outros Chips",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "2LAQvqtnrMI9CaaMTKyz",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "2aGCAlaIXyhuUFywWsQk",
+        "fields": {
+          "name": "Shampoo",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "2aGCAlaIXyhuUFywWsQk",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3KUV4f5NK1U5mYmznsUy",
+        "fields": {
+          "name": "Refrigerante Garrafa",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "3KUV4f5NK1U5mYmznsUy",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3MoTA9b88ctB5C97nRBW",
+        "fields": {
+          "name": "Refrigerantes",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "3MoTA9b88ctB5C97nRBW",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3Vx5Pqg1DV8GuqmhpfQw",
+        "fields": {
+          "name": "Linha Infantil",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "3Vx5Pqg1DV8GuqmhpfQw",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3aMmRMAtWnsa75rrqdnG",
+        "fields": {
+          "name": "Analgésicos",
+          "categoryId": "tBQebPhJCvz3scbEaYGu",
+          "updateAt": "2026-02-15T04:18:56.237000+00:00",
+          "id": "3aMmRMAtWnsa75rrqdnG",
+          "createAt": "2026-02-15T04:18:56.237000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3dPqFvOFxeEsVUtsS8kL",
+        "fields": {
+          "name": "Cobertura",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "3dPqFvOFxeEsVUtsS8kL",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3eBLrMniIPDKsEgpb8sr",
+        "fields": {
+          "name": "Suco Natural",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "3eBLrMniIPDKsEgpb8sr",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3gWmMs6iftlYwW8Z0eSl",
+        "fields": {
+          "name": "Desodorante",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "3gWmMs6iftlYwW8Z0eSl",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "3v5DBHWf3CiZx5r9SKtK",
+        "fields": {
+          "name": "Frango Inteiro/Desossado",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "3v5DBHWf3CiZx5r9SKtK",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "431lCvsCEcL4H1aTIVrJ",
+        "fields": {
+          "name": "Gomas",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "431lCvsCEcL4H1aTIVrJ",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4JPg09HS4LaoxKKuuS1H",
+        "fields": {
+          "name": "Alimento para Gatos",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "4JPg09HS4LaoxKKuuS1H",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4KMmmZtGrCG7DCitWPhq",
+        "fields": {
+          "name": "Farinhas de Trigo e Fermentos",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "4KMmmZtGrCG7DCitWPhq",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4NqSI0qdmgRdQOzHT7GF",
+        "fields": {
+          "name": "Carne Bovina",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "4NqSI0qdmgRdQOzHT7GF",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4VQoALxDtxtR1aI38PvJ",
+        "fields": {
+          "name": "Aves",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "4VQoALxDtxtR1aI38PvJ",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4l4VK6pySGH5FuyRsEEC",
+        "fields": {
+          "name": "Fava/Soja",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "4l4VK6pySGH5FuyRsEEC",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4rMPitDidGyGDg4FkuTb",
+        "fields": {
+          "name": "Carnes de Sol",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "4rMPitDidGyGDg4FkuTb",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "4rlHGNJz4s0Jo68B3vyL",
+        "fields": {
+          "name": "Escovas de Dente",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "4rlHGNJz4s0Jo68B3vyL",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "57yxbAvuE7BGivr7VaAS",
+        "fields": {
+          "name": "Leite",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "57yxbAvuE7BGivr7VaAS",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5CviHJ3oI3SfEKQrx6SM",
+        "fields": {
+          "name": "Linha Nobre",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "5CviHJ3oI3SfEKQrx6SM",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5HTK02F3cSm0gsaGgzZ5",
+        "fields": {
+          "name": "Caixa Térmica",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "5HTK02F3cSm0gsaGgzZ5",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5TKMIrgVg5lLIW0aQX2E",
+        "fields": {
+          "name": "Sanitários",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "5TKMIrgVg5lLIW0aQX2E",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5izG0lxD0E9eCKxvcRBW",
+        "fields": {
+          "name": "Hidráulico",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "5izG0lxD0E9eCKxvcRBW",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5qjH5NwzNIS2aur7k7Cn",
+        "fields": {
+          "name": "Mais Refrescos",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "5qjH5NwzNIS2aur7k7Cn",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5s5AqBMCAm1eTHzLTG6f",
+        "fields": {
+          "name": "Chiclete",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "5s5AqBMCAm1eTHzLTG6f",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5u1pTw1mMQ7NS3ThNzQ3",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "H4oUStBC1tKGbiONE0kq",
+          "updateAt": "2026-02-15T04:24:08.767000+00:00",
+          "id": "5u1pTw1mMQ7NS3ThNzQ3",
+          "createAt": "2026-02-15T04:24:08.767000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "5yeL5rVv4NFOwGKeMmtT",
+        "fields": {
+          "name": "Panettone",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "5yeL5rVv4NFOwGKeMmtT",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "6IBhORgOheeDZHWtNdmh",
+        "fields": {
+          "name": "Wafer",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "6IBhORgOheeDZHWtNdmh",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "6SBFliF5x0CC92QAzevr",
+        "fields": {
+          "name": "Fubá ",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "6SBFliF5x0CC92QAzevr",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "6t2afejanIRpX0HlOPSY",
+        "fields": {
+          "name": "Suco em Garrafa",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "6t2afejanIRpX0HlOPSY",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "7KgYnnqWpip4OpeQpMXI",
+        "fields": {
+          "name": "Yokitos",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "7KgYnnqWpip4OpeQpMXI",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "7g2GSek9s9D0mpT6v6wl",
+        "fields": {
+          "name": "Batatas",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "7g2GSek9s9D0mpT6v6wl",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "7w3rDlaVhlDW5cBcKTxY",
+        "fields": {
+          "name": "Presunto/Derivado",
+          "categoryId": "PcnQsRLfIHbfJju4Jt9y",
+          "updateAt": "2026-02-15T04:18:30.686000+00:00",
+          "id": "7w3rDlaVhlDW5cBcKTxY",
+          "createAt": "2026-02-15T04:18:30.686000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "84XcSQ6ZUymV2DzUTuA9",
+        "fields": {
+          "name": "Creme Dental",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "84XcSQ6ZUymV2DzUTuA9",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8PZiSjQr4FofaSFtbnbz",
+        "fields": {
+          "name": "Gulozitos",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "8PZiSjQr4FofaSFtbnbz",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8rjpy4IacWLRWMJAL17V",
+        "fields": {
+          "name": "Churrasco",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "8rjpy4IacWLRWMJAL17V",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8uDM53oTLlaHcqkel8d7",
+        "fields": {
+          "name": "Outros",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "8uDM53oTLlaHcqkel8d7",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "8vGdQ6ENco3O4qfn9HhJ",
+        "fields": {
+          "name": "Asa/Meio da Asa/Coxinha da Asa",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "8vGdQ6ENco3O4qfn9HhJ",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "94cwJ9A7cJhH6jJngrzy",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "94cwJ9A7cJhH6jJngrzy",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "981YKzowZtm59WShr48t",
+        "fields": {
+          "name": "Biscoitos",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "981YKzowZtm59WShr48t",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9D3MkgeuDpikvdYEbGGl",
+        "fields": {
+          "name": "Granola/Aveia",
+          "categoryId": "H4oUStBC1tKGbiONE0kq",
+          "updateAt": "2026-02-15T04:24:08.767000+00:00",
+          "id": "9D3MkgeuDpikvdYEbGGl",
+          "createAt": "2026-02-15T04:24:08.767000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9MOiAXEqxjDAZBrpu38o",
+        "fields": {
+          "name": "Mais Biscoitos",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "9MOiAXEqxjDAZBrpu38o",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9OuZeU8qgrsKkWqP4WCG",
+        "fields": {
+          "name": "Mercearia",
+          "categoryId": "hortifruti",
+          "updateAt": "2026-02-15T04:20:04.954000+00:00",
+          "id": "9OuZeU8qgrsKkWqP4WCG",
+          "createAt": "2026-02-15T04:20:04.954000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9rFsfInmrO8C8VwsAYF7",
+        "fields": {
+          "name": "Alimento para Pássaros",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "9rFsfInmrO8C8VwsAYF7",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9vKWSLbeERw7ExTuu2ZF",
+        "fields": {
+          "name": "Energéticos",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "9vKWSLbeERw7ExTuu2ZF",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "9yHf9IfiXk8ReERkUiJD",
+        "fields": {
+          "name": "Mais Grãos",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "9yHf9IfiXk8ReERkUiJD",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "AGQ23NBd67Sz4XmioIcP",
+        "fields": {
+          "name": "Casadinho de Goiabada",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "AGQ23NBd67Sz4XmioIcP",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "AeEUGZmYF5qw1ven2J3H",
+        "fields": {
+          "name": "Papel Higiênico",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "AeEUGZmYF5qw1ven2J3H",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "AnJUikAG6VmiqNKoks09",
+        "fields": {
+          "name": "Pipoca Doce",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "AnJUikAG6VmiqNKoks09",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "B9BEsqtxrA45xgpAMbaH",
+        "fields": {
+          "name": "Tortas",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "B9BEsqtxrA45xgpAMbaH",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "BFHfuKpY6AGYWoDqX2HV",
+        "fields": {
+          "name": "Filés",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "BFHfuKpY6AGYWoDqX2HV",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "BQ1OJFaCDZWVP4ycUowe",
+        "fields": {
+          "name": "Carne Bovina",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "BQ1OJFaCDZWVP4ycUowe",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "BXy3GuJDraQDmXOsu7WG",
+        "fields": {
+          "name": "Farinha de mandioca",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "BXy3GuJDraQDmXOsu7WG",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Bksk4oPxyMYDYlQ9FEmQ",
+        "fields": {
+          "name": "Odorizantes",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "Bksk4oPxyMYDYlQ9FEmQ",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "C2ww9mrT9n52jiUXNtml",
+        "fields": {
+          "name": "Vodka",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "C2ww9mrT9n52jiUXNtml",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "C3FCL5ditlkuMQnRKg3e",
+        "fields": {
+          "name": "Água & Sal",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "C3FCL5ditlkuMQnRKg3e",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CDLwhAVDjsm861QQAZCv",
+        "fields": {
+          "name": "Whisky",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "CDLwhAVDjsm861QQAZCv",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CI7yNyLuVIvASZc576FC",
+        "fields": {
+          "name": "Mais Itens",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "CI7yNyLuVIvASZc576FC",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CMwgJ7ykB8grJ5BBZEdH",
+        "fields": {
+          "name": "Defumados",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "CMwgJ7ykB8grJ5BBZEdH",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CTsdjUJekDG24qEEdyJ6",
+        "fields": {
+          "name": "Bolos",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "CTsdjUJekDG24qEEdyJ6",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CatLJxtm6lkdjWSzYvpS",
+        "fields": {
+          "name": "Pacote",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "CatLJxtm6lkdjWSzYvpS",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Cr7GdWtH1JNnMXdSCwhC",
+        "fields": {
+          "name": "Leite Condensado",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "Cr7GdWtH1JNnMXdSCwhC",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "CyOhrPg4cYsXDekBzKrS",
+        "fields": {
+          "name": "Mais Guloseimas",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "CyOhrPg4cYsXDekBzKrS",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "D3Tezodc8OSvNS6EP6cs",
+        "fields": {
+          "name": "Jardinagem",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "D3Tezodc8OSvNS6EP6cs",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "D5Gf5XxEUmsxZkFxq0zk",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "tBQebPhJCvz3scbEaYGu",
+          "updateAt": "2026-02-15T04:18:56.237000+00:00",
+          "id": "D5Gf5XxEUmsxZkFxq0zk",
+          "createAt": "2026-02-15T04:18:56.237000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "D9I1Te40XnWqvLesIROy",
+        "fields": {
+          "name": "Pilha/Bateria",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "D9I1Te40XnWqvLesIROy",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DEVp6SpXQp1U5KQtoOCF",
+        "fields": {
+          "name": "Aves e Cortes Congelados",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "DEVp6SpXQp1U5KQtoOCF",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DWlp9bzlMq2Dn5CcaWB1",
+        "fields": {
+          "name": "Rosquinhas",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "DWlp9bzlMq2Dn5CcaWB1",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Dan8MaynJfKXcycV6LZ3",
+        "fields": {
+          "name": "Espetinhos",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "Dan8MaynJfKXcycV6LZ3",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DbM2IzBT4WT2AfTw0QIp",
+        "fields": {
+          "name": "Cerveja Garrafa",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "DbM2IzBT4WT2AfTw0QIp",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DbUVfZnV8jJInyKInKIC",
+        "fields": {
+          "name": "Pirulito",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "DbUVfZnV8jJInyKInKIC",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "DgbgvNS2t1XfbmQ2dU2e",
+        "fields": {
+          "name": "Produtos para cabelo ",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "DgbgvNS2t1XfbmQ2dU2e",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "E2mNlZd1Xee5UP9UQOP7",
+        "fields": {
+          "name": "Linhaça",
+          "categoryId": "H4oUStBC1tKGbiONE0kq",
+          "updateAt": "2026-02-15T04:24:08.767000+00:00",
+          "id": "E2mNlZd1Xee5UP9UQOP7",
+          "createAt": "2026-02-15T04:24:08.767000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ECBq91eLZ3OPCCrWuS2N",
+        "fields": {
+          "name": "Achocolatado em Pó",
+          "categoryId": "mercearia",
+          "updateAt": "2026-02-15T04:23:46.030000+00:00",
+          "id": "ECBq91eLZ3OPCCrWuS2N",
+          "createAt": "2026-02-15T04:23:46.030000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "EKDxE9Ifrl7Jvluazdq2",
+        "fields": {
+          "name": "Molho em Frasco",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "EKDxE9Ifrl7Jvluazdq2",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ELfFMvRP2HbfCeKVixrh",
+        "fields": {
+          "name": "Linguiças e Salsichas",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "ELfFMvRP2HbfCeKVixrh",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "EQaxacw2tp4ikqxkGlq3",
+        "fields": {
+          "name": "Polvilho/Tapioca",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "EQaxacw2tp4ikqxkGlq3",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "EsWJOMgJv5lHdX3haYfo",
+        "fields": {
+          "name": "Achocolatados/Vitaminas",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "EsWJOMgJv5lHdX3haYfo",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "EuTwLwweukGpqKrdHtPq",
+        "fields": {
+          "name": "A Base de Soja",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "EuTwLwweukGpqKrdHtPq",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "F0KjJqgU6kKPjr8NHtTy",
+        "fields": {
+          "name": "Mais Opções",
+          "categoryId": "Q7TlMRwK1DcXybCa44PY",
+          "updateAt": "2026-02-15T04:25:22.496000+00:00",
+          "id": "F0KjJqgU6kKPjr8NHtTy",
+          "createAt": "2026-02-15T04:25:22.496000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "F1ZJzNIoXqmVlT1g1y54",
+        "fields": {
+          "name": "Mel/Derivados",
+          "categoryId": "H4oUStBC1tKGbiONE0kq",
+          "updateAt": "2026-02-15T04:24:08.767000+00:00",
+          "id": "F1ZJzNIoXqmVlT1g1y54",
+          "createAt": "2026-02-15T04:24:08.767000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FAyuLT11Zs0Ju7zTGPzw",
+        "fields": {
+          "name": "Geléias",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "FAyuLT11Zs0Ju7zTGPzw",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FRqjgVTQJrBKFd3eqfSt",
+        "fields": {
+          "name": "Pão Doce/Recheados",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "FRqjgVTQJrBKFd3eqfSt",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FZwgcpLd2YlICdXrUvfT",
+        "fields": {
+          "name": "Biscoito de Polvilho",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "FZwgcpLd2YlICdXrUvfT",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Fc8TyAYuf2c5QXQ7Drxu",
+        "fields": {
+          "name": "Sorvete/Açaí",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "Fc8TyAYuf2c5QXQ7Drxu",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FfedlcNkjCHFmEL66DW0",
+        "fields": {
+          "name": "Kits",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "FfedlcNkjCHFmEL66DW0",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FmVEH83EkZRoiu8TYNxj",
+        "fields": {
+          "name": "Papelaria",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "FmVEH83EkZRoiu8TYNxj",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FuVblezvkEgSntEBHlom",
+        "fields": {
+          "name": "Pote",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "FuVblezvkEgSntEBHlom",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "FypWNxEpFgM1Z0hRU8p8",
+        "fields": {
+          "name": "Mais Congelados",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "FypWNxEpFgM1Z0hRU8p8",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "G5AQjgKSpVW3XE2tkmm9",
+        "fields": {
+          "name": "Cozinha/Utensílios",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "G5AQjgKSpVW3XE2tkmm9",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "GPKVDh11yYdK1VNKc8R1",
+        "fields": {
+          "name": "Chocolate",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "GPKVDh11yYdK1VNKc8R1",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "GT3sj93gQpsM05eaVuVO",
+        "fields": {
+          "name": "Amendoim",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "GT3sj93gQpsM05eaVuVO",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "GZAzxqi0JAb8xHvHDO8v",
+        "fields": {
+          "name": "Farinha de trigo",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "GZAzxqi0JAb8xHvHDO8v",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "GeUHySwfH83BV1muxDE8",
+        "fields": {
+          "name": "Farinhas de Milho e Mandioca",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "GeUHySwfH83BV1muxDE8",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Ghgy75J3VmAFEObHyUxX",
+        "fields": {
+          "name": "Automotivo",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "Ghgy75J3VmAFEObHyUxX",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "GqfVGeOoIbXMMV4OdU5k",
+        "fields": {
+          "name": "Iogurte/Fermentado",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "GqfVGeOoIbXMMV4OdU5k",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "H23NaSRpvqNgGbTiJebM",
+        "fields": {
+          "name": "Pãozinho/Bisnaguinha",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "H23NaSRpvqNgGbTiJebM",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "H5nhvZqyvMEB7SYHlV9D",
+        "fields": {
+          "name": "Farinhas",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "H5nhvZqyvMEB7SYHlV9D",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "H79wk2s62mKzyWgU0pB9",
+        "fields": {
+          "name": "Curativos",
+          "categoryId": "tBQebPhJCvz3scbEaYGu",
+          "updateAt": "2026-02-15T04:18:56.237000+00:00",
+          "id": "H79wk2s62mKzyWgU0pB9",
+          "createAt": "2026-02-15T04:18:56.237000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HHiFHTgXg5m0tCkLj6jx",
+        "fields": {
+          "name": "Cookies",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "HHiFHTgXg5m0tCkLj6jx",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HLHgWIJNG8GYyrzHcBg0",
+        "fields": {
+          "name": "Farofas",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "HLHgWIJNG8GYyrzHcBg0",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HPNORjKYEl3QnlyCH3E1",
+        "fields": {
+          "name": "Especiais",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "HPNORjKYEl3QnlyCH3E1",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Hgjl65ywn4ozif05hm9R",
+        "fields": {
+          "name": "Biscoito de Queijo",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "Hgjl65ywn4ozif05hm9R",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "HoFlKyoCKf9NbiryEPCy",
+        "fields": {
+          "name": "Mercearia",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "HoFlKyoCKf9NbiryEPCy",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Hxg4gAZ4CSnx454mL9l2",
+        "fields": {
+          "name": "Ice",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "Hxg4gAZ4CSnx454mL9l2",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "IHPgrxrloNfIlsv0sges",
+        "fields": {
+          "name": "Linguiça/Bacon",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "IHPgrxrloNfIlsv0sges",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "IkvMHcBZprv1zkGkhtZm",
+        "fields": {
+          "name": "Queijo/Requeijão",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "IkvMHcBZprv1zkGkhtZm",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ItAcxBTHTFPS9d5KKowS",
+        "fields": {
+          "name": "Amanteigados",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "ItAcxBTHTFPS9d5KKowS",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "J2udaMg64WGo2oqPrTbv",
+        "fields": {
+          "name": "Pão de Forma",
+          "categoryId": "Q7TlMRwK1DcXybCa44PY",
+          "updateAt": "2026-02-15T04:25:22.496000+00:00",
+          "id": "J2udaMg64WGo2oqPrTbv",
+          "createAt": "2026-02-15T04:25:22.496000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "JApKyu2HhyxFyDDfI7qX",
+        "fields": {
+          "name": "Mais Temperos",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "JApKyu2HhyxFyDDfI7qX",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "JE6vmHrlR0raXPIm0Sbp",
+        "fields": {
+          "name": "Perfumaria e Higiene Pet",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "JE6vmHrlR0raXPIm0Sbp",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "JVrlQUQrDz1z9B7v7CZz",
+        "fields": {
+          "name": "Bala",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "JVrlQUQrDz1z9B7v7CZz",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "JjaUG8sOOfsuA8R1JThf",
+        "fields": {
+          "name": "Cortes de Primeira",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "JjaUG8sOOfsuA8R1JThf",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "JwWF0RK2LHUIQ6cL3lOW",
+        "fields": {
+          "name": "Pizza",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "JwWF0RK2LHUIQ6cL3lOW",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "KBpjomnzgqWLuh6w2DWD",
+        "fields": {
+          "name": "Peito",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "KBpjomnzgqWLuh6w2DWD",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "KKLiLzWhutbHWSeBvFri",
+        "fields": {
+          "name": "Pão Francês/Recheados",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "KKLiLzWhutbHWSeBvFri",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "KfxJjJTowlZFTtARwcdh",
+        "fields": {
+          "name": "Miúdos ",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "KfxJjJTowlZFTtARwcdh",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "KyK2QGwUkMqrUfxHcRfS",
+        "fields": {
+          "name": "Cartela",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "KyK2QGwUkMqrUfxHcRfS",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "LLZ8y0OU1AASvrZWzVdL",
+        "fields": {
+          "name": "Vinho Seco",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "LLZ8y0OU1AASvrZWzVdL",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "LdYWFZqB5T7pTUlWJT6E",
+        "fields": {
+          "name": "Carne Suína",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "LdYWFZqB5T7pTUlWJT6E",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "LeqaWDb7dUBb3Z8V8Yqj",
+        "fields": {
+          "name": "Milho de pipoca",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "LeqaWDb7dUBb3Z8V8Yqj",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "LxE5hDZ63Tc8wVqc8RKs",
+        "fields": {
+          "name": "Empanados",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "LxE5hDZ63Tc8wVqc8RKs",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "M6exV5BVLqP7eoBfC3cK",
+        "fields": {
+          "name": "Sabão em Pó",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "M6exV5BVLqP7eoBfC3cK",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "MMGashoMWZcUDQHCfao4",
+        "fields": {
+          "name": "Pimentinhas",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "MMGashoMWZcUDQHCfao4",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Mcoit0tmUtiCNtEh8ave",
+        "fields": {
+          "name": "Pães",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "Mcoit0tmUtiCNtEh8ave",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "N1Eg9yvjpRjdCfpHIijM",
+        "fields": {
+          "name": "Biscoitos Salgados",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "N1Eg9yvjpRjdCfpHIijM",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "N9vYlXyUeyf6Q6PKOIlr",
+        "fields": {
+          "name": "Mais Frios",
+          "categoryId": "PcnQsRLfIHbfJju4Jt9y",
+          "updateAt": "2026-02-15T04:18:30.686000+00:00",
+          "id": "N9vYlXyUeyf6Q6PKOIlr",
+          "createAt": "2026-02-15T04:18:30.686000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "NxCHZjF7QNkfN7pFbSY9",
+        "fields": {
+          "name": "Sachês",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "NxCHZjF7QNkfN7pFbSY9",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "NzaSK77OnOij97ZECFje",
+        "fields": {
+          "name": "Área de Serviços",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "NzaSK77OnOij97ZECFje",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OB0YqShFz1HUFmu3LZE3",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "OB0YqShFz1HUFmu3LZE3",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OF6GNcLvnDIvK6kFrUps",
+        "fields": {
+          "name": "Utensílios Pet",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "OF6GNcLvnDIvK6kFrUps",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OTKghAfOKCHotE3Gi9s0",
+        "fields": {
+          "name": "Polpa de Frutas",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "OTKghAfOKCHotE3Gi9s0",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OU7p4AuZitKBofXXmuz9",
+        "fields": {
+          "name": "Plinc",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "OU7p4AuZitKBofXXmuz9",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OVI7wwD4cYwHc9UiiXbM",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "OVI7wwD4cYwHc9UiiXbM",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OWdS8XYbb9WP9GjZR7sy",
+        "fields": {
+          "name": "Artigos de Festa",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "OWdS8XYbb9WP9GjZR7sy",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OftUMqjK6lP2he9MuXy1",
+        "fields": {
+          "name": "Calçado",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "OftUMqjK6lP2he9MuXy1",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "OqoBE2cz4IEHQSYjguOL",
+        "fields": {
+          "name": "Salgadinhos",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "OqoBE2cz4IEHQSYjguOL",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "P5VxFglAUrffTNlwTfOs",
+        "fields": {
+          "name": "Farofa Pronta",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "P5VxFglAUrffTNlwTfOs",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "PKqYem2bZaP5dA85qyJW",
+        "fields": {
+          "name": "Biscoito de Maizena",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "PKqYem2bZaP5dA85qyJW",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "PsUBkRHi6flhOYzsVZtZ",
+        "fields": {
+          "name": "Farinha de rosca",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "PsUBkRHi6flhOYzsVZtZ",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Q6yFb56pbyGdi8QSbgpp",
+        "fields": {
+          "name": "Cebolitos/Baconzitos/Doritos",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "Q6yFb56pbyGdi8QSbgpp",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Q7sjFk6AZWN9NGAJf2fA",
+        "fields": {
+          "name": "Mais Bebidas",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "Q7sjFk6AZWN9NGAJf2fA",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QEoywjhiacithlmhnS9n",
+        "fields": {
+          "name": "Desinfetante",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "QEoywjhiacithlmhnS9n",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QcE0hfRBQ4rjye8TCWxp",
+        "fields": {
+          "name": "Cheetos/Fandangos",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "QcE0hfRBQ4rjye8TCWxp",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Qd9XnIcQd9pBVRP6iWV4",
+        "fields": {
+          "name": "Suco Caixa 1L",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "Qd9XnIcQd9pBVRP6iWV4",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QmoYLCUcOVaUw5lHllYT",
+        "fields": {
+          "name": "Suco em Pó ",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "QmoYLCUcOVaUw5lHllYT",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QtHqgh24CxgX4AUgegeA",
+        "fields": {
+          "name": "Coxa/Sobre/Sobrecoxa",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "QtHqgh24CxgX4AUgegeA",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "QzTvWbiPJDwekbEI7ryg",
+        "fields": {
+          "name": "Lentilha/Grão de Bico",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "QzTvWbiPJDwekbEI7ryg",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "RHS9lkuqVHVBAIZjDxVK",
+        "fields": {
+          "name": "Cachaça",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "RHS9lkuqVHVBAIZjDxVK",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "S3jUzqBSEogWZBC1V8Ra",
+        "fields": {
+          "name": "Cera",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "S3jUzqBSEogWZBC1V8Ra",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "SjS3AHQTPQcVORfcAY7T",
+        "fields": {
+          "name": "Coco/Derivados",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "SjS3AHQTPQcVORfcAY7T",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Sti2wBBVLXD4RVTKTlfT",
+        "fields": {
+          "name": "Barba/Depilação",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "Sti2wBBVLXD4RVTKTlfT",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Th1xGEGLzRB3bFE8Smyo",
+        "fields": {
+          "name": "Doce Pedaço",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "Th1xGEGLzRB3bFE8Smyo",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ThSvDDUALYAr84vKR04B",
+        "fields": {
+          "name": "Chás",
+          "categoryId": "H4oUStBC1tKGbiONE0kq",
+          "updateAt": "2026-02-15T04:24:08.767000+00:00",
+          "id": "ThSvDDUALYAr84vKR04B",
+          "createAt": "2026-02-15T04:24:08.767000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "UG910hCJRfuIWVzCno2V",
+        "fields": {
+          "name": "Sovado/Empacotados Diversos",
+          "categoryId": "Q7TlMRwK1DcXybCa44PY",
+          "updateAt": "2026-02-15T04:25:22.496000+00:00",
+          "id": "UG910hCJRfuIWVzCno2V",
+          "createAt": "2026-02-15T04:25:22.496000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "UGM9Jd9tlMy0B6girwgX",
+        "fields": {
+          "name": "Esponjas",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "UGM9Jd9tlMy0B6girwgX",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "UqgxbOVGbn7ou6Ylwcyo",
+        "fields": {
+          "name": "Milho de Pipoca",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "UqgxbOVGbn7ou6Ylwcyo",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Us2ejjcjGBG2kF8ECnxS",
+        "fields": {
+          "name": "Biscoito/Pão de Queijo",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "Us2ejjcjGBG2kF8ECnxS",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "V7xqQj7WI90HAZZ2cPCR",
+        "fields": {
+          "name": "Ovos",
+          "categoryId": "hortifruti",
+          "updateAt": "2026-02-15T04:20:04.954000+00:00",
+          "id": "V7xqQj7WI90HAZZ2cPCR",
+          "createAt": "2026-02-15T04:20:04.954000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "VUcqWNMLuYSjEgAT8Zmn",
+        "fields": {
+          "name": "Creme",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "VUcqWNMLuYSjEgAT8Zmn",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "VxaF9Rq2ybd7Liq7MNVN",
+        "fields": {
+          "name": "Amido/Mingau",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "VxaF9Rq2ybd7Liq7MNVN",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "WXg0CLiIehrNcLzO4WEz",
+        "fields": {
+          "name": "Pastilhas",
+          "categoryId": "ocbODuL4gh1SQNI9MUMn",
+          "updateAt": "2026-02-15T04:19:22.537000+00:00",
+          "id": "WXg0CLiIehrNcLzO4WEz",
+          "createAt": "2026-02-15T04:19:22.537000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "XOXp60TP8q15xyFdnxUW",
+        "fields": {
+          "name": "Lasanha",
+          "categoryId": "NJBuIlFYOgXmbMRbJFsh",
+          "updateAt": "2026-02-15T04:17:33.980000+00:00",
+          "id": "XOXp60TP8q15xyFdnxUW",
+          "createAt": "2026-02-15T04:17:33.980000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "XuS1HngsfAqQNepL7NwX",
+        "fields": {
+          "name": "Parrilha",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "XuS1HngsfAqQNepL7NwX",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Xx2Vhb6GMUzKQeKgeO38",
+        "fields": {
+          "name": "Café",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "Xx2Vhb6GMUzKQeKgeO38",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Y9ANg4xm2SOxm2BFFGKa",
+        "fields": {
+          "name": "Embalados",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "Y9ANg4xm2SOxm2BFFGKa",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "YXmkCv4Tb9AYgE4rYsMe",
+        "fields": {
+          "name": "Amaciante",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "YXmkCv4Tb9AYgE4rYsMe",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "Yhddb08P7KeBirOaylzj",
+        "fields": {
+          "name": "Embalados",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "Yhddb08P7KeBirOaylzj",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "YsErdAMJliMjvS8P7PC7",
+        "fields": {
+          "name": "Água mineral e Água de coco",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "YsErdAMJliMjvS8P7PC7",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZFJGH6ZM1XpWnLj5AGZV",
+        "fields": {
+          "name": "Suco Caixinha/Lata",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "ZFJGH6ZM1XpWnLj5AGZV",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZHoNZzbqFwa8JeiPht5E",
+        "fields": {
+          "name": "Torradas",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "ZHoNZzbqFwa8JeiPht5E",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZXJuh32EpDxzFOqocUEy",
+        "fields": {
+          "name": "Gourmet",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "ZXJuh32EpDxzFOqocUEy",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZcwgC8ccV6F5ehQ5ZfR1",
+        "fields": {
+          "name": "Saúde Bucal",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "ZcwgC8ccV6F5ehQ5ZfR1",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ZzhgJTpqtOJn98LApa2u",
+        "fields": {
+          "name": "Sucos",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "ZzhgJTpqtOJn98LApa2u",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "a7wUqcx8HGLcnGayQDkq",
+        "fields": {
+          "name": "Especiais",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "a7wUqcx8HGLcnGayQDkq",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "aJmQ2OGi0Y6jlzerAl0L",
+        "fields": {
+          "name": "Peixes/Frutos do Mar",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "aJmQ2OGi0Y6jlzerAl0L",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "aLtsjrCXgRk8MJuK47y4",
+        "fields": {
+          "name": "Linguiça",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "aLtsjrCXgRk8MJuK47y4",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "amYCjZDDLZE6AhuXyVKr",
+        "fields": {
+          "name": "Canjica/Canjiquinha",
+          "categoryId": "u0Yzu9DRwcchumGYl8R4",
+          "updateAt": "2026-02-15T04:19:08.725000+00:00",
+          "id": "amYCjZDDLZE6AhuXyVKr",
+          "createAt": "2026-02-15T04:19:08.725000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "amendoimCanjica",
+        "fields": {
+          "name": "Amendoim e canjica",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "amendoimCanjica",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ar2fOpTDXdex3Lg7ATCa",
+        "fields": {
+          "name": "Sabão em Barra/Líquido",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "ar2fOpTDXdex3Lg7ATCa",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "av4faj0R5gLkTHax4L56",
+        "fields": {
+          "name": "Caldo em Cubos",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "av4faj0R5gLkTHax4L56",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "azQe5zSxbSvkCwwLUF0o",
+        "fields": {
+          "name": "Destiladas",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "azQe5zSxbSvkCwwLUF0o",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "bmCb8wv1HpG1BwCZ8YRk",
+        "fields": {
+          "name": "Condicionador",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "bmCb8wv1HpG1BwCZ8YRk",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cdFJ2KnWwiRj0V0eItkT",
+        "fields": {
+          "name": "Água de Coco",
+          "categoryId": "gRZ08KY5SYQs7DHjJBDJ",
+          "updateAt": "2026-02-15T04:25:36.425000+00:00",
+          "id": "cdFJ2KnWwiRj0V0eItkT",
+          "createAt": "2026-02-15T04:25:36.425000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "clT4W6NnfZKgNOtG3eMc",
+        "fields": {
+          "name": "Confeitados",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "clT4W6NnfZKgNOtG3eMc",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "corpo",
+        "fields": {
+          "name": "Corpo",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "corpo",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "cortes_de_fran",
+        "fields": {
+          "name": "CORTES DE FRAN",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "cortes_de_fran",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "dJDOrXcowSIPamoMoMax",
+        "fields": {
+          "name": "Alvejante",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "dJDOrXcowSIPamoMoMax",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "detergente",
+        "fields": {
+          "name": "Detergente",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "detergente",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "e5J05eEtPSM7r9XLLE0D",
+        "fields": {
+          "name": "Creme de Leite",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "e5J05eEtPSM7r9XLLE0D",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "eGslz72doMb21Qwkd1XK",
+        "fields": {
+          "name": "Fralda Descartável",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "eGslz72doMb21Qwkd1XK",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "elkvn4iqDee9kHt1mUzD",
+        "fields": {
+          "name": "Petiscos",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "elkvn4iqDee9kHt1mUzD",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "exoticos",
+        "fields": {
+          "name": "Exóticos",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "exoticos",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "fSWULb0s25clpPGLNAcB",
+        "fields": {
+          "name": "Vinhos",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "fSWULb0s25clpPGLNAcB",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "fUaGNueGsiBwCpBmEVfG",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "fUaGNueGsiBwCpBmEVfG",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "farinhaMillho",
+        "fields": {
+          "name": "Farinha de milho",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "farinhaMillho",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "gltxTInDKmAQoXvUyebE",
+        "fields": {
+          "name": "Sal",
+          "categoryId": "g9NEgrhPZDKwFVKQ8ahL",
+          "updateAt": "2026-02-15T04:25:48.983000+00:00",
+          "id": "gltxTInDKmAQoXvUyebE",
+          "createAt": "2026-02-15T04:25:48.983000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "granel",
+        "fields": {
+          "name": "Granel",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "granel",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "hZlW6T7U0clTcpE4gof7",
+        "fields": {
+          "name": "Quitandas",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "hZlW6T7U0clTcpE4gof7",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "hvf3XNctMubOv90OoOMF",
+        "fields": {
+          "name": "Ferramentas",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "hvf3XNctMubOv90OoOMF",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "inseticidas",
+        "fields": {
+          "name": "Inseticidas",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "inseticidas",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ittlvWePhq2aIGPlRsZI",
+        "fields": {
+          "name": "Alimento para Cães",
+          "categoryId": "TNb0sHqTOLNuvxLtLKk5",
+          "updateAt": "2026-02-15T04:15:03.175000+00:00",
+          "id": "ittlvWePhq2aIGPlRsZI",
+          "createAt": "2026-02-15T04:15:03.175000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "jU77g8Z9fBh4y7kDbazP",
+        "fields": {
+          "name": "Gelatinas",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "jU77g8Z9fBh4y7kDbazP",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "legumes",
+        "fields": {
+          "name": "Legumes",
+          "categoryId": "hortifruti",
+          "updateAt": "2026-02-15T04:20:04.954000+00:00",
+          "id": "legumes",
+          "createAt": "2026-02-15T04:20:04.954000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "limpadores",
+        "fields": {
+          "name": "Limpadores",
+          "categoryId": "limpeza",
+          "updateAt": "2026-02-15T04:22:06.162000+00:00",
+          "id": "limpadores",
+          "createAt": "2026-02-15T04:22:06.162000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "lmcdTRQ9EHOJn9IVhXof",
+        "fields": {
+          "name": "Mais Utilidades",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "lmcdTRQ9EHOJn9IVhXof",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "mIjFIdLZ0o1BK9W041B7",
+        "fields": {
+          "name": "Biscoito Doce",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "mIjFIdLZ0o1BK9W041B7",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "nu3IlKHvf0QKSpdgcc1Y",
+        "fields": {
+          "name": "Cream Cracker",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "nu3IlKHvf0QKSpdgcc1Y",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "outros",
+        "fields": {
+          "name": "Outros",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "outros",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "outrosOutros",
+        "fields": {
+          "name": "Outros",
+          "categoryId": "outros",
+          "id": "outrosOutros",
+          "isActive": true
+        }
+      },
+      {
+        "id": "outrosPadaria",
+        "fields": {
+          "name": "Outros",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "outrosPadaria",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "polvilhoAzedo",
+        "fields": {
+          "name": "Polvilho Azedo",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "polvilhoAzedo",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "porco",
+        "fields": {
+          "name": "Carne Suína",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "porco",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "qOMtvbXjGj0UhOAJpBSd",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "hortifruti",
+          "updateAt": "2026-02-15T04:20:04.954000+00:00",
+          "id": "qOMtvbXjGj0UhOAJpBSd",
+          "createAt": "2026-02-15T04:20:04.954000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "qwG62CA7ZfmH9DrENyr9",
+        "fields": {
+          "name": "Mais Laticínios",
+          "categoryId": "93OpBNqbtNLreJOvysUF",
+          "updateAt": "2026-02-15T04:21:19.937000+00:00",
+          "id": "qwG62CA7ZfmH9DrENyr9",
+          "createAt": "2026-02-15T04:21:19.937000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "sabonete",
+        "fields": {
+          "name": "Sabonete",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "sabonete",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "salgados",
+        "fields": {
+          "name": "SALGADOS",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "salgados",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "t1mFcAUUCtXyLi3IqukF",
+        "fields": {
+          "name": "Biscoito de Nata",
+          "categoryId": "4VJL4Je2Kk9fGXoH5Huw",
+          "updateAt": "2026-02-15T04:16:21.198000+00:00",
+          "id": "t1mFcAUUCtXyLi3IqukF",
+          "createAt": "2026-02-15T04:16:21.198000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "t4rHknicXbLXyuaEW7pg",
+        "fields": {
+          "name": "Milho Assado",
+          "categoryId": "Gxl7MlJm2Xva4azNur9R",
+          "updateAt": "2026-02-15T04:26:54.763000+00:00",
+          "id": "t4rHknicXbLXyuaEW7pg",
+          "createAt": "2026-02-15T04:26:54.763000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "toSETvgp1QV8pq9HvNSk",
+        "fields": {
+          "name": "Sanduíches",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "toSETvgp1QV8pq9HvNSk",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "tomadas",
+        "fields": {
+          "name": "Tomadas",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "tomadas",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "trigoQuibe",
+        "fields": {
+          "name": "Trigo para quibe",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "trigoQuibe",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "udS91WZE3PfsBq6hAIdM",
+        "fields": {
+          "name": "Espumantes",
+          "categoryId": "bebidas",
+          "updateAt": "2026-02-15T04:16:01.286000+00:00",
+          "id": "udS91WZE3PfsBq6hAIdM",
+          "createAt": "2026-02-15T04:16:01.286000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "ukzn7WeMCizvaQF82QXZ",
+        "fields": {
+          "name": "Mortadela/Salame",
+          "categoryId": "PcnQsRLfIHbfJju4Jt9y",
+          "updateAt": "2026-02-15T04:18:30.686000+00:00",
+          "id": "ukzn7WeMCizvaQF82QXZ",
+          "createAt": "2026-02-15T04:18:30.686000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "v95NpcFm9WiZSCSfyERR",
+        "fields": {
+          "name": "Absorvente",
+          "categoryId": "higiene",
+          "updateAt": "2026-02-15T04:19:43.970000+00:00",
+          "id": "v95NpcFm9WiZSCSfyERR",
+          "createAt": "2026-02-15T04:19:43.970000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "vopjiMZ0qeDHRxLY2tMX",
+        "fields": {
+          "name": "Farinha Láctea",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "vopjiMZ0qeDHRxLY2tMX",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "vqDt622hqpkjhu98ydrD",
+        "fields": {
+          "name": "Hot Dog/Hambúrguer",
+          "categoryId": "Q7TlMRwK1DcXybCa44PY",
+          "updateAt": "2026-02-15T04:25:22.496000+00:00",
+          "id": "vqDt622hqpkjhu98ydrD",
+          "createAt": "2026-02-15T04:25:22.496000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "wCojj4BWTuvvdhxSki9g",
+        "fields": {
+          "name": "Salsicha",
+          "categoryId": "lZP2iBskINtpOVxncQtA",
+          "updateAt": "2026-02-15T04:16:56.486000+00:00",
+          "id": "wCojj4BWTuvvdhxSki9g",
+          "createAt": "2026-02-15T04:16:56.486000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "wDMG33utTlofsqiaKMJ8",
+        "fields": {
+          "name": "Doce Pastoso",
+          "categoryId": "z2Iv1xs8ve9uhaV4xgOL",
+          "updateAt": "2026-02-15T04:26:39.478000+00:00",
+          "id": "wDMG33utTlofsqiaKMJ8",
+          "createAt": "2026-02-15T04:26:39.478000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "wXn0hCRIrLt7DBL7NLBy",
+        "fields": {
+          "name": "Mais Produtos",
+          "categoryId": "padaria",
+          "updateAt": "2026-02-15T04:25:00.584000+00:00",
+          "id": "wXn0hCRIrLt7DBL7NLBy",
+          "createAt": "2026-02-15T04:25:00.584000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "wwcNKKF8odl1RTCtDlsE",
+        "fields": {
+          "name": "Mais Farinhas",
+          "categoryId": "farinaceos",
+          "updateAt": "2026-02-15T04:18:18.633000+00:00",
+          "id": "wwcNKKF8odl1RTCtDlsE",
+          "createAt": "2026-02-15T04:18:18.633000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "xUAqzqnDcKprxgH1cOO8",
+        "fields": {
+          "name": "Mais Opções",
+          "categoryId": "xNSx6EUWUnkwxXiy4jh0",
+          "updateAt": "2026-02-15T04:14:53.346000+00:00",
+          "id": "xUAqzqnDcKprxgH1cOO8",
+          "createAt": "2026-02-15T04:14:53.346000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "xjkzrS0aPPhoNcdYu17l",
+        "fields": {
+          "name": "Bisnaguinhas/Pãezinhos",
+          "categoryId": "Q7TlMRwK1DcXybCa44PY",
+          "updateAt": "2026-02-15T04:25:22.496000+00:00",
+          "id": "xjkzrS0aPPhoNcdYu17l",
+          "createAt": "2026-02-15T04:25:22.496000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "xs5Fi1DT8rAl0SaLV4JQ",
+        "fields": {
+          "name": "Elétrico",
+          "categoryId": "utilidades",
+          "updateAt": "2026-02-15T04:26:06.398000+00:00",
+          "id": "xs5Fi1DT8rAl0SaLV4JQ",
+          "createAt": "2026-02-15T04:26:06.398000+00:00",
+          "isActive": true
+        }
+      },
+      {
+        "id": "yPwKScUgMIuUUCrAdEYl",
+        "fields": {
+          "name": "Cortes de Segunda",
+          "categoryId": "acougue",
+          "updateAt": "2026-02-15T04:15:21.914000+00:00",
+          "id": "yPwKScUgMIuUUCrAdEYl",
+          "createAt": "2026-02-15T04:15:21.914000+00:00",
+          "isActive": true
+        }
+      }
+    ]
+  }
+}

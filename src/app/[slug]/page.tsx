@@ -35,6 +35,12 @@ import {
   removerItemCarrinhoFirestore,
   limparCarrinhoFirestore,
   buscarLogoEstabelecimento,
+  buscarNomeEstabelecimento,
+  buscarFormasPagamento,
+  criarUsuarioNovo,
+  atualizarNomeUsuario,
+  criarOuObterUsuarioConvidado,
+  GUEST_USER_DOC_ID,
   ExemploConversa,
   DELIVERY_PRICE,
 } from "@/services/firestore";
@@ -53,7 +59,12 @@ const STOPWORDS_BUSCA = new Set([
   'oi', 'ola',
   'tem', 'tenho', 'quero', 'queria', 'preciso', 'procuro', 'busco',
   'me', 'pra', 'para', 'com', 'sem', 'uma', 'uns', 'umas', 'dos', 'das',
-  'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa'
+  'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa',
+  'mais', 'opcao', 'opcoes', 'outro', 'outros', 'outra', 'outras', 'tipo', 'tipos',
+  'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
+  'novo', 'nova', 'lista', 'pedido', 'compra', 'compras', 'item', 'itens',
+  'ha', 'ai', 'ah', 'so', 'ate', 'ou', 'que', 'se', 'ja', 'la', 'ca',
+  'tudo', 'nada', 'ainda', 'agora', 'aqui', 'ali', 'isso', 'esse', 'essa', 'esses', 'essas'
 ]);
 
 const ALIASES_BUSCA: Record<string, string[]> = {
@@ -148,6 +159,21 @@ function ehSaudacaoCurta(texto: string): boolean {
     'tudo bem',
     'blz',
   ]).has(t);
+}
+
+function ehIntencaoSemProduto(texto: string): boolean {
+  const t = normalizar(texto);
+  return (
+    t.includes('lista de compras') ||
+    t.includes('tenho uma lista') ||
+    t.includes('novo pedido') ||
+    t.includes('fazer um pedido') ||
+    t.includes('fazer pedido') ||
+    t.includes('comecar pedido') ||
+    t.includes('iniciar pedido') ||
+    t.includes('quero pedir') ||
+    t.includes('vou pedir')
+  );
 }
 
 function ehIntencaoCheckout(texto: string): boolean {
@@ -722,6 +748,8 @@ const AgentePage: React.FC = () => {
   const [indiceCategoria, setIndiceCategoria] = useState<string>('');
   const [carrinho, setCarrinho]               = useState<CartItem[]>([]);
   const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
+  const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>('');
+  const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
   const [flowState, setFlowState]             = useState<FlowState>(FLOW_STATES.BROWSING);
   const [customerData, setCustomerData]       = useState<CustomerData>({});
 
@@ -803,7 +831,21 @@ const AgentePage: React.FC = () => {
   }, []);
 
   // -------- Autenticação --------
+  const isGuestMode = process.env.NEXT_PUBLIC_GUEST_MODE === 'true';
+
   useEffect(() => {
+    if (isGuestMode) {
+      criarOuObterUsuarioConvidado()
+        .then((docId) => {
+          setUserDocId(docId);
+          setNomeCliente('Convidado');
+          setUser({ uid: GUEST_USER_DOC_ID } as any);
+          setAuthLoading(false);
+        })
+        .catch(() => setAuthLoading(false));
+      return;
+    }
+
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       if (currentUser) {
@@ -815,7 +857,15 @@ const AgentePage: React.FC = () => {
             const d    = snap.docs[0];
             const data = d.data() as any;
             setUserDocId(d.id);
-            setNomeCliente(montarNomeCompletoUsuario(data, currentUser));
+            const nome = montarNomeCompletoUsuario(data, currentUser);
+            setNomeCliente(nome);
+            if (!nome || nome === 'Cliente') {
+              setFlowState(FLOW_STATES.COLLECTING_NAME);
+            }
+          } else {
+            const newDocId = await criarUsuarioNovo(currentUser.uid);
+            setUserDocId(newDocId);
+            setFlowState(FLOW_STATES.COLLECTING_NAME);
           }
         } catch (e) {
           console.error("Erro ao buscar usuário:", e);
@@ -824,12 +874,19 @@ const AgentePage: React.FC = () => {
       setAuthLoading(false);
     });
     return () => unsub();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // -------- Logo do estabelecimento --------
   useEffect(() => {
     buscarLogoEstabelecimento(companyId)
       .then((url) => { if (url) setLogoEstabelecimento(url); })
+      .catch(() => {});
+    buscarNomeEstabelecimento(companyId)
+      .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
+      .catch(() => {});
+    buscarFormasPagamento(companyId)
+      .then((formas) => { if (formas.length > 0) setFormasPagamento(formas); })
       .catch(() => {});
   }, [companyId]);
 
@@ -889,7 +946,7 @@ const AgentePage: React.FC = () => {
         setMensagens([{
           id:        "welcome",
           role:      "assistant",
-          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do Supermercado.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
+          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
           timestamp: new Date(),
         }]);
       } catch (e) {
@@ -898,7 +955,7 @@ const AgentePage: React.FC = () => {
         setMensagens([{
           id:        "welcome",
           role:      "assistant",
-          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do Supermercado.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
+          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
           timestamp: new Date(),
         }]);
       } finally {
@@ -931,7 +988,7 @@ const AgentePage: React.FC = () => {
     setMensagens([{
       id:        "welcome",
       role:      "assistant",
-      content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do Supermercado.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
+      content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
       timestamp: new Date(),
     }]);
   };
@@ -1660,7 +1717,9 @@ const AgentePage: React.FC = () => {
         nomeCliente,
         enderecoSalvo,
         DELIVERY_PRICE,
-        fewShot
+        fewShot,
+        nomeEstabelecimento,
+        formasPagamento
       );
 
       // ---- Streaming ----
@@ -1719,34 +1778,19 @@ const AgentePage: React.FC = () => {
       );
 
 
-      const respostaPareceListagem =
-        /(?:^|\n)\s*\d+\.\s+.+/m.test(resultado.cleanText) ||
-        /R\$\s*\d/.test(resultado.cleanText);
       const termosBuscaUsuario = extrairPalavrasBaseBusca(texto);
-      const candidatosFallback = produtosMatchDireto.length > 0 ? produtosMatchDireto : produtosFoco;
-      const precisaFallbackCards =
-        resultado.produtosParaMostrar.length === 0 &&
-        wFlowState === FLOW_STATES.BROWSING &&
-        !ehSaudacaoCurta(texto) &&
-        candidatosFallback.length > 0 &&
-        (respostaPareceListagem || termosBuscaUsuario.length > 0);
 
-      const produtosParaExibirBase = precisaFallbackCards
-        ? selecionarCardsPorTermos(termosBuscaUsuario, candidatosFallback, 6)
-        : resultado.produtosParaMostrar;
-      const bloquearSomenteFallbackNesteTurno =
-        ehSaudacaoCurta(texto) ||
-        ehAcaoContinuarComprando(texto) ||
-        ehAcaoAlterarItem(texto) ||
-        ehIntencaoCheckout(texto) ||
-        resultado.newFlowState !== FLOW_STATES.BROWSING;
-      const produtosParaExibir =
-        resultado.produtosParaMostrar.length > 0
-          ? resultado.produtosParaMostrar
-          : (bloquearSomenteFallbackNesteTurno ? [] : produtosParaExibirBase);
+      const produtosParaExibirBase = resultado.produtosParaMostrar;
+      const produtosParaExibir = produtosParaExibirBase;
 
       if (produtosCardIds.length === 0 && produtosParaExibir.length > 0) {
         produtosCardIds = produtosParaExibir.map((p) => p.id);
+      }
+
+      // Salvar nome coletado no primeiro acesso
+      if (resultado.collectedName && userDocId) {
+        setNomeCliente(resultado.collectedName);
+        atualizarNomeUsuario(userDocId, resultado.collectedName).catch(() => {});
       }
 
       // Atualizar ref de últimos produtos mostrados (para contexto de confirmação "Sim")
@@ -2134,7 +2178,7 @@ const AgentePage: React.FC = () => {
     );
   }
 
-  if (!user) {
+  if (!isGuestMode && !user) {
     return (
       <div className={styles.container}>
         <div className={styles.emptyState}>
@@ -2315,6 +2359,7 @@ const AgentePage: React.FC = () => {
                 <div className={styles.produtosCardWrapper}>
                   {msg.produtosCard.map((produto) => {
                     const emCarrinho = carrinho.find(i => i.id === produto.id);
+                    const estoquebaixo = produto.stock >= 1 && produto.stock < 10;
                     return (
                       <div key={produto.id} className={styles.produtoCardRow}>
                         <div className={styles.produtoCard}>
@@ -2336,54 +2381,50 @@ const AgentePage: React.FC = () => {
                                   sizes="96px"
                                   onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }}
                                 />
-                                <ZoomIn
-                                  size={14}
-                                  style={{
-                                    position: "absolute",
-                                    bottom: 4,
-                                    right: 4,
-                                    color: "#fff",
-                                    filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))",
-                                    pointerEvents: "none",
-                                  }}
-                                />
+                                <ZoomIn size={14} style={{ position:"absolute", bottom:4, right:4, color:"#fff", filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.6))", pointerEvents:"none" }} />
                               </>
                             ) : (
-                              <Image
-                                src="/prodSemImg.svg"
-                                alt={produto.name}
-                                fill
-                                className={styles.produtoCardImg}
-                                sizes="96px"
-                              />
+                              <Image src="/prodSemImg.svg" alt={produto.name} fill className={styles.produtoCardImg} sizes="96px" />
                             )}
                           </div>
                           <div className={styles.produtoCardInfo}>
                             <p className={styles.produtoCardName}>{produto.name}</p>
-                            <p className={styles.produtoCardPrice}>
-                              R$ {produto.price.toFixed(2)}
-                            </p>
+                            <p className={styles.produtoCardPrice}>R$ {produto.price.toFixed(2)}</p>
+                            <div className={styles.produtoCardBadges}>
+                              {produto.unityType && (
+                                <span className={styles.badgeUnity}>{produto.unityType.toUpperCase()}</span>
+                              )}
+                              {estoquebaixo && (
+                                <span className={styles.badgeRestam}>RESTAM ({produto.stock})</span>
+                              )}
+                            </div>
                           </div>
+                          {/* Controles de quantidade dentro do card */}
+                          {flowState === FLOW_STATES.BROWSING && (
+                            <div className={styles.produtoCardControls}>
+                              {emCarrinho ? (
+                                <>
+                                  <button className={styles.produtoCardQtyBtn} onClick={() => handleRemoverQtdCarrinho(emCarrinho)}>−</button>
+                                  <span className={styles.produtoCardQtyNum}>{emCarrinho.quantity}</span>
+                                </>
+                              ) : null}
+                              <button
+                                className={styles.produtoCardAddBtn}
+                                onClick={() => {
+                                  const emSelecao =
+                                    (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) ||
+                                    (listaPedidoState && listaPedidoState.stage === "selecting_variant");
+                                  if (emSelecao && !emCarrinho) {
+                                    selecionarVarianteCard(produto);
+                                  } else {
+                                    adicionarSilencioso(produto);
+                                  }
+                                }}
+                                title={emCarrinho ? `Mais 1 ${produto.name}` : `Adicionar ${produto.name}`}
+                              >+</button>
+                            </div>
+                          )}
                         </div>
-                        {/* Botão separado ao lado do card */}
-                        {flowState === FLOW_STATES.BROWSING && (
-                          <button
-                            className={`${styles.produtoCardAddBtn} ${emCarrinho ? styles.produtoCardAddBtnMore : ''}`}
-                            onClick={() => {
-                              const emSelecao =
-                                (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) ||
-                                (listaPedidoState && listaPedidoState.stage === "selecting_variant");
-                              if (emSelecao && !emCarrinho) {
-                                selecionarVarianteCard(produto);
-                              } else {
-                                adicionarSilencioso(produto);
-                              }
-                            }}
-                            title={emCarrinho ? `Mais 1 ${produto.name}` : `Adicionar ${produto.name}`}
-                          >
-                            {emCarrinho ? `+${emCarrinho.quantity}` : '+'}
-                          </button>
-                        )}
                       </div>
                     );
                   })}

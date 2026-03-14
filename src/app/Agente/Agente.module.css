@@ -414,17 +414,18 @@
   overflow: hidden;
   flex: 1;
   min-width: 0;
+  justify-content: space-between;
 }
 
 .produtoCardAddBtn {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 2px solid #3632f8;
   background: #fff;
   color: #3632f8;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -436,16 +437,6 @@
 
 .produtoCardAddBtn:hover {
   background: #3632f8;
-  color: #fff;
-}
-
-.produtoCardAddBtnMore {
-  border-color: #16a34a;
-  color: #16a34a;
-}
-
-.produtoCardAddBtnMore:hover {
-  background: #16a34a;
   color: #fff;
 }
 
@@ -584,6 +575,70 @@
   font-weight: 700;
   color: #3632f8;
   margin: 0;
+}
+
+.produtoCardBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.badgeUnity {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f3f4f6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: 0.03em;
+}
+
+.badgeRestam {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 4px;
+  padding: 2px 6px;
+  letter-spacing: 0.03em;
+}
+
+.produtoCardControls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 4px;
+}
+
+.produtoCardQtyBtn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.produtoCardQtyBtn:hover {
+  background: #f3f4f6;
+}
+
+.produtoCardQtyNum {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #111827;
+  min-width: 18px;
+  text-align: center;
 }
 
 /* ========================================= */

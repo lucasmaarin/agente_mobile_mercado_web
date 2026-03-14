@@ -1,0 +1,413 @@
+{
+  "success": true,
+  "data": {
+    "document": "0R6MaD8sAWbamXHBcIOM",
+    "data": {
+      "id": "0R6MaD8sAWbamXHBcIOM",
+      "fields": {
+        "review": null,
+        "companyImageUrl": "",
+        "deliveryPrice": 4,
+        "createdAt": "2025-11-01T12:09:03.279279+00:00",
+        "price": 128.9,
+        "codeConfirmation": "",
+        "estimatedTimeDelivery": {
+          "date": "2025-11-01T12:39:00+00:00",
+          "intervalMinutes": 210
+        },
+        "orderNumber": "000125",
+        "clientReference": {
+          "_type": "DocumentReference",
+          "path": "Users/3ACRHjH2STfKilBff2j0"
+        },
+        "companyName": "",
+        "schedulerRef": null,
+        "scheduling": "2025-11-01T12:39:00+00:00",
+        "deliveryPerson": {
+          "phone": "",
+          "email": "",
+          "name": "bruno"
+        },
+        "total": 132.9,
+        "id": "0R6MaD8sAWbamXHBcIOM",
+        "currentPurchaseStatus": "PurchaseStatus.completed",
+        "clientId": "3ACRHjH2STfKilBff2j0",
+        "chatReference": null,
+        "schedule": {
+          "id": "2025-11-01 09:39 - 2025-11-01 13:09",
+          "maxDateTime": "2025-11-01T16:09:00+00:00",
+          "minDateTime": "2025-11-01T12:39:00+00:00",
+          "value": 0,
+          "isAutomaticSchedule": true
+        },
+        "clientName": "Ádilla d'Ávila",
+        "documentInNote": null,
+        "companyAddress": "",
+        "updatedAt": null,
+        "statusList": [
+          {
+            "createdAt": "2025-11-01T12:09:03.279491+00:00",
+            "purchaseStatus": "PurchaseStatus.pending"
+          },
+          {
+            "createdAt": "2025-11-01T12:09:33.483670+00:00",
+            "purchaseStatus": "PurchaseStatus.accepted"
+          },
+          {
+            "createdAt": "2025-11-01T12:51:55.940087+00:00",
+            "purchaseStatus": "PurchaseStatus.separatingOrder"
+          },
+          {
+            "createdAt": "2025-11-01T12:55:00.628160+00:00",
+            "purchaseStatus": "PurchaseStatus.waitingForDelivery"
+          },
+          {
+            "createdAt": "2025-11-01T14:28:18.253632+00:00",
+            "purchaseStatus": "PurchaseStatus.deliveryRoute"
+          },
+          {
+            "createdAt": "2025-11-01T14:28:19.376488+00:00",
+            "purchaseStatus": "PurchaseStatus.completed"
+          }
+        ],
+        "companyReference": {
+          "_type": "DocumentReference",
+          "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+        },
+        "address": {
+          "zipCode": "76700-000",
+          "city": "Mozarlândia",
+          "createAt": "2025-11-01T12:09:03.279369+00:00",
+          "uf": "GO",
+          "updateAt": "2025-11-01T12:09:03.279369+00:00",
+          "name": "Rua Nova Esperança, Qd.24, Lt.13, 00, Camões",
+          "complement": "apartamento 06",
+          "neighborhood": "Camões",
+          "id": "nQkn3Kh5cwkcqKp2SCYc",
+          "state": "Goiás",
+          "reference": "Kitnet do Ciprione",
+          "street": "Rua Nova Esperança, Qd.24, Lt.13",
+          "fullAddress": "Rua Nova Esperança, Qd.24, Lt.13, Rua Nova Esperança, Qd.24, Lt.13, Nº 00 , Camões, Mozarlândia, Goiás, CEP 76700-000.",
+          "number": "00",
+          "position": {
+            "_type": "GeoPoint",
+            "latitude": -14.756253732656639,
+            "longitude": -50.572263076901436
+          }
+        },
+        "cancelReason": "",
+        "purchasePayment": {
+          "paymentValue": 0,
+          "valueBack": null,
+          "paymentType": "PaymentType.creditcard"
+        },
+        "productsCart": [
+          {
+            "id": "7UOrYfcW7V6BKelC3OPS",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/7UOrYfcW7V6BKelC3OPS"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "7UOrYfcW7V6BKelC3OPS",
+              "unitType": "ProductUnitType.unidade",
+              "price": 8.99,
+              "barCode": "7894900701753",
+              "description": "REFRI COCA COLA ZERO 15LT",
+              "images": [
+                {
+                  "folderPath": "produtosMobile",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/produtosMobile%2F7894900701753.jpg?alt=media&token=c602c89a-ffcd-4060-a39e-d98a9cb0dcd4",
+                  "quality": 8,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "7894900701753.jpg"
+                }
+              ],
+              "name": "REFRI COCA COLA ZERO 15LT"
+            },
+            "observations": null,
+            "quantity": 3,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "EfXWcwcelwrUe2YAXMgk",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/EfXWcwcelwrUe2YAXMgk"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "EfXWcwcelwrUe2YAXMgk",
+              "unitType": "ProductUnitType.unidade",
+              "price": 18.19,
+              "barCode": "7898040080051",
+              "description": "PEITO CONG SUPER FRANGO C/OSSO KG",
+              "images": [
+                {
+                  "folderPath": "Products/7898040080051/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2F7898040080051%2Fimages%2F7898040080051.webp?alt=media&token=4fc8b34f-09cb-46fd-8183-7f914bd0f51d",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "7898040080051.webp"
+                }
+              ],
+              "name": "Peito de Frango Congelado Super C/osso Kg"
+            },
+            "observations": null,
+            "quantity": 2,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "FXqmdLDPRp8tnpMGwSWc",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/FXqmdLDPRp8tnpMGwSWc"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "FXqmdLDPRp8tnpMGwSWc",
+              "unitType": "ProductUnitType.unidade",
+              "price": 5,
+              "barCode": "0000000000010",
+              "description": "ALFACE PALITO",
+              "images": [
+                {
+                  "folderPath": "Products/FXqmdLDPRp8tnpMGwSWc/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2FFXqmdLDPRp8tnpMGwSWc%2Fimages%2F1751936498829_undefined?alt=media&token=0573e1aa-ea2b-4172-8a43-9856ebcf895e",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "1751936498829_undefined"
+                }
+              ],
+              "name": "Alface Tipo Palito"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "G1h4IQXAHaIc7WgswOIL",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/G1h4IQXAHaIc7WgswOIL"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "G1h4IQXAHaIc7WgswOIL",
+              "unitType": "ProductUnitType.unidade",
+              "price": 10.39,
+              "barCode": "7896353301191",
+              "description": "REQUEIJAO CATUPIRY  LIGHT 200G",
+              "images": [
+                {
+                  "folderPath": "Products/7896353301191/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2F7896353301191%2Fimages%2F7896353301191.png?alt=media&token=b6ef4016-8ece-4a83-beed-b2ca7a644743",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "7896353301191.png"
+                }
+              ],
+              "name": "REQUEIJAO CATUPIRY  LIGHT 200G"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "LHJaXYp8CXQpbH5SGPKi",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/LHJaXYp8CXQpbH5SGPKi"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "LHJaXYp8CXQpbH5SGPKi",
+              "unitType": "ProductUnitType.unidade",
+              "price": 4.5,
+              "barCode": "0000000012245",
+              "description": "COENTRO UN",
+              "images": [
+                {
+                  "folderPath": "Products/LHJaXYp8CXQpbH5SGPKi/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2FLHJaXYp8CXQpbH5SGPKi%2Fimages%2F1751938011068_undefined?alt=media&token=dc7bf5c7-5f08-4413-8159-92a67fb39aa6",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "1751938011068_undefined"
+                }
+              ],
+              "name": "Coentro Unidade"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "pAPc1Cl0xbfM1Tpn6Iez",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/pAPc1Cl0xbfM1Tpn6Iez"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "pAPc1Cl0xbfM1Tpn6Iez",
+              "unitType": "ProductUnitType.unidade",
+              "price": 24.89,
+              "barCode": "7898040080501",
+              "description": "FILE DE TILAPIA BOUA 400G",
+              "images": [
+                {
+                  "folderPath": "Products/7898040080501/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2F7898040080501%2Fimages%2F7898040080501.webp?alt=media&token=3a07eafb-ae97-4931-a440-4f85932c9ded",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "7898040080501.webp"
+                }
+              ],
+              "name": "Filé de Tilápia Boua 400g"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "rjIeCYSfVl6J8ae6Urjz",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/rjIeCYSfVl6J8ae6Urjz"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "rjIeCYSfVl6J8ae6Urjz",
+              "unitType": "ProductUnitType.unidade",
+              "price": 5.79,
+              "barCode": "0000000000005",
+              "description": "TOMATE SALADETE LONGA VIDA",
+              "images": [
+                {
+                  "folderPath": "Products/rjIeCYSfVl6J8ae6Urjz/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2FrjIeCYSfVl6J8ae6Urjz%2Fimages%2F1752104614626_undefined?alt=media&token=59aef9f0-eae0-4884-8176-9801e527f433",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "1752104614626_undefined"
+                }
+              ],
+              "name": "Tomate Salada Longa Vida"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          },
+          {
+            "id": "sU1WhNuvP6oEoet1wiMk",
+            "productRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF/Products/sU1WhNuvP6oEoet1wiMk"
+            },
+            "product": {
+              "unitQuantity": 1,
+              "previewPrice": 0,
+              "id": "sU1WhNuvP6oEoet1wiMk",
+              "unitType": "ProductUnitType.unidade",
+              "price": 14.98,
+              "barCode": "0000000012381",
+              "description": "CEBOLA ROXA KG",
+              "images": [
+                {
+                  "folderPath": "Products/sU1WhNuvP6oEoet1wiMk/images",
+                  "fileUrl": "https://firebasestorage.googleapis.com/v0/b/appmobileprod-19505.appspot.com/o/Products%2FsU1WhNuvP6oEoet1wiMk%2Fimages%2F1752105065526_undefined?alt=media&token=96ac38d5-6076-481d-be9b-71446ae13865",
+                  "quality": 100,
+                  "itsFromPlatform": true,
+                  "reference": null,
+                  "fileName": "1752105065526_undefined"
+                }
+              ],
+              "name": "Cebola Roxa a Granel"
+            },
+            "observations": null,
+            "quantity": 1,
+            "observationIsPermited": false,
+            "clientRef": {
+              "_type": "DocumentReference",
+              "path": "Users/3ACRHjH2STfKilBff2j0"
+            },
+            "companyRef": {
+              "_type": "DocumentReference",
+              "path": "estabelecimentos/jQQjHTCc2zW1tuZMQzGF"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

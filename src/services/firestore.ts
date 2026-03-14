@@ -39,6 +39,56 @@ export async function buscarLogoEstabelecimento(companyId: string): Promise<stri
   return (data.imageUrl ?? data.logoUrl ?? data.logo ?? data.image ?? null) as string | null;
 }
 
+export async function buscarNomeEstabelecimento(companyId: string): Promise<string | null> {
+  const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
+  if (!snap.exists()) return null;
+  const data = snap.data() as Record<string, unknown>;
+  return (data.name ?? data.nome ?? data.displayName ?? null) as string | null;
+}
+
+export const GUEST_USER_DOC_ID = 'guest_test';
+
+export async function criarOuObterUsuarioConvidado(): Promise<string> {
+  const ref = doc(db, 'Users', GUEST_USER_DOC_ID);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      userAuthId: 'guest',
+      nomeCompleto: 'Convidado',
+      createAt: Timestamp.now(),
+      updateAt: Timestamp.now(),
+    });
+  }
+  return GUEST_USER_DOC_ID;
+}
+
+export async function criarUsuarioNovo(uid: string): Promise<string> {
+  const now = Timestamp.now();
+  const ref = await addDoc(collection(db, 'Users'), {
+    userAuthId: uid,
+    nomeCompleto: '',
+    createAt: now,
+    updateAt: now,
+  });
+  return ref.id;
+}
+
+export async function atualizarNomeUsuario(docId: string, nome: string): Promise<void> {
+  await updateDoc(doc(db, 'Users', docId), {
+    nomeCompleto: nome,
+    updateAt: Timestamp.now(),
+  });
+}
+
+export async function buscarFormasPagamento(companyId: string): Promise<string[]> {
+  const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
+  if (!snap.exists()) return [];
+  const data = snap.data() as Record<string, unknown>;
+  const methods = data.paymentMethods as { name?: string }[] | undefined;
+  if (!Array.isArray(methods)) return [];
+  return methods.map((m) => m.name ?? '').filter(Boolean);
+}
+
 export async function getProducts(companyId: string): Promise<Produto[]> {
   const ref = collection(db, 'estabelecimentos', companyId, 'Products');
   const q = query(
@@ -47,6 +97,7 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
     where('isTrashed', '==', false)
   );
   const snap = await getDocs(q);
+  const isTestEstab = companyId === 'estabelecimento-teste';
 
   return snap.docs
     .map((d) => {
@@ -67,7 +118,7 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
         stock,
       };
     })
-    .filter((p) => p.stock !== 0);
+    .filter((p) => isTestEstab || p.stock !== 0);
 }
 
 export async function createOrder(

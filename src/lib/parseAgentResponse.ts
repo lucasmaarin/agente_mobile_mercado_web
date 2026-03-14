@@ -82,11 +82,13 @@ export function parseAgentResponse(
   let shouldSaveAddress        = false;
   let suggestions:    string[] = [];
 
-  // [SHOW:id]
-  for (const m of response.matchAll(/\[SHOW:([^\]]+)\]/g)) {
-    const produto = products.find((p) => p.id === m[1]);
-    if (produto && !produtosParaMostrar.find((p) => p.id === produto.id)) {
-      produtosParaMostrar.push(produto);
+  // [SHOW:id] — só exibe cards no estado BROWSING, ignora esgotados
+  if (currentFlowState === FLOW_STATES.BROWSING) {
+    for (const m of response.matchAll(/\[SHOW:([^\]]+)\]/g)) {
+      const produto = products.find((p) => p.id === m[1]);
+      if (produto && produto.stock !== 0 && !produtosParaMostrar.find((p) => p.id === produto.id)) {
+        produtosParaMostrar.push(produto);
+      }
     }
   }
   clean = clean.replace(/\[SHOW:[^\]]+\]/g, '').trim();
@@ -208,6 +210,15 @@ export function parseAgentResponse(
     clean = clean.replace(m[0], '').trim();
   }
 
+  // [SET_NAME:valor]
+  let collectedName = '';
+  const nameMatch = response.match(/\[SET_NAME:([^\]]+)\]/i);
+  if (nameMatch) {
+    collectedName = nameMatch[1].trim();
+    flowState = FLOW_STATES.BROWSING;
+    clean = clean.replace(/\[SET_NAME:[^\]]+\]/gi, '').trim();
+  }
+
   // [CONFIRM_ORDER]
   if (
     response.includes('[CONFIRM_ORDER]') &&
@@ -243,5 +254,6 @@ export function parseAgentResponse(
     shouldCreateOrder,
     shouldSaveAddress,
     suggestions,
+    collectedName,
   };
 }
