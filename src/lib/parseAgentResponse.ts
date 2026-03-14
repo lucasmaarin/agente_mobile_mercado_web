@@ -60,6 +60,7 @@ export interface ParseResult {
   shouldCreateOrder:   boolean;
   shouldSaveAddress:   boolean;
   suggestions:         string[];
+  collectedName:       string;
 }
 
 // ============================================================
