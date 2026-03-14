@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic } from "lucide-react";
+import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic, Settings } from "lucide-react";
 import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
@@ -668,6 +668,7 @@ const CHECKOUT_SEQUENCE: FlowState[] = [
 ];
 
 const ESTADO_LABEL: Record<FlowState, string> = {
+  collecting_name:          "Nome",
   browsing:                 "Navegando",
   checking_saved_address:   "Endereço",
   collecting_street:        "Rua",
@@ -783,6 +784,12 @@ const AgentePage: React.FC = () => {
   // --- Voz
   const [gravando, setGravando]           = useState(false);
   const [transcrevendo, setTranscrevendo] = useState(false);
+  const [carouselEnabled, setCarouselEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem('testConfig_carouselEnabled');
+    return saved === null ? true : saved === 'true';
+  });
+  const [showTestSettings, setShowTestSettings] = useState(false);
   const mediaRecorderRef  = useRef<MediaRecorder | null>(null);
   const audioChunksRef    = useRef<Blob[]>([]);
 
@@ -2356,12 +2363,14 @@ const AgentePage: React.FC = () => {
 
               {/* Cards de produto */}
               {msg.produtosCard && msg.produtosCard.length > 0 && (
-                <div className={styles.produtosCardWrapper}>
+                {(() => { const useCarousel = carouselEnabled && msg.produtosCard.length > 2; return (
+                <div className={useCarousel ? styles.produtosCarousel : styles.produtosCardWrapper}>
                   {msg.produtosCard.map((produto) => {
                     const emCarrinho = carrinho.find(i => i.id === produto.id);
                     const estoquebaixo = produto.stock >= 1 && produto.stock < 10;
+                    const useCarouselItem = carouselEnabled && msg.produtosCard!.length > 2;
                     return (
-                      <div key={produto.id} className={styles.produtoCardRow}>
+                      <div key={produto.id} className={useCarouselItem ? styles.produtoCarouselItem : styles.produtoCardRow}>
                         <div className={styles.produtoCard}>
                           <div
                             className={styles.produtoCardImgWrapper}
@@ -2429,6 +2438,7 @@ const AgentePage: React.FC = () => {
                     );
                   })}
                 </div>
+                ); })()}
               )}
 
               {/* Chips de recuperação de carrinho */}
@@ -2575,6 +2585,35 @@ const AgentePage: React.FC = () => {
             <p className={styles.lightboxPrice}>R$ {imagemAmpliada.price.toFixed(2)}</p>
           </div>
         </div>
+      )}
+
+      {/* Painel de configurações (apenas modo teste) */}
+      {isGuestMode && (
+        <>
+          <button
+            className={styles.testSettingsBtn}
+            onClick={() => setShowTestSettings(v => !v)}
+            title="Configurações de teste"
+          >
+            <Settings size={18} />
+          </button>
+          {showTestSettings && (
+            <div className={styles.testSettingsPanel}>
+              <p className={styles.testSettingsTitle}>⚙️ Configurações de Teste</p>
+              <label className={styles.testSettingsRow}>
+                <span>Carrossel horizontal de produtos</span>
+                <input
+                  type="checkbox"
+                  checked={carouselEnabled}
+                  onChange={(e) => {
+                    setCarouselEnabled(e.target.checked);
+                    localStorage.setItem('testConfig_carouselEnabled', String(e.target.checked));
+                  }}
+                />
+              </label>
+            </div>
+          )}
+        </>
       )}
 
       {/* Tour onboarding */}
