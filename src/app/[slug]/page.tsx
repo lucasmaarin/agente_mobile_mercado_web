@@ -2,7 +2,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { onAuthStateChanged, signInAnonymously, User } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic } from "lucide-react";
 import Image from "next/image";
@@ -40,8 +40,6 @@ import {
   criarUsuarioNovo,
   atualizarNomeUsuario,
   atualizarDadosUsuario,
-  criarOuObterUsuarioConvidado,
-  GUEST_USER_DOC_ID,
   ExemploConversa,
   DELIVERY_PRICE,
 } from "@/services/firestore";
@@ -846,15 +844,8 @@ const AgentePage: React.FC = () => {
 
   useEffect(() => {
     if (isGuestMode) {
-      criarOuObterUsuarioConvidado()
-        .then((docId) => {
-          setUserDocId(docId);
-          setNomeCliente('Convidado');
-          setUser({ uid: GUEST_USER_DOC_ID } as any);
-          setAuthLoading(false);
-        })
-        .catch(() => setAuthLoading(false));
-      return;
+      // Login anônimo para ter token válido no Firestore
+      signInAnonymously(auth).catch(console.error);
     }
 
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
@@ -868,17 +859,25 @@ const AgentePage: React.FC = () => {
             const d    = snap.docs[0];
             const data = d.data() as any;
             setUserDocId(d.id);
-            const nome = montarNomeCompletoUsuario(data, currentUser);
-            setNomeCliente(nome);
-            setUserCpf(data?.cpf ?? '');
-            setUserPhone(data?.telefone ?? currentUser.phoneNumber ?? '');
-            if (!nome || nome === 'Cliente') {
-              setFlowState(FLOW_STATES.COLLECTING_NAME);
+            if (isGuestMode) {
+              setNomeCliente('Convidado');
+            } else {
+              const nome = montarNomeCompletoUsuario(data, currentUser);
+              setNomeCliente(nome);
+              setUserCpf(data?.cpf ?? '');
+              setUserPhone(data?.telefone ?? currentUser.phoneNumber ?? '');
+              if (!nome || nome === 'Cliente') {
+                setFlowState(FLOW_STATES.COLLECTING_NAME);
+              }
             }
           } else {
             const newDocId = await criarUsuarioNovo(currentUser.uid);
             setUserDocId(newDocId);
-            setFlowState(FLOW_STATES.COLLECTING_NAME);
+            if (!isGuestMode) {
+              setFlowState(FLOW_STATES.COLLECTING_NAME);
+            } else {
+              setNomeCliente('Convidado');
+            }
           }
         } catch (e) {
           console.error("Erro ao buscar usuário:", e);
@@ -1186,12 +1185,12 @@ const AgentePage: React.FC = () => {
         setConversaId(cid);
       }
 
-      // Salvar mensagem do usuário
+      // Salvar mensagem do usuário (não-fatal)
       if (cid && userDocId) {
-        await salvarMensagem(
+        salvarMensagem(
           cid, userDocId, 'user', texto,
           flowStateAntes, wFlowState, [], [], null
-        );
+        ).catch(console.error);
       }
 
       const salvarRespostaLocal = async (
@@ -1955,18 +1954,18 @@ const AgentePage: React.FC = () => {
         }
       }
 
-      // ---- Salvar no Firestore com estado correto ----
+      // ---- Salvar no Firestore com estado correto (não-fatal) ----
       if (cid && userDocId && !resultado.shouldCreateOrder) {
-        await salvarMensagem(
+        salvarMensagem(
           cid, userDocId, "assistant", cleanTextFormatado,
           flowStateAntes, wFlowState,
           tagsDetectadas, produtosCardIds, null
-        );
-        await atualizarConversa(userDocId, cid, {
+        ).catch(console.error);
+        atualizarConversa(userDocId, cid, {
           flowStateAtual:       wFlowState,
           carrinhoFinal:        wCart,
           customerDataColetado: wCustomerData,
-        });
+        }).catch(console.error);
       }
     } catch (e) {
       console.error("Erro ao chamar agente:", e);
