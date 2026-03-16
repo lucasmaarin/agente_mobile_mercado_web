@@ -58,7 +58,7 @@ function normalizar(s: string): string {
 const STOPWORDS_BUSCA = new Set([
   'oi', 'ola',
   'tem', 'tenho', 'quero', 'queria', 'preciso', 'procuro', 'busco',
-  'me', 'pra', 'para', 'com', 'sem', 'uma', 'uns', 'umas', 'dos', 'das',
+  'me', 'pra', 'para', 'com', 'sem', 'um', 'uma', 'uns', 'umas', 'dos', 'das',
   'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa',
   'mais', 'opcao', 'opcoes', 'outro', 'outros', 'outra', 'outras', 'tipo', 'tipos',
   'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
@@ -1354,8 +1354,34 @@ const AgentePage: React.FC = () => {
         const textoNormalizado = normalizar(texto);
         const itensComQtd   = extrairItensListaComQuantidade(texto);
         const itensSimples  = itensComQtd.length < 2 ? extrairItensSimples(texto) : [];
-        const itensExtraidos = itensComQtd.length >= 2 ? itensComQtd : itensSimples;
-        const itemUnicoExtraido = itensExtraidos.length === 1 ? itensExtraidos[0] : null;
+        let itensExtraidos  = itensComQtd.length >= 2 ? itensComQtd : itensSimples;
+
+        // Detecção de lista sem vírgula/e (ex: "Arroz feijão") — verifica se cada palavra
+        // bate em produtos distintos (baixo overlap entre resultados individuais)
+        if (itensExtraidos.length < 2 && !texto.trim().endsWith('?') && !listaPedidoState) {
+          const palavrasFiltradas = extrairPalavrasBaseBusca(texto).filter(w => w.length >= 3);
+          if (palavrasFiltradas.length >= 2 && palavrasFiltradas.length <= 5) {
+            const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+            const resultados = palavrasFiltradas.map(w => ({ w, ids: new Set(buscarL(w).map(p => p.id)) }));
+            // Calcula overlap entre TODOS os pares: se todos tiverem overlap < 30% → lista separada
+            let todosBaixoOverlap = resultados.every(a => a.ids.size > 0);
+            if (todosBaixoOverlap) {
+              for (let i = 0; i < resultados.length && todosBaixoOverlap; i++) {
+                for (let j = i + 1; j < resultados.length && todosBaixoOverlap; j++) {
+                  const intersect = [...resultados[i].ids].filter(id => resultados[j].ids.has(id)).length;
+                  const menor = Math.min(resultados[i].ids.size, resultados[j].ids.size);
+                  if (intersect / menor >= 0.3) todosBaixoOverlap = false;
+                }
+              }
+            }
+            if (todosBaixoOverlap) {
+              itensExtraidos = palavrasFiltradas.map(w => ({ termoOriginal: w, termoBusca: w, quantidade: 1 }));
+            }
+          }
+        }
+
+        // Se itensComQtd tem exatamente 1 item (ex: "um frango", "2 ovos"), usa diretamente como item único
+        const itemUnicoExtraido = itensComQtd.length === 1 ? itensComQtd[0] : (itensExtraidos.length === 1 ? itensExtraidos[0] : null);
         const podeIniciarLista = !listaPedidoState && itensExtraidos.length >= 2;
 
         if (itemUnicoQtdState) {
@@ -1384,7 +1410,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${itemUnicoQtdState.produtoSugerido.name} ao carrinho.`,
                 [itemUnicoQtdState.produtoSugerido],
-                ["Finalizar compra", "Continuar comprando"]
+                ["Finalizar pedido 🛒", "Continuar comprando"]
               );
               return;
             }
@@ -1404,7 +1430,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
                 novoEstado.candidatos,
-                ["Cancelar"]
+                ["Finalizar pedido 🛒", "Continuar comprando"]
               );
               return;
             }
@@ -1412,7 +1438,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Esta é a opção de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
               [itemUnicoQtdState.produtoSugerido],
-              ["Outro tipo/marca", "Cancelar"]
+              ["Finalizar pedido 🛒", "Continuar comprando"]
             );
             return;
           }
@@ -1434,7 +1460,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${escolhido.name} ao carrinho.`,
               [escolhido],
-              ["Finalizar compra", "Continuar comprando"]
+              ["Finalizar pedido 🛒", "Continuar comprando"]
             );
             return;
           }
@@ -1442,7 +1468,7 @@ const AgentePage: React.FC = () => {
           await salvarRespostaLocal(
             `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
             itemUnicoQtdState.candidatos.slice(0, 6),
-            ["Cancelar"]
+            ["Finalizar pedido 🛒", "Continuar comprando"]
           );
           return;
         }
@@ -1461,7 +1487,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Estas são as opções de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
               candidatosItemUnico,
-              ["Cancelar"]
+              ["Finalizar pedido 🛒", "Continuar comprando"]
             );
             return;
           }
@@ -1478,7 +1504,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Esta é a opção de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
               [sugerido],
-              ["Outro tipo/marca", "Cancelar"]
+              ["Finalizar pedido 🛒", "Continuar comprando"]
             );
             return;
           }
@@ -1497,84 +1523,53 @@ const AgentePage: React.FC = () => {
               };
 
           if (!listaPedidoState) {
-            const produtosResumo = estadoAtual.itens
-              .map((it) => it.candidatos[0])
-              .filter((p): p is Produto => Boolean(p))
-              .slice(0, 6);
-            const resumo = estadoAtual.itens
-              .map((it, i) => `${i + 1}. ${it.quantidade}x ${it.termoBusca}${it.candidatos.length === 0 ? " (sem variedade encontrada agora)" : ""}`)
-              .join("\n");
+            // Um carrossel por item da lista — cada um como mensagem separada
+            const sections = estadoAtual.itens
+              .filter((it) => it.candidatos.length > 0)
+              .map((it) => ({
+                titulo: `Opções de ${it.termoBusca} ⤵️`,
+                produtos: it.candidatos.slice(0, 6),
+              }));
+            const itensSemCandidatos = estadoAtual.itens.filter((it) => it.candidatos.length === 0);
 
             setListaPedidoState(estadoAtual);
-            await salvarRespostaLocal(
-              `Perfeito! Entendi esta lista:\n${resumo}\n\nEsta correta?`,
-              produtosResumo,
-              ["Confirmar lista", "Outras opções", "Editar lista", "Cancelar"]
-            );
+
+            for (let i = 0; i < sections.length; i++) {
+              const isLast = i === sections.length - 1 && itensSemCandidatos.length === 0;
+              await salvarRespostaLocal(
+                sections[i].titulo,
+                sections[i].produtos,
+                isLast ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined
+              );
+            }
+            if (itensSemCandidatos.length > 0) {
+              await salvarRespostaLocal(
+                `Sem resultado para: ${itensSemCandidatos.map((it) => it.termoBusca).join(", ")}`,
+                undefined,
+                ["Finalizar pedido 🛒", "Continuar comprando"]
+              );
+            }
             return;
           }
 
           if (estadoAtual.stage === "await_confirm") {
-            if (ehConfirmacaoPositiva(texto)) {
-              estadoAtual.stage = "await_mode";
-              setListaPedidoState(estadoAtual);
-              await salvarRespostaLocal(
-                "Como voce deseja adicionar os itens ao carrinho?",
-                undefined,
-                ["Preencher automaticamente (mais populares)", "Escolher variedade de cada item"]
-              );
-              return;
-            }
-
-            // "Outras opções", "outro", "alternativa" → vai direto para seleção de variante
-            const querOutrasOpcoes =
-              textoNormalizado.includes("outr") ||
-              textoNormalizado.includes("opcao") ||
-              textoNormalizado.includes("opcoes") ||
-              textoNormalizado.includes("alternativ") ||
-              textoNormalizado.includes("diferente") ||
-              textoNormalizado.includes("trocar") ||
-              textoNormalizado.includes("mudar");
-            if (querOutrasOpcoes) {
-              estadoAtual.stage = "selecting_variant";
-              estadoAtual.currentIndex = 0;
-              setListaPedidoState(estadoAtual);
-              const itemAtual = estadoAtual.itens[0];
-              if (!itemAtual || itemAtual.candidatos.length === 0) {
-                estadoAtual.stage = "await_next_item";
-                setListaPedidoState(estadoAtual);
-                await salvarRespostaLocal(
-                  `Nao encontrei variedades para "${itemAtual?.termoBusca}". Proximo item?`,
-                  undefined,
-                  ["Proximo item", "Cancelar lista"]
-                );
-                return;
-              }
-              const msg = montarMensagemSelecaoItem(estadoAtual, itemAtual, 0);
-              await salvarRespostaLocal(msg.texto, msg.produtosCard, msg.suggestions);
-              return;
-            }
-
-            if (textoNormalizado.includes("editar")) {
+            // Finalizar pedido → abre checkout
+            if (ehIntencaoCheckout(texto)) {
               setListaPedidoState(null);
-              await salvarRespostaLocal("Perfeito. Me envie a lista corrigida com as quantidades que eu processo novamente.");
+              setShowCheckout(true);
               return;
             }
-
+            // Continuar comprando → limpa lista e volta ao chat
+            if (ehAcaoContinuarComprando(texto)) {
+              setListaPedidoState(null);
+              await salvarRespostaLocal("Tudo certo! O que mais posso separar para você? 😊");
+              return;
+            }
             if (ehCancelamento(texto)) {
               setListaPedidoState(null);
-              await salvarRespostaLocal("Lista cancelada. Se quiser, envie novamente a lista com quantidades.");
+              await salvarRespostaLocal("Lista cancelada. Se quiser, envie novamente.");
               return;
             }
-
-            const resumo = estadoAtual.itens
-              .map((it, i) => `${i + 1}. ${it.quantidade}x ${it.termoBusca}`)
-              .join("\n");
-            await salvarRespostaLocal(
-              `So para confirmar, esta e a sua lista:\n${resumo}`,
-              undefined,
-              ["Confirmar lista", "Editar lista", "Cancelar"]
-            );
             return;
           }
 
@@ -1609,7 +1604,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Pronto! Preenchi automaticamente com as opcoes mais populares:\n${resumoAdd}\n\nDeseja finalizar a compra, alterar algum item ou continuar comprando?`,
                 escolhidos.slice(0, 6),
-                ["Finalizar compra", "Alterar algum item", "Continuar comprando"]
+                ["Finalizar pedido 🛒", "Continuar comprando"]
               );
               return;
             }
@@ -1703,7 +1698,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Lista encerrada.\n\nResumo final do carrinho:\n${formatarResumoCarrinho(wCart)}`,
                 undefined,
-                ["Finalizar compra", "Continuar comprando"]
+                ["Finalizar pedido 🛒", "Continuar comprando"]
               );
               return;
             }
@@ -1719,7 +1714,7 @@ const AgentePage: React.FC = () => {
                 await salvarRespostaLocal(
                   `Todos os itens da lista foram processados.\n\nResumo final do carrinho:\n${formatarResumoCarrinho(wCart)}`,
                   cardsFinal,
-                  ["Finalizar compra", "Continuar comprando"]
+                  ["Finalizar pedido 🛒", "Continuar comprando"]
                 );
                 return;
               }
@@ -2511,107 +2506,54 @@ const AgentePage: React.FC = () => {
                 <span className={styles.timestamp}>{formatarHora(msg.timestamp)}</span>
               </div>
 
-              {/* Cards de produto */}
-              {msg.produtosCard && msg.produtosCard.length > 0 && (
-                <div
-                  className={
-                    carouselEnabled && msg.produtosCard.length > 2
-                      ? styles.produtosCarousel
-                      : styles.produtosCardWrapper
-                  }
-                  ref={carouselEnabled && msg.produtosCard.length > 2 ? (el) => {
-                    if (!el) return;
-                    const onDown = (e: MouseEvent) => {
-                      carouselDragRef.current = { el, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft, dragging: true };
-                      el.style.cursor = 'grabbing';
-                    };
-                    const onMove = (e: MouseEvent) => {
-                      const d = carouselDragRef.current;
-                      if (!d || !d.dragging || d.el !== el) return;
-                      e.preventDefault();
-                      el.scrollLeft = d.scrollLeft - (e.pageX - el.offsetLeft - d.startX);
-                    };
-                    const onUp = () => {
-                      if (carouselDragRef.current?.el === el) { carouselDragRef.current!.dragging = false; el.style.cursor = 'grab'; }
-                    };
-                    el.style.cursor = 'grab';
-                    el.addEventListener('mousedown', onDown);
-                    window.addEventListener('mousemove', onMove);
-                    window.addEventListener('mouseup', onUp);
-                  } : undefined}
-                >
-                  {msg.produtosCard.map((produto) => {
-                    const emCarrinho = carrinho.find(i => i.id === produto.id);
-                    const estoquebaixo = produto.stock >= 1 && produto.stock < 10;
-                    const isCarouselItem = carouselEnabled && msg.produtosCard!.length > 2;
-                    const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: produto.name, price: produto.price });
-                    return (
-                      <div key={produto.id} className={isCarouselItem ? styles.produtoCarouselItem : styles.produtoCardRow}>
-                        <div className={`${styles.produtoCard} ${emCarrinho ? styles.produtoCardAtivo : ''}`}>
-                          <div
-                            className={styles.produtoCardImgWrapper}
-                            onClick={abrirModal}
-                            title="Clique para ampliar"
-                          >
-                            {produto.image ? (
-                              <>
-                                <Image
-                                  src={produto.image}
-                                  alt={produto.name}
-                                  fill
-                                  className={styles.produtoCardImg}
-                                  sizes="96px"
-                                  onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }}
-                                />
-                                <ZoomIn size={14} style={{ position:"absolute", bottom:4, right:4, color:"#fff", filter:"drop-shadow(0 1px 2px rgba(0,0,0,0.6))", pointerEvents:"none" }} />
-                              </>
-                            ) : (
-                              <Image src="/prodSemImg.svg" alt={produto.name} fill className={styles.produtoCardImg} sizes="96px" />
+              {/* Cards de produto — carrossel único */}
+              {msg.produtosCard && msg.produtosCard.length > 0 && (() => {
+                const isCarousel = carouselEnabled && msg.produtosCard!.length > 2;
+                const attachDrag = (el: HTMLDivElement | null) => {
+                  if (!el) return;
+                  const onDown = (e: MouseEvent) => { carouselDragRef.current = { el, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft, dragging: true }; el.style.cursor = 'grabbing'; };
+                  const onMove = (e: MouseEvent) => { const d = carouselDragRef.current; if (!d || !d.dragging || d.el !== el) return; e.preventDefault(); el.scrollLeft = d.scrollLeft - (e.pageX - el.offsetLeft - d.startX); };
+                  const onUp = () => { if (carouselDragRef.current?.el === el) { carouselDragRef.current!.dragging = false; el.style.cursor = 'grab'; } };
+                  el.style.cursor = 'grab';
+                  el.addEventListener('mousedown', onDown);
+                  window.addEventListener('mousemove', onMove);
+                  window.addEventListener('mouseup', onUp);
+                };
+                return (
+                  <div className={isCarousel ? styles.produtosCarousel : styles.produtosCardWrapper} ref={isCarousel ? attachDrag : undefined}>
+                    {msg.produtosCard!.map((produto) => {
+                      const emCarrinho = carrinho.find(i => i.id === produto.id);
+                      const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: produto.name, price: produto.price });
+                      return (
+                        <div key={produto.id} className={isCarousel ? styles.produtoCarouselItem : styles.produtoCardRow}>
+                          <div className={`${styles.produtoCard} ${emCarrinho ? styles.produtoCardAtivo : ''}`}>
+                            <div className={styles.produtoCardImgWrapper} onClick={abrirModal} title="Ver detalhes">
+                              <Image src={produto.image || '/prodSemImg.svg'} alt={produto.name} fill className={styles.produtoCardImg} sizes="140px" onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }} />
+                            </div>
+                            <div className={styles.produtoCardInfo}>
+                              <p className={styles.produtoCardName} onClick={abrirModal} style={{ cursor: 'pointer' }}>{produto.name}</p>
+                              <p className={styles.produtoCardPrice}>R$ {produto.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                            </div>
+                            {flowState === FLOW_STATES.BROWSING && (
+                              <div className={styles.produtoCardControls}>
+                                {emCarrinho ? (
+                                  <>
+                                    <button className={styles.produtoCardQtyBtn} onClick={() => handleRemoverQtdCarrinho(emCarrinho)}><Minus size={16} color="#BF1E2E" /></button>
+                                    <span className={styles.produtoCardQtyNum}>{emCarrinho.quantity}</span>
+                                  </>
+                                ) : null}
+                                <button className={styles.produtoCardAddBtn} onClick={() => { const emSelecao = (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) || (listaPedidoState && listaPedidoState.stage === "selecting_variant"); if (emSelecao && !emCarrinho) { selecionarVarianteCard(produto); } else { adicionarSilencioso(produto); } }} title={emCarrinho ? `Mais 1 ${produto.name}` : `Adicionar ${produto.name}`}>
+                                  <Plus size={emCarrinho ? 16 : 22} color="#193281" />
+                                </button>
+                              </div>
                             )}
                           </div>
-                          <div className={styles.produtoCardInfo}>
-                            <p className={styles.produtoCardName} onClick={abrirModal} style={{ cursor: 'pointer' }}>{produto.name}</p>
-                            <p className={styles.produtoCardPrice}>R$ {produto.price.toFixed(2)}</p>
-                            <div className={styles.produtoCardBadges}>
-                              {produto.unityType && (
-                                <span className={styles.badgeUnity}>{produto.unityType.toUpperCase()}</span>
-                              )}
-                              {estoquebaixo && (
-                                <span className={styles.badgeRestam}>RESTAM ({produto.stock})</span>
-                              )}
-                            </div>
-                          </div>
-                          {/* Controles de quantidade dentro do card */}
-                          {flowState === FLOW_STATES.BROWSING && (
-                            <div className={styles.produtoCardControls}>
-                              {emCarrinho ? (
-                                <>
-                                  <button className={styles.produtoCardQtyBtn} onClick={() => handleRemoverQtdCarrinho(emCarrinho)}>−</button>
-                                  <span className={styles.produtoCardQtyNum}>{emCarrinho.quantity}</span>
-                                </>
-                              ) : null}
-                              <button
-                                className={styles.produtoCardAddBtn}
-                                onClick={() => {
-                                  const emSelecao =
-                                    (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) ||
-                                    (listaPedidoState && listaPedidoState.stage === "selecting_variant");
-                                  if (emSelecao && !emCarrinho) {
-                                    selecionarVarianteCard(produto);
-                                  } else {
-                                    adicionarSilencioso(produto);
-                                  }
-                                }}
-                                title={emCarrinho ? `Mais 1 ${produto.name}` : `Adicionar ${produto.name}`}
-                              >+</button>
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {/* Chips de recuperação de carrinho */}
               {msg.id === "cart-recovery" && cartRecoveryPending && !enviando && (
