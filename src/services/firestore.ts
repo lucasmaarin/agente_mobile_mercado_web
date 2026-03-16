@@ -123,8 +123,10 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
         subcategory:   data.shelves?.[0]?.subcategoryName       ?? '',
         subcategoryId: data.shelves?.[0]?.productSubcategoryId  ?? '',
         image:         data.images?.[0]?.fileUrl ?? null,
-        unityType:     data.unityType ?? 'unidade',
-        barCode:       data.barCode   ?? '',
+        unityType:     data.unityType    ?? 'unidade',
+        barCode:       data.barCode      ?? '',
+        searchIndex:   Array.isArray(data.searchIndex) ? data.searchIndex : [],
+        wordKeys:      Array.isArray(data.wordKeys)    ? data.wordKeys    : [],
         stock,
       };
     })

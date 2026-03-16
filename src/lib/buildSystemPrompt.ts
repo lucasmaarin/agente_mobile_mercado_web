@@ -35,6 +35,8 @@ export interface Produto {
   unityType: string;
   barCode: string;
   stock: number;
+  searchIndex: string[];
+  wordKeys: string[];
 }
 
 export interface CartItem {
@@ -108,12 +110,12 @@ export function buildSystemPrompt(
   let secaoProdutos = '';
   if (flowState === FLOW_STATES.BROWSING) {
     const listaProdutos = produtosFoco.length > 0
-      ? produtosFoco.map((p, i) => {
+      ? produtosFoco.map((p) => {
           const stockTag = p.stock === 0 ? ' ❌ESGOTADO' : (p.stock >= 1 && p.stock < 10) ? ` ⚠️restam:${p.stock}` : '';
-          return `${i + 1}. [${p.id}] ${p.name} — R$${p.price.toFixed(2)}${stockTag}`;
+          return `ID=${p.id} | ${p.name} | R$${p.price.toFixed(2)}${stockTag}`;
         }).join('\n')
       : '(nenhum produto encontrado para esta busca)';
-    secaoProdutos = `\nCATEGORIAS: ${indiceCategoria}\nPRODUTOS (os [ID] são internos — NÃO mostre ao cliente; use nas tags ADD e SHOW):\n${listaProdutos}`;
+    secaoProdutos = `\nCATEGORIAS: ${indiceCategoria}\nCATÁLOGO INTERNO (IDs são privados — use apenas nas tags [SHOW] e [ADD], NUNCA escreva no texto):\n${listaProdutos}`;
   }
 
   let secaoExemplos = '';
@@ -134,8 +136,13 @@ PROIBIDO: falar sobre produtos, promoções ou qualquer outra coisa antes de col
   } else if (flowState === FLOW_STATES.BROWSING) {
     stateBlock = `MODO: navegação
 
+🚫 REGRA ABSOLUTA — NUNCA QUEBRE:
+Produtos JAMAIS podem aparecer como texto (lista, bullet, numeração, nome escrito).
+Use EXCLUSIVAMENTE a tag [SHOW:ID] para cada produto. O card visual já exibe nome, preço e imagem.
+Violar esta regra destrói a experiência do usuário.
+
 ━━ TAGS OBRIGATÓRIAS ━━
-[SHOW:ID]    → use após CADA produto citado ou listado → exibe o card visual
+[SHOW:ID]    → use para CADA produto → exibe o card visual automaticamente
 [ADD:ID:QTD] → use ao adicionar → sem essa tag o item NÃO entra no carrinho
 [REMOVE:ID]  → remove do carrinho
 NUNCA exiba [ID] no texto — são internos.
@@ -149,8 +156,6 @@ Responda SOMENTE ao que o cliente pediu. Não faça recomendações proativas.
 • ❌ NUNCA mostre produtos que o cliente não pediu
 • ❌ NUNCA sugira combinações ou complementos sem o cliente pedir
 
-SEMPRE use [SHOW:ID] após cada produto que mencionar.
-
 ━━ AÇÕES DO SISTEMA ━━
 • Mostrar produto:       [SHOW:ID]
 • Adicionar ao carrinho: [ADD:ID:QTD]     ← sem essa tag o item NÃO entra no carrinho
@@ -160,12 +165,12 @@ SEMPRE use [SHOW:ID] após cada produto que mencionar.
 ❌ NUNCA exiba o [ID] no texto — são internos.
 ❌ NUNCA escreva "adicionei", "coloquei" ou qualquer confirmação de adição — só emita as tags, o card já é o feedback visual.
 ❌ NUNCA invente produtos fora da lista.
-❌ NUNCA liste com numeração (1. 2. 3.) nem pergunte "qual você quer?" — o cliente usa o botão '+'.
+❌ NUNCA liste nomes de produtos com numeração (1. 2. 3.), hifens (- produto) ou qualquer formato de texto — use SEMPRE [SHOW:ID].
 ❌ NUNCA use [SHOW:ID] sem o cliente ter pedido um produto específico — não recomende espontaneamente.
 
 ━━ SITUAÇÕES COMUNS ━━
-• Cliente pede produto → responda com UMA frase curta + [SHOW:id1] [SHOW:id2] para cada produto encontrado. NUNCA escreva nome, preço ou descrição do produto no texto — o card já exibe tudo.
-• Cliente envia lista de compras → para cada item encontrado emita apenas [SHOW:ID]. Resposta: "Aqui está o que encontrei! Para adicionar é só clicar no '+'. [SHOW:id1] [SHOW:id2] ..." — SEM texto listando nomes, preços ou categorias.
+• Cliente pede produto → UMA frase curta + [SHOW:id1][SHOW:id2] para cada produto encontrado. PROIBIDO escrever nome, preço ou descrição no texto.
+• Cliente envia lista de compras → emita apenas [SHOW:ID] para cada item encontrado. Resposta: "Aqui está o que encontrei! Para adicionar é só clicar no '+'. [SHOW:id1][SHOW:id2]..." — ZERO texto com nomes de produtos.
 • Cliente diz que tem uma lista de compras (sem mandar) → pergunte "Me manda a lista que eu adiciono tudo pra você! 😊" — NÃO mostre produtos antes de receber a lista
 • Cliente diz que quer fazer um novo pedido / recomeçar → pergunte "Claro! O que você vai precisar hoje?" — NÃO mostre produtos antes de o cliente pedir
 • Cliente descreve situação sem pedir produto específico → pergunte "O que você precisa?" para entender o que deseja
@@ -322,6 +327,8 @@ TAGS = comandos do sistema. Sem elas NADA acontece:
 
 ESTADO ATUAL: ${flowState} — siga SOMENTE o que o estado pede. Não repita perguntas já feitas.
 COLETA: nos estados COLLECTING_*, emita [SET_*:valor_exato] — aceite qualquer resposta sem questionar.
-${cartLine}${secaoProdutos}${secaoExemplos}
-${stateBlock}`;
+${cartLine}
+
+${stateBlock}
+${secaoProdutos}${secaoExemplos}`;
 }

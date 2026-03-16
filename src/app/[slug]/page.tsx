@@ -358,6 +358,39 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   return resultado.slice(0, 20);
 }
 
+/**
+ * Busca usando wordKeys/searchIndex do Firestore.
+ * Converte o termo para maiúsculo e checa se algum token dos arrays começa com o prefixo.
+ * Mais precisa que a busca por string simples.
+ */
+function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] {
+  const palavrasBase = extrairPalavrasBaseBusca(texto);
+  if (palavrasBase.length === 0) return [];
+
+  const prefixos = palavrasBase.map(p => p.toUpperCase());
+
+  const comScore = produtos.map((p) => {
+    const todosKeys = [...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
+    let score = 0;
+
+    for (const pref of prefixos) {
+      if (todosKeys.some(k => k === pref))            score += 15; // match exato
+      else if (todosKeys.some(k => k.startsWith(pref))) score += 8; // match por prefixo
+    }
+
+    // Bônus: todos os prefixos encontrados = produto cobre toda a busca
+    const todosPresentes = prefixos.every(pref => todosKeys.some(k => k.startsWith(pref)));
+    if (todosPresentes && prefixos.length > 1) score += 20;
+
+    return { produto: p, score };
+  }).filter(({ score }) => score > 0);
+
+  return comScore
+    .sort((a, b) => b.score - a.score)
+    .map(({ produto }) => produto)
+    .slice(0, 20);
+}
+
 function selecionarCardsPorTermos(
   termos: string[],
   candidatos: Produto[],
@@ -539,6 +572,43 @@ function extrairItensListaComQuantidade(texto: string): Array<{ termoOriginal: s
   return itens;
 }
 
+/**
+ * Detecta listas simples SEM quantidade explícita: "Arroz, feijão e frango"
+ * Cada item recebe quantidade=1 por padrão.
+ */
+function extrairItensSimples(texto: string): Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> {
+  // Perguntas não são listas
+  if (texto.trim().endsWith('?')) return [];
+
+  // Divide por vírgula primeiro
+  const porVirgula = texto.split(',').map(p => p.trim()).filter(Boolean);
+
+  let candidatos: string[];
+  if (porVirgula.length >= 2) {
+    // Última parte pode ter " e " no final: "arroz, feijão e frango"
+    const ultima = porVirgula[porVirgula.length - 1];
+    const partsE = ultima.split(/\se\s/i).map(p => p.trim()).filter(Boolean);
+    candidatos = [...porVirgula.slice(0, -1), ...partsE];
+  } else {
+    // Sem vírgulas: tenta "X e Y" apenas (ex: "arroz e feijão")
+    const partsE = texto.split(/\se\s/i).map(p => p.trim()).filter(Boolean);
+    if (partsE.length < 2) return [];
+    candidatos = partsE;
+  }
+
+  const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
+  for (const c of candidatos) {
+    const termoOriginal = c.trim();
+    if (!termoOriginal) continue;
+    const termoBusca = limparTermoItemLista(termoOriginal);
+    // Garante que tem pelo menos uma palavra válida (não stopword)
+    const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
+    if (palavrasValidas.length === 0) continue;
+    itens.push({ termoOriginal, termoBusca, quantidade: 1 });
+  }
+  return itens;
+}
+
 function limparMarkdownBasico(texto: string): string {
   return texto
     .replace(/\*\*/g, "")
@@ -559,9 +629,10 @@ function resumirTextoQuandoHaCards(texto: string, temCards: boolean): string {
     .filter(Boolean);
 
   const filtradas = linhas.filter((linha) => {
-    if (/^\d+\.\s+/.test(linha)) return false;
-    if (/^-\s+/.test(linha) && /R\$\s*\d/.test(linha)) return false;
-    if (/R\$\s*\d/.test(linha) && linha.length <= 90) return false;
+    if (/^\d+\.\s+/.test(linha)) return false;           // "1. Arroz..."
+    if (/^-\s+\S/.test(linha)) return false;             // "- Arroz..." (bullet de lista)
+    if (/^•\s+\S/.test(linha)) return false;             // "• Arroz..."
+    if (/R\$\s*\d/.test(linha) && linha.length <= 90) return false; // linha com preço curta
     return true;
   });
 
@@ -789,6 +860,11 @@ const AgentePage: React.FC = () => {
     if (typeof window === 'undefined') return true;
     const saved = localStorage.getItem('testConfig_carouselEnabled');
     return saved === null ? true : saved === 'true';
+  });
+  const [wordKeysEnabled, setWordKeysEnabled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const saved = localStorage.getItem('testConfig_wordKeysEnabled');
+    return saved === 'true';
   });
 
   const carouselDragRef   = useRef<{ el: HTMLDivElement; startX: number; scrollLeft: number; dragging: boolean } | null>(null);
@@ -1274,7 +1350,9 @@ const AgentePage: React.FC = () => {
 
       if (wFlowState === FLOW_STATES.BROWSING) {
         const textoNormalizado = normalizar(texto);
-        const itensExtraidos = extrairItensListaComQuantidade(texto);
+        const itensComQtd   = extrairItensListaComQuantidade(texto);
+        const itensSimples  = itensComQtd.length < 2 ? extrairItensSimples(texto) : [];
+        const itensExtraidos = itensComQtd.length >= 2 ? itensComQtd : itensSimples;
         const itemUnicoExtraido = itensExtraidos.length === 1 ? itensExtraidos[0] : null;
         const podeIniciarLista = !listaPedidoState && itensExtraidos.length >= 2;
 
@@ -1368,7 +1446,8 @@ const AgentePage: React.FC = () => {
         }
 
         if (!listaPedidoState && itemUnicoExtraido) {
-          const candidatosItemUnico = filtrarProdutos(itemUnicoExtraido.termoBusca, produtos).slice(0, 6);
+          const buscarLocal = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+          const candidatosItemUnico = buscarLocal(itemUnicoExtraido.termoBusca).slice(0, 6);
           if (candidatosItemUnico.length > 1) {
             const novoEstadoUnico: ItemUnicoQuantidadeState = {
               termoBusca: itemUnicoExtraido.termoBusca,
@@ -1411,7 +1490,7 @@ const AgentePage: React.FC = () => {
                 currentIndex: 0,
                 itens: itensExtraidos.map((it) => ({
                   ...it,
-                  candidatos: filtrarProdutos(it.termoBusca, produtos).slice(0, 6),
+                  candidatos: (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6),
                 })),
               };
 
@@ -1669,7 +1748,10 @@ const AgentePage: React.FC = () => {
       let produtosFoco: Produto[] = [];
       let produtosMatchDireto: Produto[] = [];
       if (wFlowState === FLOW_STATES.BROWSING) {
-        const filtrado = filtrarProdutos(texto, produtos);
+        const buscar = (t: string, cat: Produto[]) =>
+          wordKeysEnabled ? filtrarProdutosWordKeys(t, cat) : filtrarProdutos(t, cat);
+
+        const filtrado = buscar(texto, produtos);
         produtosMatchDireto = filtrado;
         if (filtrado.length > 0) {
           // Mantém os matches no topo, mas adiciona diversidade para o agente
@@ -1688,7 +1770,7 @@ const AgentePage: React.FC = () => {
               const porContexto: Produto[] = [];
               const ids = new Set<string>();
               for (const termo of termosContexto) {
-                for (const p of filtrarProdutos(termo, produtos).slice(0, 4)) {
+                for (const p of buscar(termo, produtos).slice(0, 4)) {
                   if (!ids.has(p.id)) { ids.add(p.id); porContexto.push(p); }
                 }
                 if (porContexto.length >= 20) break;
@@ -2241,6 +2323,11 @@ const AgentePage: React.FC = () => {
         onCarouselChange={(val) => {
           setCarouselEnabled(val);
           localStorage.setItem('testConfig_carouselEnabled', String(val));
+        }}
+        wordKeysEnabled={wordKeysEnabled}
+        onWordKeysChange={(val) => {
+          setWordKeysEnabled(val);
+          localStorage.setItem('testConfig_wordKeysEnabled', String(val));
         }}
       />
 

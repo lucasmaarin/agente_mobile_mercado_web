@@ -33,6 +33,8 @@ interface HeaderProps {
   isGuestMode?: boolean;
   carouselEnabled?: boolean;
   onCarouselChange?: (val: boolean) => void;
+  wordKeysEnabled?: boolean;
+  onWordKeysChange?: (val: boolean) => void;
 }
 
 const EMPTY_ENDERECO: EnderecoSalvo = { street: '', number: '', neighborhood: '', city: '', state: '', zipCode: '' };
@@ -54,6 +56,8 @@ const Header: React.FC<HeaderProps> = ({
   isGuestMode = false,
   carouselEnabled = true,
   onCarouselChange,
+  wordKeysEnabled = false,
+  onWordKeysChange,
 }) => {
   const [menuAberto, setMenuAberto] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -396,6 +400,15 @@ const Header: React.FC<HeaderProps> = ({
                         className={styles.settingsCheckbox}
                         checked={carouselEnabled}
                         onChange={(e) => onCarouselChange?.(e.target.checked)}
+                      />
+                    </label>
+                    <label className={styles.settingsToggleRow}>
+                      <span className={styles.settingsToggleLabel}>Busca por wordKeys/searchIndex</span>
+                      <input
+                        type="checkbox"
+                        className={styles.settingsCheckbox}
+                        checked={wordKeysEnabled}
+                        onChange={(e) => onWordKeysChange?.(e.target.checked)}
                       />
                     </label>
                   </div>
