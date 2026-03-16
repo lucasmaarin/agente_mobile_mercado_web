@@ -1507,7 +1507,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Perfeito! Entendi esta lista:\n${resumo}\n\nEsta correta?`,
               produtosResumo,
-              ["Confirmar lista", "Editar lista", "Cancelar"]
+              ["Confirmar lista", "Outras opções", "Editar lista", "Cancelar"]
             );
             return;
           }
@@ -1521,6 +1521,35 @@ const AgentePage: React.FC = () => {
                 undefined,
                 ["Preencher automaticamente (mais populares)", "Escolher variedade de cada item"]
               );
+              return;
+            }
+
+            // "Outras opções", "outro", "alternativa" → vai direto para seleção de variante
+            const querOutrasOpcoes =
+              textoNormalizado.includes("outr") ||
+              textoNormalizado.includes("opcao") ||
+              textoNormalizado.includes("opcoes") ||
+              textoNormalizado.includes("alternativ") ||
+              textoNormalizado.includes("diferente") ||
+              textoNormalizado.includes("trocar") ||
+              textoNormalizado.includes("mudar");
+            if (querOutrasOpcoes) {
+              estadoAtual.stage = "selecting_variant";
+              estadoAtual.currentIndex = 0;
+              setListaPedidoState(estadoAtual);
+              const itemAtual = estadoAtual.itens[0];
+              if (!itemAtual || itemAtual.candidatos.length === 0) {
+                estadoAtual.stage = "await_next_item";
+                setListaPedidoState(estadoAtual);
+                await salvarRespostaLocal(
+                  `Nao encontrei variedades para "${itemAtual?.termoBusca}". Proximo item?`,
+                  undefined,
+                  ["Proximo item", "Cancelar lista"]
+                );
+                return;
+              }
+              const msg = montarMensagemSelecaoItem(estadoAtual, itemAtual, 0);
+              await salvarRespostaLocal(msg.texto, msg.produtosCard, msg.suggestions);
               return;
             }
 
