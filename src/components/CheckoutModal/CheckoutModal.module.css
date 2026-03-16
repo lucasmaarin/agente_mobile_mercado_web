@@ -1,0 +1,506 @@
+/* ============================================================
+   CHECKOUT MODAL
+   ============================================================ */
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1000;
+}
+
+@media (min-width: 600px) {
+  .overlay { align-items: center; }
+}
+
+/* Modal container */
+.modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  max-height: 92dvh;
+  background: #f8f7f5;
+  border-radius: 20px 20px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 600px) {
+  .modal {
+    border-radius: 20px;
+    max-height: 88dvh;
+  }
+}
+
+/* Header */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 20px;
+  background: #3632f8;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.modalTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  text-align: center;
+}
+
+.backBtn,
+.closeBtn {
+  position: absolute;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  opacity: 0.85;
+  transition: opacity 0.15s;
+}
+
+.backBtn:hover,
+.closeBtn:hover { opacity: 1; }
+
+.backBtn  { left: 14px; }
+.closeBtn { right: 14px; }
+
+/* Body */
+.modalBody {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Footer */
+.modalFooter {
+  padding: 12px 16px 16px;
+  flex-shrink: 0;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+/* ─── Botões globais ────────────────────────────────────────── */
+
+.btnPrimary {
+  background: #3632f8;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnPrimary:hover:not(:disabled) { background: #5855fa; }
+.btnPrimary:disabled { background: #ccc; cursor: not-allowed; }
+
+.btnSecondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btnSecondary:hover { background: #e5e7eb; }
+
+.btnFooter {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  border: none;
+  background: #3632f8;
+  color: #fff;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btnFooter:hover:not(:disabled) { background: #5855fa; }
+.btnFooter:disabled { background: #ccc; cursor: not-allowed; }
+
+.btnFooterGreen { background: #16a34a; }
+.btnFooterGreen:hover:not(:disabled) { background: #15803d; }
+
+/* ─── Pagamento ─────────────────────────────────────────────── */
+
+.methodList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.methodBtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+  text-align: left;
+}
+.methodBtn:hover { border-color: #3632f8; }
+
+.methodBtnSel {
+  border-color: #3632f8;
+  background: #eef0ff;
+}
+
+.methodIcon { color: #3632f8; flex-shrink: 0; }
+.methodNome { flex: 1; font-weight: 600; font-size: 0.95rem; color: #111827; }
+.methodDetail { font-size: 0.78rem; color: #6b7280; }
+.methodCheck { color: #3632f8; flex-shrink: 0; }
+
+/* CPF */
+.cpfRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.cpfLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cpfInput {
+  flex: 1;
+  min-width: 140px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cpfInput:focus { border-color: #3632f8; }
+
+/* Total */
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #374151;
+}
+.totalVal { font-weight: 700; color: #16a34a; font-size: 1rem; }
+
+/* ─── Endereços ─────────────────────────────────────────────── */
+
+.addressList { display: flex; flex-direction: column; gap: 10px; }
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: #6b7280;
+  padding: 12px 0;
+}
+
+.emptyAddr {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.88rem;
+  padding: 16px 0;
+}
+
+.addrCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  background: #fff;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.addrCard:hover { border-color: #3632f8; }
+.addrCardSel    { border-color: #3632f8; background: #eef0ff; }
+
+.addrLeft { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
+.addrIcon { color: #3632f8; flex-shrink: 0; margin-top: 2px; }
+.addrStreet { font-weight: 600; font-size: 0.9rem; color: #111827; margin: 0 0 2px; }
+.addrFull   { font-size: 0.78rem; color: #6b7280; margin: 0; }
+
+.addrRight { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.addrCheck {
+  width: 22px; height: 22px;
+  background: #3632f8;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.addrMenuWrap { position: relative; }
+.addrMenuBtn {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.1rem; color: #6b7280; padding: 4px 6px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.addrMenuBtn:hover { background: #f3f4f6; }
+
+.addrDropdown {
+  position: absolute; right: 0; top: 28px;
+  background: #fff; border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 10; min-width: 110px; overflow: hidden;
+}
+.addrDropdown button {
+  display: block; width: 100%;
+  padding: 10px 14px;
+  background: none; border: none;
+  text-align: left; font-size: 0.85rem;
+  cursor: pointer; transition: background 0.15s;
+}
+.addrDropdown button:hover { background: #f3f4f6; }
+
+.addAddrBtn {
+  background: none;
+  border: 2px dashed #3632f8;
+  color: #3632f8;
+  border-radius: 12px;
+  padding: 12px;
+  width: 100%;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.addAddrBtn:hover { background: #eef0ff; }
+
+/* Formulário endereço */
+.addrForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.locationBtn {
+  display: flex; align-items: center; gap: 8px;
+  background: #3632f8; color: #fff;
+  border: none; border-radius: 10px;
+  padding: 10px 14px; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: background 0.15s;
+}
+.locationBtn:hover { background: #5855fa; }
+
+.formInput {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.formInput:focus { border-color: #3632f8; }
+.formInput::placeholder { color: #9ca3af; }
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+/* ─── Confirmação ───────────────────────────────────────────── */
+
+.confirmList { display: flex; flex-direction: column; gap: 10px; }
+
+.confirmCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  font-size: 0.88rem;
+  color: #374151;
+  line-height: 1.5;
+}
+.confirmCard p { margin: 0; }
+
+.confirmIcon { color: #3632f8; flex-shrink: 0; margin-top: 2px; }
+.confirmLabel { font-weight: 700; color: #111827; margin-bottom: 4px !important; }
+.confirmItem  { color: #6b7280; font-size: 0.82rem; }
+
+.confirmValues { width: 100%; }
+.confirmRow {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.88rem;
+  color: #374151;
+}
+.confirmTotal {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+  border-top: 1px solid #f3f4f6;
+  margin-top: 6px;
+  padding-top: 8px;
+}
+
+/* ─── Sub-modais ────────────────────────────────────────────── */
+
+.subModalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 20px;
+}
+
+.subModalBox {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+}
+
+.subModalBox h3 { margin: 0; font-size: 1.1rem; color: #111827; }
+.subModalBox p  { margin: 0; font-size: 0.9rem; color: #374151; }
+
+.subModalInput {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+.subModalInput:focus { border-color: #3632f8; }
+
+.subModalError { color: #ef4444; font-size: 0.8rem; margin: 0; }
+
+.subModalActions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.bandeirasGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.bandeiraBtn {
+  padding: 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #374151;
+  transition: border-color 0.15s, background 0.15s;
+}
+.bandeiraBtn:hover   { border-color: #3632f8; }
+.bandeiraBtnSel      { border-color: #3632f8; background: #eef0ff; color: #3632f8; font-weight: 700; }
+
+/* ─── Sucesso ───────────────────────────────────────────────── */
+
+.successBox {
+  background: #fff;
+  border-radius: 24px;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.successCircle {
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: #16a34a;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+.successBox h2 { margin: 0; font-size: 1.3rem; color: #111827; }
+.successOrder  { font-size: 0.9rem; color: #6b7280; margin: 0; }
+.successTotal  { font-size: 1rem; color: #374151; margin: 0; }
+
+.successBtn {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 28px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+.successBtn:hover { background: #15803d; }
+
+/* ─── Utilitários ───────────────────────────────────────────── */
+
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

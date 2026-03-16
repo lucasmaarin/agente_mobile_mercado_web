@@ -34,7 +34,9 @@
       "Bash(grep -n \"CONTEXTOS_SITUACIONAIS\\\\|STOPWORDS_BUSCA\\\\|ALIASES_BUSCA\" /c/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx)",
       "Bash(grep -r \"ProductCard\\\\|CardProduto\\\\|produto.*card\\\\|card.*produto\" c:UserslucasDesktopmobile_mercadoagente_mobile_mercadosrc --include=*.tsx -l)",
       "Bash(grep -n \"R$\\\\|price\\\\|\\\\.name\\\\b\" \"c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\src\\\\app\\\\[slug]\\\\page.tsx\")",
-      "Bash(\"c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\src\\\\app\\\\Agente\\\\Agente.module.css\")"
+      "Bash(\"c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\src\\\\app\\\\Agente\\\\Agente.module.css\")",
+      "Bash(cat:*)",
+      "Bash(grep -n \"^}$\\\\|^};\\\\|export default\\\\|return \\(.*null\\\\|imagemAmpliada\\\\|setImagemAmpliada\" \"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx\")"
     ]
   }
 }

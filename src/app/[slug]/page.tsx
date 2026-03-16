@@ -9,6 +9,7 @@ import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
 import Header from "@/components/Header/Header";
+import CheckoutModal from "@/components/CheckoutModal/CheckoutModal";
 
 import {
   FLOW_STATES,
@@ -835,6 +836,7 @@ const AgentePage: React.FC = () => {
 
   // --- UI
   const [mostrarCarrinho, setMostrarCarrinho]   = useState(false);
+  const [showCheckout, setShowCheckout]         = useState(false);
   const [imagemAmpliada, setImagemAmpliada]     = useState<{ src: string; name: string; price: number } | null>(null);
   const [carregandoConversa, setCarregandoConversa] = useState(false);
   const [produtosCarregados, setProdutosCarregados] = useState(false);
@@ -2461,8 +2463,13 @@ const AgentePage: React.FC = () => {
                     <span style={{ color: "green" }}>R$ {formatarPrecoCarrinho(DELIVERY_PRICE)}</span>
                   </dt>
                 </div>
-
               </dl>
+              <button
+                className={styles.agFinalizarBtn}
+                onClick={() => { setMostrarCarrinho(false); setShowCheckout(true); }}
+              >
+                Finalizar pedido 🛒
+              </button>
             </div>
           )}
         </div>
@@ -2836,6 +2843,31 @@ const AgentePage: React.FC = () => {
       </div>
 
       </div>{/* /chatWrapper */}
+
+      {/* Modal de checkout */}
+      {showCheckout && userDocId && (
+        <CheckoutModal
+          carrinho={carrinho}
+          userDocId={userDocId}
+          companyId={companyId}
+          nomeCliente={nomeCliente}
+          formasPagamento={formasPagamento.length > 0 ? formasPagamento : ["Pix", "Dinheiro", "Cartão Crédito", "Cartão Débito"]}
+          subtotal={totalCarrinho}
+          taxaEntrega={DELIVERY_PRICE}
+          onClose={() => setShowCheckout(false)}
+          onSuccess={(orderNumber, total) => {
+            setShowCheckout(false);
+            setCarrinho([]);
+            if (userDocId) limparCarrinhoFirestore(companyId, userDocId).catch(console.error);
+            setMensagens((prev) => [...prev, {
+              id:        `pedido-modal-${Date.now()}`,
+              role:      "assistant" as const,
+              content:   `✅ Pedido #${orderNumber} confirmado!\nTotal: R$ ${total.toFixed(2).replace('.', ',')}\n\nObrigado pela preferência! Posso ajudar com mais alguma coisa? 😊`,
+              timestamp: new Date(),
+            }]);
+          }}
+        />
+      )}
     </div>
   );
 };
