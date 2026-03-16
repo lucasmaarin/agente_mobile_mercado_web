@@ -264,7 +264,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     };
     if (editingAddress) {
       await updateDoc(doc(db, "Users", userDocId, "Addresses", editingAddress.id), { ...data, updatedAt: Timestamp.now() });
-      setAddresses((prev) => prev.map((a) => a.id === editingAddress.id ? { ...a, ...data, id: a.id, nome: data.name } : a));
+      setAddresses((prev) => prev.map((a) => a.id === editingAddress.id ? { ...a, ...data, id: a.id, nome: data.name, latitude: data.latitude ?? undefined, longitude: data.longitude ?? undefined } : a));
     } else {
       const ref = await addDoc(collection(db, "Users", userDocId, "Addresses"), data);
       setAddresses((prev) => [...prev, { id: ref.id, ...data, nome: data.name, endereco: data.street, numero: data.number, bairro: data.neighborhood, cidade: data.city } as Address]);
