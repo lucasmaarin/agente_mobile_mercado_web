@@ -396,22 +396,41 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   z-index: 1100;
-  padding: 20px;
+  padding: 0;
+}
+
+@media (min-width: 600px) {
+  .subModalOverlay {
+    align-items: center;
+    padding: 20px;
+  }
 }
 
 .subModalBox {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 20px 20px 0 0;
+  padding: 24px 20px 32px;
   width: 100%;
-  max-width: 360px;
+  max-width: 480px;
+  max-height: 90dvh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+}
+
+@media (min-width: 600px) {
+  .subModalBox {
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 360px;
+    max-height: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  }
 }
 
 .subModalBox h3 { margin: 0; font-size: 1.1rem; color: #111827; }
@@ -431,7 +450,29 @@
 
 .subModalError { color: #ef4444; font-size: 0.8rem; margin: 0; }
 
-.subModalActions { display: flex; justify-content: flex-end; gap: 8px; }
+.subModalActions {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+}
+
+.subModalActions button {
+  width: 100%;
+  padding: 13px;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 600px) {
+  .subModalActions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .subModalActions button {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+}
 
 .bandeirasGrid {
   display: grid;
@@ -464,8 +505,8 @@
   align-items: center;
   gap: 16px;
   text-align: center;
+  width: calc(100% - 32px);
   max-width: 340px;
-  width: 90%;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 

@@ -56,7 +56,8 @@ function normalizar(s: string): string {
 }
 
 const STOPWORDS_BUSCA = new Set([
-  'oi', 'ola',
+  'oi', 'ola', 'boa', 'bom', 'dia', 'tarde', 'noite', 'olas', 'ola', 'hello', 'hi', 'hey', 'boas',
+  'obrigado', 'obrigada', 'brigado', 'brigada', 'valeu', 'vlw', 'tks',
   'tem', 'tenho', 'quero', 'queria', 'preciso', 'procuro', 'busco',
   'me', 'pra', 'para', 'com', 'sem', 'um', 'uma', 'uns', 'umas', 'dos', 'das',
   'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa',
@@ -298,6 +299,14 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
       if (pareceLeitePo) score += 22;
     }
 
+    if (temLeite && palavrasBase.includes('condensado')) {
+      const pareceLeiteCondensado =
+        nomeN.includes('leite') && nomeN.includes('condensado');
+      if (pareceLeiteCondensado) score += 22;
+      // Penaliza leite em pó quando o pedido é leite condensado
+      if (nomeN.includes('po') || nomeN.includes('instantaneo') || subcatN.includes('po')) score -= 20;
+    }
+
     if (palavrasBase.includes('frango') && palavrasBase.includes('peito')) {
       if (nomeN.includes('frango') && (nomeN.includes('peito') || nomeN.includes('file'))) {
         score += 24;
@@ -332,9 +341,13 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   } else {
     // Nenhum produto cobre todas as palavras → trata como lista de itens distintos
     // (ex: "macarrão, ovos, toddy") e garante top-3 por palavra
+    // Se a busca é composta (2+ palavras), exige score mínimo para evitar falsos positivos
+    // (ex: "leite condensado" não deve trazer chocolates "ao leite" que só pontuam por "leite")
+    const scoreMinComposto = palavrasBase.length >= 2 ? 12 : 0;
     for (const w of palavrasBase) {
       comScore
-        .filter(({ produto: p }) => {
+        .filter(({ produto: p, score }) => {
+          if (score < scoreMinComposto) return false;
           const nomeN   = normalizar(p.name);
           const subcatN = normalizar(p.subcategory);
           const catN    = normalizar(p.category);
@@ -349,11 +362,18 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const ordenados = comScore.sort((a, b) => b.score - a.score);
   const resultado: Produto[] = [];
 
-  for (const { produto } of ordenados) {
-    if (garantidos.has(produto.id)) resultado.push(produto);
-  }
-  for (const { produto } of ordenados) {
-    if (!garantidos.has(produto.id)) resultado.push(produto);
+  if (matchamTodos.length > 0) {
+    // Produto composto encontrado (ex: "leite condensado") → retorna só esses
+    for (const { produto } of ordenados) {
+      if (garantidos.has(produto.id)) resultado.push(produto);
+    }
+  } else {
+    for (const { produto } of ordenados) {
+      if (garantidos.has(produto.id)) resultado.push(produto);
+    }
+    for (const { produto } of ordenados) {
+      if (!garantidos.has(produto.id)) resultado.push(produto);
+    }
   }
 
   return resultado.slice(0, 20);
@@ -1570,7 +1590,8 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal("Lista cancelada. Se quiser, envie novamente.");
               return;
             }
-            return;
+            // Se o cliente mandou um novo pedido, limpa o estado e processa normalmente
+            setListaPedidoState(null);
           }
 
           if (estadoAtual.stage === "await_mode") {
@@ -2151,7 +2172,9 @@ const AgentePage: React.FC = () => {
         return [];
     }
   };
-  const quickReplies = getQuickReplies(flowState, carrinho.length);
+  const ultimaMensagemAgente = [...mensagens].reverse().find((m) => m.role === "assistant");
+  const ultimaMensagemTemChips = (ultimaMensagemAgente?.opcoes?.length ?? 0) > 0;
+  const quickReplies = ultimaMensagemTemChips ? [] : getQuickReplies(flowState, carrinho.length);
   const saudacaoInicialCarregada = mensagens.some((m) => m.id === "welcome");
 
   const handleAdicionarQtdCarrinho = (item: CartItem) => {
@@ -2508,7 +2531,7 @@ const AgentePage: React.FC = () => {
 
               {/* Cards de produto — carrossel único */}
               {msg.produtosCard && msg.produtosCard.length > 0 && (() => {
-                const isCarousel = carouselEnabled && msg.produtosCard!.length > 2;
+                const isCarousel = carouselEnabled;
                 const attachDrag = (el: HTMLDivElement | null) => {
                   if (!el) return;
                   const onDown = (e: MouseEvent) => { carouselDragRef.current = { el, startX: e.pageX - el.offsetLeft, scrollLeft: el.scrollLeft, dragging: true }; el.style.cursor = 'grabbing'; };
