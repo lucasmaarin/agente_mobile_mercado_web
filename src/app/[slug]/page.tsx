@@ -2173,7 +2173,7 @@ const AgentePage: React.FC = () => {
     }
   };
   const ultimaMensagemAgente = [...mensagens].reverse().find((m) => m.role === "assistant");
-  const ultimaMensagemTemChips = (ultimaMensagemAgente?.opcoes?.length ?? 0) > 0;
+  const ultimaMensagemTemChips = (ultimaMensagemAgente?.suggestions?.length ?? 0) > 0;
   const quickReplies = ultimaMensagemTemChips ? [] : getQuickReplies(flowState, carrinho.length);
   const saudacaoInicialCarregada = mensagens.some((m) => m.id === "welcome");
 
