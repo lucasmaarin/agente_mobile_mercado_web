@@ -86,6 +86,13 @@ export interface FewShotExemplo {
 // BUILD SYSTEM PROMPT
 // ============================================================
 
+export interface ConfigLojaPrompt {
+  pedidoMinimo: number;
+  taxaEntrega: number;
+  distanciaMaxima: number;
+  horarios: { dia: string; aberto: boolean; abertura: string; fechamento: string }[];
+}
+
 export function buildSystemPrompt(
   produtosFoco: Produto[],
   indiceCategoria: string,
@@ -97,7 +104,8 @@ export function buildSystemPrompt(
   deliveryPrice: number = 0,
   fewShotExemplos: FewShotExemplo[] = [],
   nomeEstabelecimento: string = '',
-  formasPagamento: string[] = []
+  formasPagamento: string[] = [],
+  lojaConfig?: ConfigLojaPrompt
 ): string {
   const nomeSupermercado = nomeEstabelecimento || 'Mobile Mercado';
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -184,7 +192,9 @@ Responda SOMENTE ao que o cliente pediu. Não faça recomendações proativas.
 • Cliente quer remover → [REMOVE:ID]
 • Carrinho ("o que tem no carrinho?") → responda com base no CARRINHO (sem ADD/SHOW)
 • Formas de pagamento → informe: "Aceitamos: ${formasPagamento.length > 0 ? formasPagamento.join(', ') : 'Pix, Dinheiro, Cartão de Crédito e Cartão de Débito'}."
-• Pedido mínimo → o valor mínimo para realizar um pedido é R$ 60,00. Se o cliente perguntar, informe este valor. Se o carrinho estiver abaixo disso ao tentar finalizar, avise que ainda não atingiu o mínimo.
+• Pedido mínimo → o valor mínimo para realizar um pedido é R$ ${(lojaConfig?.pedidoMinimo ?? 60).toFixed(2).replace('.', ',')}. Se o cliente perguntar, informe este valor. Se o carrinho estiver abaixo disso ao tentar finalizar, avise que ainda não atingiu o mínimo.
+• Taxa de entrega → R$ ${(lojaConfig?.taxaEntrega ?? deliveryPrice).toFixed(2).replace('.', ',')}${lojaConfig?.distanciaMaxima ? ` (raio máximo de entrega: ${lojaConfig.distanciaMaxima} km)` : ''}.
+• Horário de funcionamento → ${(() => { const hs = lojaConfig?.horarios; if (!hs) return 'consulte o estabelecimento'; const abertos = hs.filter(h => h.aberto); if (abertos.length === 0) return 'fechado no momento'; return abertos.map(h => `${h.dia}: ${h.abertura}–${h.fechamento}`).join(', '); })()}
 • Finalizar / pagar → [START_CHECKOUT] ← o sistema cuida do restante, NUNCA peça endereço aqui
 • Cumprimento puro → responda brevemente e pergunte o que precisa
 • Pergunta fora do escopo → responda com bom humor, relacione à compra, redirecione. Ex: "Previsão do tempo? Se vai chover eu já separo a sopa quente! ☔ O que você precisa hoje?"`;

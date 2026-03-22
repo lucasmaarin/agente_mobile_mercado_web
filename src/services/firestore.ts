@@ -99,6 +99,65 @@ export async function buscarFormasPagamento(companyId: string): Promise<string[]
   return methods.map((m) => m.name ?? '').filter(Boolean);
 }
 
+// ── CONFIG DA LOJA ──────────────────────────────────────────
+export interface ConfigLoja {
+  pedidoMinimo: number;
+  taxaEntrega: number;
+  distanciaMaxima: number;
+  horarios: { dia: string; aberto: boolean; abertura: string; fechamento: string }[];
+}
+
+const DIAS_SEMANA = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+function extrairHoraDeValor(val: unknown): string {
+  if (typeof val === 'string') return val.substring(0, 5);
+  if (val && typeof val === 'object') {
+    const v = val as Record<string, unknown>;
+    if (typeof v.seconds === 'number') {
+      const d = new Date(v.seconds * 1000);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    if (typeof (v as { toDate?: () => Date }).toDate === 'function') {
+      const d = (v as { toDate: () => Date }).toDate();
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+  }
+  return '08:00';
+}
+
+export async function buscarConfigLoja(companyId: string): Promise<ConfigLoja> {
+  const defaultHorarios = DIAS_SEMANA.map(dia => ({ dia, aberto: true, abertura: '08:00', fechamento: '20:00' }));
+  const defaultConfig: ConfigLoja = { pedidoMinimo: 60, taxaEntrega: 5, distanciaMaxima: 40, horarios: defaultHorarios };
+
+  try {
+    const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
+    if (!snap.exists()) return defaultConfig;
+
+    const data = snap.data() as Record<string, unknown>;
+    const delivery = (data.deliveryInfo ?? {}) as Record<string, unknown>;
+
+    const pedidoMinimo  = typeof delivery.fixedValue      === 'number' ? delivery.fixedValue      : 60;
+    const taxaEntrega   = typeof delivery.deliveryFee     === 'number' ? delivery.deliveryFee     : DELIVERY_PRICE;
+    const distanciaMaxima = typeof delivery.maximunDistance === 'number' ? delivery.maximunDistance : 40;
+
+    const rawHorarios = Array.isArray(data.openingHours) ? data.openingHours as Record<string, unknown>[] : [];
+    const horarios = DIAS_SEMANA.map((dia, idx) => {
+      const h = rawHorarios[idx];
+      if (!h) return { dia, aberto: false, abertura: '08:00', fechamento: '20:00' };
+      return {
+        dia,
+        aberto:    Boolean(h.isOpen),
+        abertura:  extrairHoraDeValor(h.openingHours),
+        fechamento: extrairHoraDeValor(h.closeHours),
+      };
+    });
+
+    return { pedidoMinimo, taxaEntrega, distanciaMaxima, horarios };
+  } catch {
+    return defaultConfig;
+  }
+}
+
 export async function getProducts(companyId: string): Promise<Produto[]> {
   const ref = collection(db, 'estabelecimentos', companyId, 'Products');
   const q = query(

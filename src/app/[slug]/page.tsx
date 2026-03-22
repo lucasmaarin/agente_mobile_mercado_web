@@ -38,6 +38,8 @@ import {
   buscarLogoEstabelecimento,
   buscarNomeEstabelecimento,
   buscarFormasPagamento,
+  buscarConfigLoja,
+  ConfigLoja,
   criarUsuarioNovo,
   atualizarNomeUsuario,
   atualizarDadosUsuario,
@@ -873,6 +875,7 @@ const AgentePage: React.FC = () => {
   const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
   const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>('');
   const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
+  const [lojaConfig, setLojaConfig] = useState<ConfigLoja | null>(null);
   const [flowState, setFlowState]             = useState<FlowState>(FLOW_STATES.BROWSING);
   const [customerData, setCustomerData]       = useState<CustomerData>({});
 
@@ -1026,6 +1029,9 @@ const AgentePage: React.FC = () => {
       .catch(() => {});
     buscarFormasPagamento(companyId)
       .then((formas) => { if (formas.length > 0) setFormasPagamento(formas); })
+      .catch(() => {});
+    buscarConfigLoja(companyId)
+      .then((cfg) => setLojaConfig(cfg))
       .catch(() => {});
   }, [companyId]);
 
@@ -1886,10 +1892,11 @@ const AgentePage: React.FC = () => {
         wCustomerData,
         nomeCliente,
         enderecoSalvo,
-        DELIVERY_PRICE,
+        lojaConfig?.taxaEntrega ?? DELIVERY_PRICE,
         fewShot,
         nomeEstabelecimento,
-        formasPagamento
+        formasPagamento,
+        lojaConfig ?? undefined
       );
 
       // ---- Streaming ----

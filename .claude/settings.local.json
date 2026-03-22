@@ -37,7 +37,9 @@
       "Bash(\"c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\src\\\\app\\\\Agente\\\\Agente.module.css\")",
       "Bash(cat:*)",
       "Bash(grep -n \"^}$\\\\|^};\\\\|export default\\\\|return \\(.*null\\\\|imagemAmpliada\\\\|setImagemAmpliada\" \"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx\")",
-      "Bash(find c:/Users/lucas/Desktop/mobile_mercado/loja_mobile_mercado -name Produtos*)"
+      "Bash(find c:/Users/lucas/Desktop/mobile_mercado/loja_mobile_mercado -name Produtos*)",
+      "Bash(start \"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/treinamento_agente_mercado/index.html\")",
+      "Bash(\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/treinamento_agente_mercado/css/style.css\":*)"
     ]
   }
 }
