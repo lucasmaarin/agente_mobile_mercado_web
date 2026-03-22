@@ -319,6 +319,21 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
       }
     }
 
+    // Bônus: produto começa com o primeiro termo da busca (produto principal)
+    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) {
+      score += 15;
+    }
+
+    // Penalidade: termo aparece apenas como descritor de sabor ("ao X", "com X")
+    // Ex: buscar "leite" não deve retornar "Chocolate ao Leite"
+    for (const w of palavrasBase) {
+      const apareceComoSabor = (nomeN.includes('ao ' + w) || nomeN.includes('c/ ' + w) || nomeN.includes('com ' + w));
+      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
+      if (apareceComoSabor && !apareceComoProduto) {
+        score -= 18;
+      }
+    }
+
     return { produto: p, score };
   }).filter(({ score }) => score > 0);
 
@@ -392,16 +407,30 @@ function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] 
 
   const comScore = produtos.map((p) => {
     const todosKeys = [...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
+    const nomeN   = normalizar(p.name);
+    const subcatN = normalizar(p.subcategory);
+    const catN    = normalizar(p.category);
     let score = 0;
 
     for (const pref of prefixos) {
-      if (todosKeys.some(k => k === pref))            score += 15; // match exato
+      if (todosKeys.some(k => k === pref))             score += 15; // match exato
       else if (todosKeys.some(k => k.startsWith(pref))) score += 8; // match por prefixo
     }
 
     // Bônus: todos os prefixos encontrados = produto cobre toda a busca
     const todosPresentes = prefixos.every(pref => todosKeys.some(k => k.startsWith(pref)));
     if (todosPresentes && prefixos.length > 1) score += 20;
+
+    // Bônus: produto começa com o primeiro termo da busca
+    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) score += 15;
+
+    // Penalidade: termo aparece apenas como descritor de sabor ("ao X", "com X")
+    // Ex: buscar "leite" não deve retornar "Chocolate ao Leite"
+    for (const w of palavrasBase) {
+      const apareceComoSabor = nomeN.includes('ao ' + w) || nomeN.includes('c/ ' + w) || nomeN.includes('com ' + w);
+      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
+      if (apareceComoSabor && !apareceComoProduto) score -= 18;
+    }
 
     return { produto: p, score };
   }).filter(({ score }) => score > 0);
