@@ -4,6 +4,7 @@ export const DOMAIN_SLUGS: Record<string, string> = {
   // 'royal.com.br':            'royal',
   // 'zerograu.com.br':         'zerograu',
   // 'padaria-center.com.br':   'padaria-center',
+  'teste.com.br': 'jqqjhtcc2zw1tuzmqzgf', // Teste
 };
 
 // Slugs autorizados a carregar o agente
