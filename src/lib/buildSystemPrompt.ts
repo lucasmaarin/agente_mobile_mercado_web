@@ -17,6 +17,7 @@ export const FLOW_STATES = {
   COLLECTING_CARD_BRAND:     'collecting_card_brand',
   COLLECTING_CHANGE:         'collecting_change',
   COLLECTING_CPF:            'collecting_cpf',
+  COLLECTING_CPF_ONBOARDING: 'collecting_cpf_onboarding',
   CONFIRMING_ORDER:          'confirming_order',
 } as const;
 
@@ -141,6 +142,12 @@ export function buildSystemPrompt(
 Mensagem: "Olá! Seja bem-vindo ao ${nomeSupermercado}! 😊 Como você gostaria de ser chamado?"
 Quando o cliente responder: emita [SET_NAME:nome_exato]
 PROIBIDO: falar sobre produtos, promoções ou qualquer outra coisa antes de coletar o nome.`;
+  } else if (flowState === FLOW_STATES.COLLECTING_CPF_ONBOARDING) {
+    stateBlock = `TAREFA: coletar o CPF do cliente para cadastro.
+Mensagem: "Obrigado, ${nomeCliente}! 😊 Para finalizar seu cadastro, qual é o seu CPF? (apenas números)"
+Quando o cliente responder com um CPF válido (11 dígitos): emita [SET_CPF:cpf_apenas_numeros]
+Se o cliente não quiser informar: emita [SET_CPF:skip]
+PROIBIDO: falar sobre produtos ou pedidos antes de coletar o CPF.`;
   } else if (flowState === FLOW_STATES.BROWSING) {
     stateBlock = `MODO: navegação
 

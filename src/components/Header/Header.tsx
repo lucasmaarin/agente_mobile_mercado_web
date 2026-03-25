@@ -30,6 +30,7 @@ interface HeaderProps {
   enderecoSalvo?: EnderecoSalvo | null;
   onSalvarPerfil?: (dados: { nome: string; cpf: string; telefone: string }) => Promise<void>;
   onSalvarEndereco?: (end: EnderecoSalvo) => Promise<void>;
+  onLogout?: () => void;
   isGuestMode?: boolean;
   carouselEnabled?: boolean;
   onCarouselChange?: (val: boolean) => void;
@@ -58,6 +59,7 @@ const Header: React.FC<HeaderProps> = ({
   onCarouselChange,
   wordKeysEnabled = false,
   onWordKeysChange,
+  onLogout,
 }) => {
   const [menuAberto, setMenuAberto] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -104,6 +106,7 @@ const Header: React.FC<HeaderProps> = ({
     try {
       await signOut(auth);
       setMenuAberto(false);
+      onLogout?.();
     } catch (error) {
       console.error("Erro ao sair:", error);
     }

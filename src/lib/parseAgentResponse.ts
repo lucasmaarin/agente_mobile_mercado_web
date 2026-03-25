@@ -61,6 +61,7 @@ export interface ParseResult {
   shouldSaveAddress:   boolean;
   suggestions:         string[];
   collectedName:       string;
+  collectedCpf:        string;
 }
 
 // ============================================================
@@ -216,8 +217,18 @@ export function parseAgentResponse(
   const nameMatch = response.match(/\[SET_NAME:([^\]]+)\]/i);
   if (nameMatch) {
     collectedName = nameMatch[1].trim();
-    flowState = FLOW_STATES.BROWSING;
+    // Após nome, vai para coleta de CPF (onboarding) em vez de BROWSING direto
+    flowState = FLOW_STATES.COLLECTING_CPF_ONBOARDING;
     clean = clean.replace(/\[SET_NAME:[^\]]+\]/gi, '').trim();
+  }
+
+  // [SET_CPF:valor] — coleta CPF no onboarding
+  let collectedCpf = '';
+  const cpfMatch = response.match(/\[SET_CPF:([^\]]+)\]/i);
+  if (cpfMatch) {
+    collectedCpf = cpfMatch[1].trim();
+    flowState = FLOW_STATES.BROWSING;
+    clean = clean.replace(/\[SET_CPF:[^\]]+\]/gi, '').trim();
   }
 
   // [CONFIRM_ORDER]
@@ -256,5 +267,6 @@ export function parseAgentResponse(
     shouldSaveAddress,
     suggestions,
     collectedName,
+    collectedCpf,
   };
 }

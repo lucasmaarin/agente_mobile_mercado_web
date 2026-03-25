@@ -1,0 +1,275 @@
+/* ===== WRAPPER ===== */
+/* Ocupa o espaço restante dentro do container do chat, abaixo do Header existente */
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  width: 100%;
+  background: #f0f2f5;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ===== MENSAGENS ===== */
+.messagesArea {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agentBubble {
+  background: #fff;
+  color: #111;
+  padding: 10px 14px;
+  border-radius: 0 16px 16px 16px;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  max-width: 78%;
+  align-self: flex-start;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  animation: fadeUp 0.25s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.typing {
+  color: #6b7280;
+}
+
+/* ===== INPUT DE TELEFONE ===== */
+.userInputArea {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.inputError {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  margin: 0;
+  max-width: 78%;
+  align-self: flex-start;
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 24px;
+  font-size: 0.95rem;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.phoneInput:focus {
+  border-color: #193281;
+}
+
+.phoneInput:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.sendBtn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #193281;
+  color: #fff;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.sendBtn:hover:not(:disabled) {
+  background: #1a3a9a;
+}
+
+.sendBtn:disabled {
+  background: #c5cde8;
+  cursor: not-allowed;
+}
+
+/* ===== MODAL SMS ===== */
+.modalOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 28px 24px 36px;
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.modalIcon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.modalTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  text-align: center;
+}
+
+.modalSub {
+  font-size: 0.88rem;
+  color: #6b7280;
+  text-align: center;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.codeInput {
+  width: 100%;
+  padding: 14px;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.codeInput:focus {
+  border-color: #193281;
+}
+
+.codeInput:disabled {
+  background: #f9fafb;
+}
+
+.codeError {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.83rem;
+  width: 100%;
+  text-align: center;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* ===== CHECKBOXES ===== */
+.checkboxGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: #374151;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checkbox {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  accent-color: #193281;
+  cursor: pointer;
+}
+
+.termsLink {
+  color: #193281;
+  text-decoration: underline;
+}
+
+/* ===== BOTÕES DO MODAL ===== */
+.confirmBtn {
+  width: 100%;
+  padding: 14px;
+  background: #193281;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirmBtn:hover:not(:disabled) {
+  background: #1a3a9a;
+}
+
+.confirmBtn:disabled {
+  background: #c5cde8;
+  cursor: not-allowed;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 2px 0;
+}
+
+.resendBtn:disabled {
+  opacity: 0.5;
+}

@@ -62,11 +62,12 @@ export async function criarOuObterUsuarioConvidado(): Promise<string> {
   return GUEST_USER_DOC_ID;
 }
 
-export async function criarUsuarioNovo(uid: string): Promise<string> {
+export async function criarUsuarioNovo(uid: string, telefone?: string): Promise<string> {
   const now = Timestamp.now();
   const ref = await addDoc(collection(db, 'Users'), {
     userAuthId: uid,
     nomeCompleto: '',
+    telefone: telefone ?? '',
     createAt: now,
     updateAt: now,
   });

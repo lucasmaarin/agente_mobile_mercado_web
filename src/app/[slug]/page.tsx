@@ -2,14 +2,15 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { onAuthStateChanged, signInAnonymously, User } from "firebase/auth";
+import { onAuthStateChanged, signInAnonymously, signOut, signInWithPhoneNumber, RecaptchaVerifier, ConfirmationResult, setPersistence, browserLocalPersistence, browserSessionPersistence, User } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { Send, UserCircle, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic } from "lucide-react";
+import { Send, Loader2, ShoppingCart, X, ZoomIn, QrCode, Banknote, CreditCard, Plus, Minus, Mic } from "lucide-react";
 import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
 import Header from "@/components/Header/Header";
 import CheckoutModal from "@/components/CheckoutModal/CheckoutModal";
+import { validatePhone } from "@/lib/validation";
 
 import {
   FLOW_STATES,
@@ -770,6 +771,7 @@ interface Mensagem {
   timestamp: Date;
   produtosCard?: Produto[]; // cards de produto exibidos junto à mensagem
   suggestions?: string[];   // chips clicáveis gerados pelo [SUGGEST:...] do agente
+  authCheckboxCard?: boolean; // card especial com checkboxes de login
 }
 
 // Sequência para calcular progresso da barra
@@ -849,6 +851,21 @@ const AgentePage: React.FC = () => {
   const [userCpf, setUserCpf]     = useState('');
   const [userPhone, setUserPhone] = useState('');
   const [authLoading, setAuthLoading] = useState(true);
+
+  // --- Fluxo de autenticação por telefone (inline no chat) ---
+  const [authStep, setAuthStep]               = useState<'phone' | 'validating' | 'code_modal'>('phone');
+  const [authPhone, setAuthPhone]             = useState('');
+  const [authCode, setAuthCode]               = useState('');
+  const [authConfirmation, setAuthConfirmation] = useState<ConfirmationResult | null>(null);
+  const [authKeepLogged, setAuthKeepLogged]   = useState(true);
+  const [authAcceptTerms, setAuthAcceptTerms] = useState(false);
+  const [authPhoneError, setAuthPhoneError]   = useState('');
+  const [authCodeError, setAuthCodeError]     = useState('');
+  const [authSending, setAuthSending]         = useState(false);
+  const [loginCompleto, setLoginCompleto]     = useState(false);
+  const [authDigitando, setAuthDigitando]     = useState(false);
+  const recaptchaAuthRef = useRef<RecaptchaVerifier | undefined>(undefined);
+  const authIniciado = useRef(false); // garante que mensagens de auth só são adicionadas uma vez
 
   // --- Endereço salvo pelo agente
   const [enderecoSalvo, setEnderecoSalvo] = useState<EnderecoSalvo | null>(null);
@@ -979,6 +996,11 @@ const AgentePage: React.FC = () => {
     }
 
     const unsub = onAuthStateChanged(auth, async (currentUser) => {
+      // Se não é guest mode e o usuário logado é anônimo, desloga para forçar autenticação real
+      if (!isGuestMode && currentUser?.isAnonymous) {
+        signOut(auth).catch(console.error);
+        return;
+      }
       setUser(currentUser);
       if (currentUser) {
         try {
@@ -1001,7 +1023,7 @@ const AgentePage: React.FC = () => {
               }
             }
           } else {
-            const newDocId = await criarUsuarioNovo(currentUser.uid);
+            const newDocId = await criarUsuarioNovo(currentUser.uid, currentUser.phoneNumber ?? undefined);
             setUserDocId(newDocId);
             if (!isGuestMode) {
               setFlowState(FLOW_STATES.COLLECTING_NAME);
@@ -1018,6 +1040,25 @@ const AgentePage: React.FC = () => {
     return () => unsub();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // -------- Inicializa mensagens de auth no chat quando não há usuário logado --------
+  useEffect(() => {
+    if (authLoading) return;
+    if (isGuestMode) return;
+    const needsLogin = !user || user.isAnonymous;
+    if (needsLogin && !authIniciado.current) {
+      authIniciado.current = true;
+      // Só inicializa se o chat estiver vazio — se já tiver mensagens (ex: após logout), não substitui
+      setMensagens(prev => {
+        if (prev.length > 0) return prev;
+        return [
+          { id: 'auth-0', role: 'assistant', content: 'Olá! 👋 Bem-vindo(a)!', timestamp: new Date() },
+          { id: 'auth-1', role: 'assistant', content: 'Para continuar, preciso que você faça login. Informe seu número de telefone com DDD:', timestamp: new Date() },
+        ];
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
 
   // -------- Logo do estabelecimento --------
   useEffect(() => {
@@ -1084,25 +1125,32 @@ const AgentePage: React.FC = () => {
         }
         // Reinicia apenas a interface/sessão local.
         setConversaId(null);
-        setFlowState(FLOW_STATES.BROWSING);
         setCarrinho([]);
         setCustomerData({});
         setCartRecoveryPending(false);
-        setMensagens([{
-          id:        "welcome",
-          role:      "assistant",
-          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
-          timestamp: new Date(),
-        }]);
+        // Não sobrescreve COLLECTING_NAME/CPF_ONBOARDING definidos no onAuthStateChanged
+        const isNewUser = nomeCliente === 'Cliente' || !nomeCliente;
+        if (!isNewUser) setFlowState(FLOW_STATES.BROWSING);
+        const welcomeContent = isNewUser
+          ? `Olá! Seja bem-vindo ao ${nomeEstabelecimento || 'Mercado'}! 😊\n\nComo você gostaria de ser chamado?`
+          : `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`;
+        // Preserva mensagens de auth anteriores e appenda a boas-vindas
+        setMensagens(prev => {
+          const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
+          return [...authMsgs, {
+            id: 'welcome', role: 'assistant' as const,
+            content: welcomeContent, timestamp: new Date(),
+          }];
+        });
       } catch (e) {
         console.error("Erro ao iniciar nova conversa:", e);
-        // Fallback: boas-vindas
-        setMensagens([{
-          id:        "welcome",
-          role:      "assistant",
-          content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
-          timestamp: new Date(),
-        }]);
+        setMensagens(prev => {
+          const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
+          return [...authMsgs, {
+            id: 'welcome', role: 'assistant' as const,
+            content: `Olá! Seja bem-vindo ao ${nomeEstabelecimento || 'Mercado'}! 😊`, timestamp: new Date(),
+          }];
+        });
       } finally {
         setCarregandoConversa(false);
       }
@@ -1204,6 +1252,107 @@ const AgentePage: React.FC = () => {
     mediaRecorderRef.current?.stop();
     mediaRecorderRef.current = null;
     setGravando(false);
+  };
+
+  // -------- Auth por telefone (inline no chat) --------
+  const formatPhoneAuth = (value: string) => {
+    const d = value.replace(/\D/g, '').slice(0, 11);
+    if (d.length <= 2) return d;
+    if (d.length <= 6) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+    return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  };
+
+  const setupRecaptchaAuth = (): RecaptchaVerifier => {
+    if (window.recaptchaVerifier) return window.recaptchaVerifier;
+    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      size: 'invisible',
+      callback: () => {},
+    });
+    window.recaptchaVerifier = verifier;
+    recaptchaAuthRef.current = verifier;
+    return verifier;
+  };
+
+  const handleAuthSendCode = async () => {
+    const formatted = validatePhone(authPhone);
+    if (!formatted) {
+      setMensagens(prev => [
+        ...prev.filter(m => m.id !== 'auth-phone-error'),
+        { id: 'auth-phone-error', role: 'assistant', content: 'Número inválido. Use o formato: (11) 99999-9999', timestamp: new Date() },
+      ]);
+      return;
+    }
+    setAuthSending(true);
+    setAuthStep('validating');
+    const ts = Date.now();
+    // Adiciona bubble do usuário + "Enviando..."
+    setMensagens(prev => [
+      ...prev.filter(m => !['auth-phone-error', 'auth-validating', 'auth-phone-user'].includes(m.id)),
+      { id: 'auth-phone-user', role: 'user', content: authPhone, timestamp: new Date() },
+      { id: 'auth-validating', role: 'assistant', content: `Enviando SMS para ${authPhone}…`, timestamp: new Date() },
+    ]);
+    try {
+      await setPersistence(auth, authKeepLogged ? browserLocalPersistence : browserSessionPersistence);
+      const result = await signInWithPhoneNumber(auth, formatted, setupRecaptchaAuth());
+      setAuthConfirmation(result);
+      setMensagens(prev => [
+        ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card'].includes(m.id)),
+        { id: `auth-code-sent-${ts}`, role: 'assistant', content: `Código enviado para ${authPhone}. Digite os 6 dígitos no campo abaixo:`, timestamp: new Date() },
+        { id: 'auth-code-card', role: 'assistant', content: '', authCheckboxCard: true, timestamp: new Date() },
+      ]);
+      setAuthStep('code_modal');
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      console.error('[PhoneAuth] Erro ao enviar SMS:', err.code, err.message, e);
+      const errMsgs: Record<string, string> = {
+        'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+        'auth/invalid-phone-number': 'Número inválido. Confira o DDD e os dígitos.',
+        'auth/quota-exceeded': 'Limite de SMS atingido. Tente mais tarde.',
+        'auth/captcha-check-failed': 'Verificação de segurança falhou. Recarregue a página.',
+        'auth/invalid-app-credential': 'Erro de configuração. Tente novamente.',
+      };
+      const msgErro = errMsgs[err.code ?? ''] ?? 'Não foi possível enviar o SMS. Tente novamente.';
+      setMensagens(prev => [
+        ...prev.filter(m => !['auth-validating', 'auth-phone-error'].includes(m.id)),
+        { id: 'auth-phone-error', role: 'assistant', content: msgErro, timestamp: new Date() },
+      ]);
+      setAuthStep('phone');
+      if (window.recaptchaVerifier) { window.recaptchaVerifier.clear(); window.recaptchaVerifier = undefined; }
+      recaptchaAuthRef.current = undefined;
+    } finally { setAuthSending(false); }
+  };
+
+  const handleAuthVerifyCode = async () => {
+    if (!authConfirmation || authCode.length !== 6 || !authAcceptTerms) return;
+    setAuthSending(true);
+    setAuthCodeError('');
+    try {
+      await authConfirmation.confirm(authCode);
+      setLoginCompleto(true); // Esconde auth imediatamente, antes do onAuthStateChanged disparar
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      console.error('[PhoneAuth] Erro ao verificar código:', err.code, err.message, e);
+      const msgs: Record<string, string> = {
+        'auth/invalid-verification-code': 'Código incorreto. Verifique o SMS.',
+        'auth/code-expired': 'Código expirado. Clique em reenviar.',
+        'auth/session-expired': 'Sessão expirada. Solicite um novo código.',
+      };
+      setMensagens(prev => [
+        ...prev.filter(m => m.id !== 'auth-code-error'),
+        { id: 'auth-code-error', role: 'assistant', content: msgs[err.code ?? ''] ?? 'Não foi possível verificar. Tente novamente.', timestamp: new Date() },
+      ]);
+    } finally { setAuthSending(false); }
+  };
+
+  const handleAuthResend = () => {
+    setAuthCode('');
+    setAuthStep('phone');
+    setAuthConfirmation(null);
+    recaptchaAuthRef.current?.clear();
+    recaptchaAuthRef.current = undefined;
+    // Volta para o estado de digitar telefone, removendo os cards de código
+    setMensagens(prev => prev.filter(m => !['auth-code-sent', 'auth-code-card', 'auth-code-error', 'auth-validating'].includes(m.id)));
   };
 
   // -------- Enviar mensagem --------
@@ -1440,6 +1589,13 @@ const AgentePage: React.FC = () => {
         const podeIniciarLista = !listaPedidoState && itensExtraidos.length >= 2;
 
         if (itemUnicoQtdState) {
+          // Se o usuário pediu um produto diferente do estado atual, reseta e processa normalmente
+          const termoDiferente = itemUnicoExtraido &&
+            normalizar(itemUnicoExtraido.termoBusca) !== normalizar(itemUnicoQtdState.termoBusca);
+          if (termoDiferente) {
+            setItemUnicoQtdState(null);
+            // Cai no fluxo normal abaixo (não retorna)
+          } else {
           if (ehCancelamento(texto) || textoNormalizado.includes("cancelar")) {
             setItemUnicoQtdState(null);
             await salvarRespostaLocal("Tudo bem, selecao cancelada.");
@@ -1526,6 +1682,7 @@ const AgentePage: React.FC = () => {
             ["Finalizar pedido 🛒", "Continuar comprando"]
           );
           return;
+          } // fecha else (termo diferente)
         }
 
         if (!listaPedidoState && itemUnicoExtraido) {
@@ -1964,10 +2121,18 @@ const AgentePage: React.FC = () => {
         produtosCardIds = produtosParaExibir.map((p) => p.id);
       }
 
-      // Salvar nome coletado no primeiro acesso
+      // Salvar nome coletado no onboarding
       if (resultado.collectedName && userDocId) {
         setNomeCliente(resultado.collectedName);
         atualizarNomeUsuario(userDocId, resultado.collectedName).catch(() => {});
+      }
+
+      // Salvar CPF coletado no onboarding
+      if (resultado.collectedCpf && resultado.collectedCpf !== 'skip' && userDocId) {
+        setUserCpf(resultado.collectedCpf);
+        atualizarDadosUsuario(userDocId, { cpf: resultado.collectedCpf }).catch(() => {});
+      } else if (resultado.collectedCpf === 'skip') {
+        // Usuário pulou CPF — vai para BROWSING mesmo assim (já tratado no parse)
       }
 
       // Atualizar ref de últimos produtos mostrados (para contexto de confirmação "Sim")
@@ -2211,7 +2376,8 @@ const AgentePage: React.FC = () => {
   const ultimaMensagemAgente = [...mensagens].reverse().find((m) => m.role === "assistant");
   const ultimaMensagemTemChips = (ultimaMensagemAgente?.suggestions?.length ?? 0) > 0;
   const quickReplies = ultimaMensagemTemChips ? [] : getQuickReplies(flowState, carrinho.length);
-  const saudacaoInicialCarregada = mensagens.some((m) => m.id === "welcome");
+  // Chat tem conteúdo se há mensagem de welcome OU mensagens de auth (não mostra tela de loading)
+  const saudacaoInicialCarregada = mensagens.length > 0;
 
   const handleAdicionarQtdCarrinho = (item: CartItem) => {
     const novaQtd = item.quantity + 1;
@@ -2344,7 +2510,7 @@ const AgentePage: React.FC = () => {
   // ============================================================
   // ESTADOS DE CARREGAMENTO / SEM LOGIN
   // ============================================================
-  if (authLoading || carregandoConversa || (user !== null && !saudacaoInicialCarregada)) {
+  if (authLoading || (user !== null && !saudacaoInicialCarregada)) {
     return (
       <div className={styles.container}>
         <div className={styles.loadingContainer}>
@@ -2357,30 +2523,14 @@ const AgentePage: React.FC = () => {
     );
   }
 
-  if (!isGuestMode && !user) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.emptyState}>
-          <UserCircle size={64} color="#ccc" strokeWidth={1.2} />
-          <p className={styles.emptyText}>
-            Faça login para falar com nosso assistente de vendas
-          </p>
-          <button
-            className={styles.loginButton}
-            onClick={() => (window.location.href = `/${companyId}/login`)}
-          >
-            Fazer Login
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const precisaLogin = !isGuestMode && (!user || user.isAnonymous) && !loginCompleto;
 
   // ============================================================
   // RENDER
   // ============================================================
   return (
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
+      <div id="recaptcha-container"></div>
       <Header
         logoUrl={logoEstabelecimento ?? undefined}
         cartTotal={totalCarrinho}
@@ -2404,6 +2554,37 @@ const AgentePage: React.FC = () => {
           setEnderecoSalvo(end);
         }}
         isGuestMode={isGuestMode}
+        onLogout={() => {
+          if (userDocId) limparCarrinhoFirestore(companyId, userDocId).catch(console.error);
+          setCarrinho([]);
+          setUserDocId(null);
+          setNomeCliente('Cliente');
+          setUserCpf('');
+          setUserPhone('');
+          setLoginCompleto(false);
+          setAuthStep('phone');
+          setAuthPhone('');
+          setAuthCode('');
+          setAuthConfirmation(null);
+          if (window.recaptchaVerifier) { window.recaptchaVerifier.clear(); window.recaptchaVerifier = undefined; }
+          recaptchaAuthRef.current = undefined;
+          // NÃO resetar authIniciado para o useEffect não substituir as mensagens
+          // Mensagens de logout com delay natural (typing indicator)
+          setAuthDigitando(true);
+          setTimeout(() => {
+            setMensagens(prev => [...prev, {
+              id: `logout-${Date.now()}`, role: 'assistant' as const,
+              content: 'Você saiu da conta com sucesso.', timestamp: new Date(),
+            }]);
+            setTimeout(() => {
+              setMensagens(prev => [...prev, {
+                id: `auth-r-0-${Date.now()}`, role: 'assistant' as const,
+                content: 'Olá! 👋 Para continuar, informe seu número de telefone com DDD:', timestamp: new Date(),
+              }]);
+              setAuthDigitando(false);
+            }, 1000);
+          }, 700);
+        }}
         carouselEnabled={carouselEnabled}
         onCarouselChange={(val) => {
           setCarouselEnabled(val);
@@ -2417,7 +2598,7 @@ const AgentePage: React.FC = () => {
       />
 
       {/* Barra de progresso do checkout */}
-      {flowState !== FLOW_STATES.BROWSING && (
+      {!precisaLogin && flowState !== FLOW_STATES.BROWSING && (
         <div className={styles.progressBar}>
           <div
             className={styles.progressFill}
@@ -2427,7 +2608,7 @@ const AgentePage: React.FC = () => {
       )}
 
       {/* Backdrop do carrinho */}
-      {mostrarCarrinho && (
+      {!precisaLogin && mostrarCarrinho && (
         <div className={styles.agCarrinhoBackdrop} onClick={() => setMostrarCarrinho(false)} />
       )}
 
@@ -2534,6 +2715,8 @@ const AgentePage: React.FC = () => {
 
       {/* Mensagens */}
       <div className={styles.messagesContainer}>
+
+        {/* ── Todas as mensagens (auth + chat) no mesmo fluxo ── */}
         {mensagens.map((msg) => (
           <div
             key={msg.id}
@@ -2550,7 +2733,23 @@ const AgentePage: React.FC = () => {
             )}
 
             <div className={styles.messageColumn}>
-              {/* Texto da mensagem */}
+              {/* Card especial: checkboxes de auth (não renderiza bubble de texto) */}
+              {msg.authCheckboxCard ? (
+                <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 300 }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', color: '#374151', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={authKeepLogged} onChange={(e) => setAuthKeepLogged(e.target.checked)} style={{ width: 18, height: 18, accentColor: '#193281', flexShrink: 0 }} />
+                    Continuar logado
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.88rem', color: '#374151', cursor: 'pointer', lineHeight: 1.4 }}>
+                    <input type="checkbox" checked={authAcceptTerms} onChange={(e) => setAuthAcceptTerms(e.target.checked)} style={{ width: 18, height: 18, accentColor: '#193281', marginTop: 1, flexShrink: 0 }} />
+                    <span>Li e aceito os{' '}<a href="#" style={{ color: '#193281' }}>Termos de Uso</a>{' '}e a{' '}<a href="#" style={{ color: '#193281' }}>Política de Privacidade</a></span>
+                  </label>
+                  <button onClick={handleAuthResend} disabled={authSending}
+                    style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'underline', padding: 0, textAlign: 'left' }}>
+                    Reenviar código
+                  </button>
+                </div>
+              ) : (
               <div
                 className={`${styles.messageBubble} ${
                   msg.role === "user" ? styles.bubbleUser : styles.bubbleAgent
@@ -2564,6 +2763,7 @@ const AgentePage: React.FC = () => {
                 ))}
                 <span className={styles.timestamp}>{formatarHora(msg.timestamp)}</span>
               </div>
+              )}
 
               {/* Cards de produto — carrossel único */}
               {msg.produtosCard && msg.produtosCard.length > 0 && (() => {
@@ -2712,7 +2912,7 @@ const AgentePage: React.FC = () => {
         ))}
 
         {/* Indicador de digitação */}
-        {enviando && (
+        {((!precisaLogin && enviando) || authDigitando) && (
           <div className={`${styles.messageWrapper} ${styles.messageWrapperAgent}`}>
             <div className={styles.agentAvatarSmall}>
               <Image src="/logo2.jpeg" alt="Assistente" fill className={styles.agentAvatarImg} sizes="28px" />
@@ -2807,15 +3007,38 @@ const AgentePage: React.FC = () => {
       <div className={styles.inputContainer}>
         <input
           ref={inputRef}
-          type="text"
-          placeholder={transcrevendo ? "Transcrevendo..." : gravando ? "Gravando..." : "Digite sua mensagem..."}
+          type={precisaLogin && authStep !== 'code_modal' ? "tel" : "text"}
+          inputMode={precisaLogin && authStep === 'code_modal' ? "numeric" : undefined}
+          maxLength={precisaLogin && authStep === 'code_modal' ? 6 : undefined}
+          placeholder={
+            !precisaLogin
+              ? (transcrevendo ? "Transcrevendo..." : gravando ? "Gravando..." : "Digite sua mensagem...")
+              : authStep === 'code_modal'
+              ? "000000"
+              : "(11) 99999-9999"
+          }
           className={styles.messageInput}
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && enviarMensagem()}
-          disabled={enviando || (process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (gravando || transcrevendo))}
+          style={precisaLogin && authStep === 'code_modal' ? { letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.1rem', fontWeight: 700 } : undefined}
+          value={
+            !precisaLogin ? inputText :
+            authStep === 'code_modal' ? authCode :
+            authPhone
+          }
+          onChange={(e) => {
+            if (!precisaLogin) { setInputText(e.target.value); }
+            else if (authStep === 'code_modal') { setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setAuthCodeError(''); }
+            else { setAuthPhone(formatPhoneAuth(e.target.value)); }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              if (!precisaLogin) enviarMensagem();
+              else if (authStep === 'code_modal') handleAuthVerifyCode();
+              else handleAuthSendCode();
+            }
+          }}
+          disabled={precisaLogin ? (authSending || authStep === 'validating' || (authStep === 'code_modal' && !authAcceptTerms)) : (enviando || (process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (gravando || transcrevendo)))}
         />
-        {process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (
+        {!precisaLogin && process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (
           <button
             className={`${styles.micButton} ${gravando ? styles.micButtonGravando : ""}`}
             onClick={gravando ? pararGravacao : iniciarGravacao}
@@ -2831,17 +3054,26 @@ const AgentePage: React.FC = () => {
         )}
         <button
           className={styles.sendButton}
-          onClick={() => enviarMensagem()}
-          disabled={!inputText.trim() || enviando}
+          onClick={() => {
+            if (!precisaLogin) enviarMensagem();
+            else if (authStep === 'code_modal') handleAuthVerifyCode();
+            else handleAuthSendCode();
+          }}
+          disabled={
+            !precisaLogin ? (!inputText.trim() || enviando) :
+            authStep === 'code_modal' ? (authCode.length !== 6 || !authAcceptTerms || authSending) :
+            (!authPhone.trim() || authSending || authStep === 'validating')
+          }
           aria-label="Enviar mensagem"
         >
-          {enviando ? (
+          {(precisaLogin ? authSending : enviando) ? (
             <Loader2 size={20} className={styles.spinnerIcon} />
           ) : (
             <Send size={20} />
           )}
         </button>
       </div>
+
 
       </div>{/* /chatWrapper */}
 
@@ -2869,6 +3101,7 @@ const AgentePage: React.FC = () => {
           }}
         />
       )}
+
     </div>
   );
 };
