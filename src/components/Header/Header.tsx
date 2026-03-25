@@ -32,6 +32,7 @@ interface HeaderProps {
   onSalvarEndereco?: (end: EnderecoSalvo) => Promise<void>;
   onLogout?: () => void;
   isGuestMode?: boolean;
+  precisaLogin?: boolean;
   carouselEnabled?: boolean;
   onCarouselChange?: (val: boolean) => void;
   wordKeysEnabled?: boolean;
@@ -55,6 +56,7 @@ const Header: React.FC<HeaderProps> = ({
   onSalvarPerfil,
   onSalvarEndereco,
   isGuestMode = false,
+  precisaLogin = false,
   carouselEnabled = true,
   onCarouselChange,
   wordKeysEnabled = false,
@@ -163,12 +165,12 @@ const Header: React.FC<HeaderProps> = ({
           <div className={styles.logoArea}>
             <div className={styles.logoWrapper}>
               <Image
-                src={logoUrl || "/logo_vidal.png"}
+                src={logoUrl || "/logo.png"}
                 alt="Logo"
                 fill
                 className={styles.logoImg}
-                sizes="72px"
-                onError={(e) => { (e.target as HTMLImageElement).src = "/logo_vidal.png"; }}
+                sizes="100px"
+                onError={(e) => { (e.target as HTMLImageElement).src = "/logo.png"; }}
               />
             </div>
           </div>
@@ -221,13 +223,13 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </header>
 
-      {/* Faixa info colada abaixo do header */}
+      {/* Faixa info colada abaixo do header — oculta quando não logado */}
       <div
         ref={infoStripRef}
         className={styles.infoStripOuter}
         style={{ top: headerHeight + 2 }}
       >
-        <div className={styles.infoStrip}>
+        {!precisaLogin && <div className={styles.infoStrip}>
           {infoFinal.aberto === false ? (
             <span className={styles.infoFechado}>Fechado</span>
           ) : (
@@ -259,7 +261,7 @@ const Header: React.FC<HeaderProps> = ({
               </span>
             </>
           )}
-        </div>
+        </div>}
       </div>
 
       {/* Settings modal */}
@@ -276,154 +278,158 @@ const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className={styles.settingsBody}>
-              {/* Seção: Dados pessoais */}
-              <div className={styles.settingsSection}>
-                <div className={styles.settingsSectionTitle}>
-                  <User size={15} />
-                  <span>Dados Pessoais</span>
-                </div>
-                <div className={styles.settingsField}>
-                  <label className={styles.settingsLabel}>Nome</label>
-                  <input
-                    className={styles.settingsInput}
-                    type="text"
-                    value={editNome}
-                    onChange={(e) => setEditNome(e.target.value)}
-                    placeholder="Como você gostaria de ser chamado?"
-                  />
-                </div>
-                <div className={styles.settingsField}>
-                  <label className={styles.settingsLabel}>CPF</label>
-                  <input
-                    className={styles.settingsInput}
-                    type="text"
-                    value={editCpf}
-                    onChange={(e) => setEditCpf(e.target.value)}
-                    placeholder="000.000.000-00"
-                    inputMode="numeric"
-                  />
-                </div>
-                <div className={styles.settingsField}>
-                  <label className={styles.settingsLabel}>Telefone</label>
-                  <input
-                    className={styles.settingsInput}
-                    type="tel"
-                    value={editPhone}
-                    onChange={(e) => setEditPhone(e.target.value)}
-                    placeholder="+55 (00) 00000-0000"
-                    inputMode="tel"
-                  />
-                </div>
-                <div className={styles.settingsSaveRow}>
-                  {feedbackPerfil && (
-                    <span className={styles.settingsFeedback}>{feedbackPerfil}</span>
-                  )}
-                  <button
-                    className={styles.settingsSaveBtn}
-                    onClick={handleSalvarPerfil}
-                    disabled={salvandoPerfil}
-                  >
-                    <Save size={14} />
-                    {salvandoPerfil ? 'Salvando...' : 'Salvar dados'}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.settingsDivider} />
-
-              {/* Seção: Endereço */}
-              <div className={styles.settingsSection}>
-                <div className={styles.settingsSectionTitle}>
-                  <MapPin size={15} />
-                  <span>Endereço de Entrega</span>
-                </div>
-                <div className={styles.settingsField}>
-                  <label className={styles.settingsLabel}>Rua / Avenida</label>
-                  <input className={styles.settingsInput} type="text" value={editEnd.street}
-                    onChange={(e) => setEditEnd(p => ({ ...p, street: e.target.value }))} placeholder="Ex: Rua das Flores" />
-                </div>
-                <div className={styles.settingsFieldRow}>
-                  <div className={styles.settingsField} style={{ flex: 2 }}>
-                    <label className={styles.settingsLabel}>Bairro</label>
-                    <input className={styles.settingsInput} type="text" value={editEnd.neighborhood}
-                      onChange={(e) => setEditEnd(p => ({ ...p, neighborhood: e.target.value }))} placeholder="Bairro" />
-                  </div>
-                  <div className={styles.settingsField} style={{ flex: 1 }}>
-                    <label className={styles.settingsLabel}>Número</label>
-                    <input className={styles.settingsInput} type="text" value={editEnd.number}
-                      onChange={(e) => setEditEnd(p => ({ ...p, number: e.target.value }))} placeholder="Nº" />
-                  </div>
-                </div>
-                <div className={styles.settingsFieldRow}>
-                  <div className={styles.settingsField} style={{ flex: 2 }}>
-                    <label className={styles.settingsLabel}>Cidade</label>
-                    <input className={styles.settingsInput} type="text" value={editEnd.city}
-                      onChange={(e) => setEditEnd(p => ({ ...p, city: e.target.value }))} placeholder="Cidade" />
-                  </div>
-                  <div className={styles.settingsField} style={{ flex: 1 }}>
-                    <label className={styles.settingsLabel}>Estado</label>
-                    <input className={styles.settingsInput} type="text" value={editEnd.state}
-                      onChange={(e) => setEditEnd(p => ({ ...p, state: e.target.value }))} placeholder="UF" maxLength={2} />
-                  </div>
-                </div>
-                <div className={styles.settingsField}>
-                  <label className={styles.settingsLabel}>CEP</label>
-                  <input className={styles.settingsInput} type="text" value={editEnd.zipCode}
-                    onChange={(e) => setEditEnd(p => ({ ...p, zipCode: e.target.value }))} placeholder="00000-000" inputMode="numeric" />
-                </div>
-                <div className={styles.settingsSaveRow}>
-                  {feedbackEnd && (
-                    <span className={styles.settingsFeedback}>{feedbackEnd}</span>
-                  )}
-                  <button
-                    className={styles.settingsSaveBtn}
-                    onClick={handleSalvarEndereco}
-                    disabled={salvandoEnd}
-                  >
-                    <Save size={14} />
-                    {salvandoEnd ? 'Salvando...' : 'Salvar endereço'}
-                  </button>
-                </div>
-              </div>
-
-              <div className={styles.settingsDivider} />
-
-              {/* Seção: Configurações de Teste — apenas modo convidado */}
-              {isGuestMode && (
+              {!precisaLogin && (
                 <>
+                  {/* Seção: Dados pessoais */}
                   <div className={styles.settingsSection}>
                     <div className={styles.settingsSectionTitle}>
-                      <SlidersHorizontal size={15} />
-                      <span>Configurações de Teste</span>
+                      <User size={15} />
+                      <span>Dados Pessoais</span>
                     </div>
-                    <label className={styles.settingsToggleRow}>
-                      <span className={styles.settingsToggleLabel}>Carrossel horizontal de produtos</span>
+                    <div className={styles.settingsField}>
+                      <label className={styles.settingsLabel}>Nome</label>
                       <input
-                        type="checkbox"
-                        className={styles.settingsCheckbox}
-                        checked={carouselEnabled}
-                        onChange={(e) => onCarouselChange?.(e.target.checked)}
+                        className={styles.settingsInput}
+                        type="text"
+                        value={editNome}
+                        onChange={(e) => setEditNome(e.target.value)}
+                        placeholder="Como você gostaria de ser chamado?"
                       />
-                    </label>
-                    <label className={styles.settingsToggleRow}>
-                      <span className={styles.settingsToggleLabel}>Busca por wordKeys/searchIndex</span>
+                    </div>
+                    <div className={styles.settingsField}>
+                      <label className={styles.settingsLabel}>CPF</label>
                       <input
-                        type="checkbox"
-                        className={styles.settingsCheckbox}
-                        checked={wordKeysEnabled}
-                        onChange={(e) => onWordKeysChange?.(e.target.checked)}
+                        className={styles.settingsInput}
+                        type="text"
+                        value={editCpf}
+                        onChange={(e) => setEditCpf(e.target.value)}
+                        placeholder="000.000.000-00"
+                        inputMode="numeric"
                       />
-                    </label>
+                    </div>
+                    <div className={styles.settingsField}>
+                      <label className={styles.settingsLabel}>Telefone</label>
+                      <input
+                        className={styles.settingsInput}
+                        type="tel"
+                        value={editPhone}
+                        onChange={(e) => setEditPhone(e.target.value)}
+                        placeholder="+55 (00) 00000-0000"
+                        inputMode="tel"
+                      />
+                    </div>
+                    <div className={styles.settingsSaveRow}>
+                      {feedbackPerfil && (
+                        <span className={styles.settingsFeedback}>{feedbackPerfil}</span>
+                      )}
+                      <button
+                        className={styles.settingsSaveBtn}
+                        onClick={handleSalvarPerfil}
+                        disabled={salvandoPerfil}
+                      >
+                        <Save size={14} />
+                        {salvandoPerfil ? 'Salvando...' : 'Salvar dados'}
+                      </button>
+                    </div>
                   </div>
+
                   <div className={styles.settingsDivider} />
+
+                  {/* Seção: Endereço */}
+                  <div className={styles.settingsSection}>
+                    <div className={styles.settingsSectionTitle}>
+                      <MapPin size={15} />
+                      <span>Endereço de Entrega</span>
+                    </div>
+                    <div className={styles.settingsField}>
+                      <label className={styles.settingsLabel}>Rua / Avenida</label>
+                      <input className={styles.settingsInput} type="text" value={editEnd.street}
+                        onChange={(e) => setEditEnd(p => ({ ...p, street: e.target.value }))} placeholder="Ex: Rua das Flores" />
+                    </div>
+                    <div className={styles.settingsFieldRow}>
+                      <div className={styles.settingsField} style={{ flex: 2 }}>
+                        <label className={styles.settingsLabel}>Bairro</label>
+                        <input className={styles.settingsInput} type="text" value={editEnd.neighborhood}
+                          onChange={(e) => setEditEnd(p => ({ ...p, neighborhood: e.target.value }))} placeholder="Bairro" />
+                      </div>
+                      <div className={styles.settingsField} style={{ flex: 1 }}>
+                        <label className={styles.settingsLabel}>Número</label>
+                        <input className={styles.settingsInput} type="text" value={editEnd.number}
+                          onChange={(e) => setEditEnd(p => ({ ...p, number: e.target.value }))} placeholder="Nº" />
+                      </div>
+                    </div>
+                    <div className={styles.settingsFieldRow}>
+                      <div className={styles.settingsField} style={{ flex: 2 }}>
+                        <label className={styles.settingsLabel}>Cidade</label>
+                        <input className={styles.settingsInput} type="text" value={editEnd.city}
+                          onChange={(e) => setEditEnd(p => ({ ...p, city: e.target.value }))} placeholder="Cidade" />
+                      </div>
+                      <div className={styles.settingsField} style={{ flex: 1 }}>
+                        <label className={styles.settingsLabel}>Estado</label>
+                        <input className={styles.settingsInput} type="text" value={editEnd.state}
+                          onChange={(e) => setEditEnd(p => ({ ...p, state: e.target.value }))} placeholder="UF" maxLength={2} />
+                      </div>
+                    </div>
+                    <div className={styles.settingsField}>
+                      <label className={styles.settingsLabel}>CEP</label>
+                      <input className={styles.settingsInput} type="text" value={editEnd.zipCode}
+                        onChange={(e) => setEditEnd(p => ({ ...p, zipCode: e.target.value }))} placeholder="00000-000" inputMode="numeric" />
+                    </div>
+                    <div className={styles.settingsSaveRow}>
+                      {feedbackEnd && (
+                        <span className={styles.settingsFeedback}>{feedbackEnd}</span>
+                      )}
+                      <button
+                        className={styles.settingsSaveBtn}
+                        onClick={handleSalvarEndereco}
+                        disabled={salvandoEnd}
+                      >
+                        <Save size={14} />
+                        {salvandoEnd ? 'Salvando...' : 'Salvar endereço'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={styles.settingsDivider} />
+
+                  {/* Seção: Configurações de Teste — apenas modo convidado */}
+                  {isGuestMode && (
+                    <>
+                      <div className={styles.settingsSection}>
+                        <div className={styles.settingsSectionTitle}>
+                          <SlidersHorizontal size={15} />
+                          <span>Configurações de Teste</span>
+                        </div>
+                        <label className={styles.settingsToggleRow}>
+                          <span className={styles.settingsToggleLabel}>Carrossel horizontal de produtos</span>
+                          <input
+                            type="checkbox"
+                            className={styles.settingsCheckbox}
+                            checked={carouselEnabled}
+                            onChange={(e) => onCarouselChange?.(e.target.checked)}
+                          />
+                        </label>
+                        <label className={styles.settingsToggleRow}>
+                          <span className={styles.settingsToggleLabel}>Busca por wordKeys/searchIndex</span>
+                          <input
+                            type="checkbox"
+                            className={styles.settingsCheckbox}
+                            checked={wordKeysEnabled}
+                            onChange={(e) => onWordKeysChange?.(e.target.checked)}
+                          />
+                        </label>
+                      </div>
+                      <div className={styles.settingsDivider} />
+                    </>
+                  )}
+
+                  {/* Logout */}
+                  <button className={styles.settingsLogoutBtn} onClick={handleLogout}>
+                    <LogOut size={16} />
+                    <span>Sair da conta</span>
+                  </button>
                 </>
               )}
-
-              {/* Logout */}
-              <button className={styles.settingsLogoutBtn} onClick={handleLogout}>
-                <LogOut size={16} />
-                <span>Sair da conta</span>
-              </button>
             </div>
           </div>
         </>

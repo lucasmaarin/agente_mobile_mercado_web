@@ -805,8 +805,9 @@ const ESTADO_LABEL: Record<FlowState, string> = {
   collecting_payment:       "Pagamento",
   collecting_card_brand:    "Bandeira",
   collecting_change:        "Troco",
-  collecting_cpf:           "CPF",
-  confirming_order:         "Confirmando pedido",
+  collecting_cpf:                "CPF",
+  collecting_cpf_onboarding:     "CPF (cadastro)",
+  confirming_order:              "Confirmando pedido",
 };
 
 // ============================================================
@@ -2532,7 +2533,7 @@ const AgentePage: React.FC = () => {
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
       <div id="recaptcha-container"></div>
       <Header
-        logoUrl={logoEstabelecimento ?? undefined}
+        logoUrl={precisaLogin ? '/logo.png' : (logoEstabelecimento ?? '/logo.png')}
         cartTotal={totalCarrinho}
         cartCount={qtdItens}
         onAbrirCarrinho={() => setMostrarCarrinho(true)}
@@ -2554,6 +2555,7 @@ const AgentePage: React.FC = () => {
           setEnderecoSalvo(end);
         }}
         isGuestMode={isGuestMode}
+        precisaLogin={precisaLogin}
         onLogout={() => {
           if (userDocId) limparCarrinhoFirestore(companyId, userDocId).catch(console.error);
           setCarrinho([]);
