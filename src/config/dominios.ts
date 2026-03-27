@@ -8,10 +8,3 @@ export const DOMAIN_SLUGS: Record<string, string> = {
   'vidal': 'xaxmop6awerbbab0guvu',
   'zero grau': 'jqqjhtcc2zw1tuzmqzgf',
 };
-
-// Slugs autorizados a carregar o agente
-// 'estabelecimento-teste' é sempre permitido (ambiente de demonstração)
-export const SLUGS_AUTORIZADOS: ReadonlySet<string> = new Set([
-  'estabelecimento-teste',
-  ...Object.values(DOMAIN_SLUGS),
-]);
