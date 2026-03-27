@@ -892,6 +892,7 @@ const AgentePage: React.FC = () => {
   const [carrinho, setCarrinho]               = useState<CartItem[]>([]);
   const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
   const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>('');
+  const [nomeEstabelecimentoCarregado, setNomeEstabelecimentoCarregado] = useState<boolean>(false);
   const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
   const [lojaConfig, setLojaConfig] = useState<ConfigLoja | null>(null);
   const [flowState, setFlowState]             = useState<FlowState>(FLOW_STATES.BROWSING);
@@ -1068,7 +1069,8 @@ const AgentePage: React.FC = () => {
       .catch(() => {});
     buscarNomeEstabelecimento(companyId)
       .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => { setNomeEstabelecimentoCarregado(true); });
     buscarFormasPagamento(companyId)
       .then((formas) => { if (formas.length > 0) setFormasPagamento(formas); })
       .catch(() => {});
@@ -1111,7 +1113,7 @@ const AgentePage: React.FC = () => {
   // -------- Iniciar sempre uma conversa nova na interface --------
   // Mantém o histórico no DB, mas não reidrata mensagens após recarregar a página.
   useEffect(() => {
-    if (!userDocId || !produtosCarregados) return;
+    if (!userDocId || !produtosCarregados || !nomeEstabelecimentoCarregado) return;
 
     (async () => {
       setCarregandoConversa(true);
@@ -1157,7 +1159,7 @@ const AgentePage: React.FC = () => {
       }
     })();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userDocId, produtosCarregados]);
+  }, [userDocId, produtosCarregados, nomeEstabelecimentoCarregado]);
 
   // handleCreateOrder foi movido para inline em enviarMensagem
 
