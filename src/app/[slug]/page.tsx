@@ -22,6 +22,7 @@ import {
   FewShotExemplo,
   buildSystemPrompt,
 } from "@/lib/buildSystemPrompt";
+import { SLUG_PARA_COMPANY_ID } from "@/config/dominios";
 import { parseAgentResponse, COLLECTING_FIELD, NEXT_STATE, nextStateAfterPayment } from "@/lib/parseAgentResponse";
 import {
   getProducts,
@@ -843,7 +844,8 @@ const TOUR_STEPS = [
 // ============================================================
 const AgentePage: React.FC = () => {
   const params = useParams();
-  const companyId = params.slug as string;
+  const rawSlug = params.slug as string;
+  const companyId = SLUG_PARA_COMPANY_ID[rawSlug.toLowerCase()] ?? rawSlug;
 
   // --- Auth
   const [user, setUser]           = useState<User | null>(null);

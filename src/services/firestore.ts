@@ -41,9 +41,14 @@ export async function buscarLogoEstabelecimento(companyId: string): Promise<stri
 
 export async function buscarNomeEstabelecimento(companyId: string): Promise<string | null> {
   const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
-  if (!snap.exists()) return null;
+  if (!snap.exists()) {
+    console.warn('[buscarNomeEstabelecimento] Documento não encontrado:', companyId);
+    return null;
+  }
   const data = snap.data() as Record<string, unknown>;
-  return (data.name ?? data.nome ?? data.displayName ?? null) as string | null;
+  const nome = (data.name ?? data.nome ?? data.displayName ?? null) as string | null;
+  console.log('[buscarNomeEstabelecimento] companyId:', companyId, '| name:', nome, '| data:', data);
+  return nome;
 }
 
 export const GUEST_USER_DOC_ID = 'guest_test';
