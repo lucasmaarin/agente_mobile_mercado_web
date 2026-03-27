@@ -6,6 +6,7 @@ export const DOMAIN_SLUGS: Record<string, string> = {
   // 'padaria-center.com.br':   'padaria-center',
   'https://www.uaumart.com.br': 'q0ipiusmpeq3phbmyfwy', // UAU Mart
   '.': 'xaxmop6awerbbab0guvu', // Vidal Supermercado
+  '.2': 'jqqjhtcc2zw1tuzmqzgf', // Zero Grau
 };
 
 // Slugs autorizados a carregar o agente
