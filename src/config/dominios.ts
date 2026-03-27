@@ -5,7 +5,7 @@ export const DOMAIN_SLUGS: Record<string, string> = {
   // 'zerograu.com.br':         'zerograu',
   // 'padaria-center.com.br':   'padaria-center',
   'https://www.uaumart.com.br': 'q0ipiusmpeq3phbmyfwy', // UAU Mart
-  '.': 'xaxmop6awerbbab0guvu', // Vidal Supermercado
+  'vidal': 'xaxmop6awerbbab0guvu',
   '.2': 'jqqjhtcc2zw1tuzmqzgf', // Zero Grau
 };
 
