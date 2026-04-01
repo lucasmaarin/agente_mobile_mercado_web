@@ -9,6 +9,7 @@ import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
 import Header from "@/components/Header/Header";
+import type { InfoEstabelecimento } from "@/components/Header/Header";
 import CheckoutModal from "@/components/CheckoutModal/CheckoutModal";
 import { validatePhone } from "@/lib/validation";
 
@@ -42,6 +43,7 @@ import {
   buscarFormasPagamento,
   buscarConfigLoja,
   ConfigLoja,
+  buscarInfoEstabelecimento,
   criarUsuarioNovo,
   atualizarNomeUsuario,
   atualizarDadosUsuario,
@@ -917,6 +919,7 @@ const AgentePage: React.FC = () => {
   // --- Recuperação de carrinho ao recarregar
   const [cartRecoveryPending, setCartRecoveryPending] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(136);
+  const [infoEstabelecimento, setInfoEstabelecimento] = useState<InfoEstabelecimento>({});
 
   // --- Tour onboarding
   const [tourEtapa, setTourEtapa]     = useState<number | null>(null);
@@ -1072,6 +1075,9 @@ const AgentePage: React.FC = () => {
       .catch(() => {});
     buscarConfigLoja(companyId)
       .then((cfg) => setLojaConfig(cfg))
+      .catch(() => {});
+    buscarInfoEstabelecimento(companyId)
+      .then((info) => setInfoEstabelecimento(info))
       .catch(() => {});
   }, [companyId]);
 
@@ -2549,6 +2555,7 @@ const AgentePage: React.FC = () => {
         cartTotal={totalCarrinho}
         cartCount={qtdItens}
         onAbrirCarrinho={() => setMostrarCarrinho(true)}
+        info={infoEstabelecimento}
         onTotalHeightChange={setHeaderOffset}
         nomeCliente={nomeCliente}
         userCpf={userCpf}

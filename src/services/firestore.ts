@@ -164,6 +164,53 @@ export async function buscarConfigLoja(companyId: string): Promise<ConfigLoja> {
   }
 }
 
+export interface InfoEstabelecimento {
+  aberto?: boolean;
+  horarioFechamento?: string;
+  tempoMin?: number;
+  tempoMax?: number;
+  taxaEntrega?: number;
+  avaliacao?: number;
+}
+
+export async function buscarInfoEstabelecimento(companyId: string): Promise<InfoEstabelecimento> {
+  try {
+    const snap = await getDoc(doc(db, 'estabelecimentos', companyId));
+    if (!snap.exists()) return {};
+
+    const data = snap.data() as Record<string, unknown>;
+
+    // Tempos de entrega (int64 do Firestore pode vir como número ou objeto)
+    const tempoMinRaw = data.minimumDeliveryTimeInMinutes;
+    const tempoMaxRaw = data.maximumDeliveryTimeInMinutes;
+    const tempoMin = tempoMinRaw != null ? Number(tempoMinRaw) : undefined;
+    const tempoMax = tempoMaxRaw != null ? Number(tempoMaxRaw) : undefined;
+
+    // Taxa de entrega
+    const delivery = (data.deliveryInfo ?? {}) as Record<string, unknown>;
+    const taxaEntrega = typeof delivery.baseValue === 'number' ? delivery.baseValue : undefined;
+
+    // Status de abertura hoje
+    const rawHorarios = Array.isArray(data.openingHours) ? data.openingHours as Record<string, unknown>[] : [];
+    // JS getDay(): 0=Dom, 1=Seg...6=Sab; Firestore weekday: 1=Seg...7=Dom
+    const jsDay = new Date().getDay();
+    const firestoreWeekday = jsDay === 0 ? 7 : jsDay;
+    const todayEntry = rawHorarios.find(h => Number(h.weekday) === firestoreWeekday) ?? rawHorarios[firestoreWeekday - 1];
+
+    let aberto: boolean | undefined;
+    let horarioFechamento: string | undefined;
+
+    if (todayEntry) {
+      aberto = Boolean(todayEntry.isOpen);
+      horarioFechamento = extrairHoraDeValor(todayEntry.closeHours);
+    }
+
+    return { aberto, horarioFechamento, tempoMin, tempoMax, taxaEntrega, avaliacao: 4.9 };
+  } catch {
+    return {};
+  }
+}
+
 export async function getProducts(companyId: string): Promise<Produto[]> {
   const ref = collection(db, 'estabelecimentos', companyId, 'Products');
   const q = query(

@@ -147,13 +147,12 @@ const Header: React.FC<HeaderProps> = ({
   const corStrip = corPrimaria === "#1C30C7" ? "#314DD9" : corPrimaria;
 
   const infoFinal: InfoEstabelecimento = {
-    aberto: true,
-    horarioFechamento: "20:00",
-    tempoMin: 20,
-    tempoMax: 60,
-    taxaEntrega: 5.0,
-    avaliacao: 4.9,
-    ...info,
+    aberto: info?.aberto ?? true,
+    horarioFechamento: info?.horarioFechamento ?? "20:00",
+    tempoMin: info?.tempoMin ?? 20,
+    tempoMax: info?.tempoMax ?? 60,
+    taxaEntrega: info?.taxaEntrega ?? 5.0,
+    avaliacao: info?.avaliacao ?? 4.9,
   };
 
   return (
@@ -248,9 +247,9 @@ const Header: React.FC<HeaderProps> = ({
           <span className={styles.infoDivider} />
           <span className={styles.infoItem}>
             <Truck size={14} />
-            {infoFinal.taxaEntrega === 0
+            {!infoFinal.taxaEntrega
               ? "Grátis"
-              : `R$ ${infoFinal.taxaEntrega!.toFixed(2).replace(".", ",")}`}
+              : `R$ ${infoFinal.taxaEntrega.toFixed(2).replace(".", ",")}`}
           </span>
           {infoFinal.avaliacao !== undefined && (
             <>
