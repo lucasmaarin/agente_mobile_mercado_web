@@ -106,7 +106,8 @@ export function buildSystemPrompt(
   fewShotExemplos: FewShotExemplo[] = [],
   nomeEstabelecimento: string = '',
   formasPagamento: string[] = [],
-  lojaConfig?: ConfigLojaPrompt
+  lojaConfig?: ConfigLojaPrompt,
+  contextoDetectado?: string
 ): string {
   const nomeSupermercado = nomeEstabelecimento || 'Mobile Mercado';
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -117,7 +118,7 @@ export function buildSystemPrompt(
     : '';
 
   let secaoProdutos = '';
-  if (flowState === FLOW_STATES.BROWSING) {
+  if (flowState === FLOW_STATES.BROWSING && !(contextoDetectado && produtosFoco.length === 0)) {
     const listaProdutos = produtosFoco.length > 0
       ? produtosFoco.map((p) => {
           const stockTag = p.stock === 0 ? ' ❌ESGOTADO' : (p.stock >= 1 && p.stock < 10) ? ` ⚠️restam:${p.stock}` : '';
@@ -148,6 +149,23 @@ Mensagem: "Obrigado, ${nomeCliente}! 😊 Para finalizar seu cadastro, qual é o
 Quando o cliente responder com um CPF válido (11 dígitos): emita [SET_CPF:cpf_apenas_numeros]
 Se o cliente não quiser informar: emita [SET_CPF:skip]
 PROIBIDO: falar sobre produtos ou pedidos antes de coletar o CPF.`;
+  } else if (flowState === FLOW_STATES.BROWSING && contextoDetectado && produtosFoco.length === 0) {
+    stateBlock = `TAREFA OBRIGATÓRIA — EXECUTE AGORA:
+O cliente pediu algo para "${contextoDetectado}" mas não temos produtos específicos dessa data no catálogo.
+RESPONDA EXATAMENTE: "Para o ${contextoDetectado}, o que você está procurando? Me diz o produto e eu verifico se temos aqui! 😊"
+NÃO diga "O que você precisa?" sem mencionar "${contextoDetectado}".
+PROIBIDO: mostrar qualquer produto, usar [SHOW:ID].`;
+  } else if (flowState === FLOW_STATES.BROWSING && contextoDetectado && produtosFoco.length > 0) {
+    stateBlock = `MODO: data comemorativa — mostre os produtos encontrados
+
+🚫 REGRA ABSOLUTA — NUNCA QUEBRE:
+Produtos JAMAIS podem aparecer como texto (lista, bullet, numeração, nome escrito).
+Use EXCLUSIVAMENTE a tag [SHOW:ID] para cada produto.
+
+TAREFA: O cliente pediu algo para "${contextoDetectado}". Temos produtos relacionados.
+1. Escreva UMA frase curta mencionando "${contextoDetectado}"
+2. Use [SHOW:ID] para CADA produto do catálogo abaixo — sem escrever nomes, preços ou descrições no texto
+PROIBIDO: perguntar "O que você precisa?", escrever nomes/preços de produtos no texto.`;
   } else if (flowState === FLOW_STATES.BROWSING) {
     stateBlock = `MODO: navegação
 

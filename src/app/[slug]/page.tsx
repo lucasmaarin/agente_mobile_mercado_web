@@ -66,7 +66,7 @@ const STOPWORDS_BUSCA = new Set([
   'me', 'pra', 'para', 'com', 'sem', 'um', 'uma', 'uns', 'umas', 'dos', 'das',
   'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa',
   'mais', 'opcao', 'opcoes', 'outro', 'outros', 'outra', 'outras', 'tipo', 'tipos',
-  'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
+  'algo', 'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
   'novo', 'nova', 'lista', 'pedido', 'compra', 'compras', 'item', 'itens',
   'ha', 'ai', 'ah', 'so', 'ate', 'ou', 'que', 'se', 'ja', 'la', 'ca',
   'tudo', 'nada', 'ainda', 'agora', 'aqui', 'ali', 'isso', 'esse', 'essa', 'esses', 'essas'
@@ -85,39 +85,23 @@ const ALIASES_BUSCA: Record<string, string[]> = {
  * Usado quando o cliente descreve uma situação em vez de citar um produto diretamente.
  */
 const CONTEXTOS_SITUACIONAIS: Record<string, string[]> = {
-  'churrasco':        ['carne', 'frango', 'linguica', 'carvao', 'cerveja', 'refrigerante', 'maionese', 'pao'],
-  'cafe da manha':    ['pao', 'manteiga', 'cafe', 'leite', 'ovo', 'queijo', 'presunto', 'iogurte', 'suco'],
-  'cafe':             ['cafe', 'cappuccino', 'achocolatado', 'leite', 'pao', 'biscoito'],
-  'almoco':           ['arroz', 'feijao', 'carne', 'frango', 'macarrao', 'legume', 'verdura', 'tempero'],
-  'jantar':           ['massa', 'carne', 'frango', 'legume', 'molho', 'vinho'],
-  'lanche':           ['pao', 'queijo', 'presunto', 'refrigerante', 'suco', 'biscoito', 'iogurte'],
-  'macarronada':      ['macarrao', 'molho', 'queijo', 'presunto', 'carne'],
-  'bolo':             ['farinha', 'ovo', 'manteiga', 'acucar', 'chocolate', 'fermento', 'leite'],
-  'doce':             ['chocolate', 'biscoito', 'bolo', 'sorvete', 'gelatina', 'pudim'],
-  'sobremesa':        ['chocolate', 'sorvete', 'biscoito', 'pudim', 'gelatina', 'iogurte'],
-  'festa':            ['refrigerante', 'cerveja', 'salgadinho', 'biscoito', 'suco', 'chocolate'],
-  'aniversario':      ['refrigerante', 'cerveja', 'salgadinho', 'biscoito', 'suco', 'chocolate', 'bolo'],
-  'crianca':          ['leite', 'iogurte', 'biscoito', 'suco', 'achocolatado'],
-  'bebe':             ['leite', 'iogurte', 'papa', 'suco'],
-  'doente':           ['laranja', 'limao', 'mel', 'cha', 'suco', 'vitamina'],
-  'gripe':            ['laranja', 'limao', 'mel', 'cha', 'suco', 'vitamina'],
-  'dieta':            ['frango', 'atum', 'ovo', 'iogurte', 'aveia', 'fruta', 'verdura', 'light'],
-  'emagrecer':        ['frango', 'atum', 'ovo', 'iogurte', 'aveia', 'fruta', 'verdura', 'light'],
-  'academia':         ['frango', 'ovo', 'atum', 'aveia', 'banana', 'proteina'],
-  'musculacao':       ['frango', 'ovo', 'atum', 'aveia', 'banana', 'proteina'],
-  'calor':            ['agua', 'suco', 'refrigerante', 'cerveja', 'sorvete', 'isotônico'],
-  'frio':             ['cha', 'cafe', 'chocolate quente', 'sopa', 'caldo'],
-  'sopa':             ['caldo', 'legume', 'macarrao', 'feijao', 'tempero'],
-  'feijoada':         ['feijao preto', 'carne seca', 'linguica', 'arroz', 'laranja', 'farofa'],
-  'farofa':           ['farinha mandioca', 'manteiga', 'ovo', 'linguica'],
-  'pizza':            ['queijo mussarela', 'molho tomate', 'presunto', 'azeitona'],
-  'vitamina':         ['banana', 'morango', 'leite', 'aveia', 'mel', 'iogurte'],
-  'suco':             ['laranja', 'limao', 'uva', 'manga', 'abacaxi', 'suco'],
-  'cerveja':          ['cerveja'],
-  'bebida':           ['agua', 'suco', 'refrigerante', 'cerveja', 'vinho', 'cha', 'isotônico'],
-  'estoque':          ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
-  'compras do mes':   ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite', 'macarrao'],
-  'mercadoria basica':['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
+  'churrasco':        ['carne', 'frango', 'linguica', 'carvao'],
+  'macarronada':      ['macarrao', 'molho tomate', 'queijo ralado'],
+  'feijoada':         ['feijao preto', 'carne seca', 'linguica', 'farofa'],
+  'farofa':           ['farinha mandioca', 'manteiga'],
+  'pizza':            ['queijo mussarela', 'molho tomate'],
+  'vitamina':         ['banana', 'aveia', 'leite'],
+  'compras do mes':   ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
+  'natal':            ['natal', 'panetone', 'chocotone', 'tender', 'peru', 'chester', 'espumante', 'nozes', 'castanha'],
+  'natalino':         ['natal', 'panetone', 'chocotone', 'tender', 'peru', 'chester'],
+  'pascoa':           ['pascoa', 'ovo pascoa', 'ovo de pascoa', 'coelho', 'trufa'],
+  'festa junina':     ['festa junina', 'junina', 'canjica', 'pamonha', 'pipoca', 'amendoim'],
+  'reveillon':        ['reveillon', 'espumante', 'lentilha'],
+  'ano novo':         ['ano novo', 'espumante', 'lentilha'],
+  'dia dos namorados':['namorados', 'vinho', 'espumante', 'bombom', 'trufa'],
+  'dia das maes':     ['maes', 'vinho', 'espumante', 'bombom'],
+  'dia dos pais':     ['pais', 'whisky', 'vinho'],
+  'carnaval':         ['carnaval', 'energetico'],
 };
 
 /** Detecta situações contextuais na mensagem e retorna termos de busca relevantes */
@@ -130,6 +114,15 @@ function detectarContexto(texto: string): string[] {
     }
   }
   return Array.from(termos);
+}
+
+/** Retorna o nome do primeiro contexto situacional detectado no texto */
+function detectarNomeContexto(texto: string): string | null {
+  const t = normalizar(texto);
+  for (const contexto of Object.keys(CONTEXTOS_SITUACIONAIS)) {
+    if (t.includes(normalizar(contexto))) return contexto;
+  }
+  return null;
 }
 
 /**
@@ -773,6 +766,7 @@ interface Mensagem {
   produtosCard?: Produto[]; // cards de produto exibidos junto à mensagem
   suggestions?: string[];   // chips clicáveis gerados pelo [SUGGEST:...] do agente
   authCheckboxCard?: boolean; // card especial com checkboxes de login
+  skeletonCardCount?: number; // quantidade de skeleton cards durante streaming
 }
 
 // Sequência para calcular progresso da barra
@@ -1607,6 +1601,12 @@ const AgentePage: React.FC = () => {
             return;
           }
 
+          if (ehAcaoContinuarComprando(texto)) {
+            setItemUnicoQtdState(null);
+            await salvarRespostaLocal("Com prazer! 😊 Me conta o que mais está precisando e eu encontro rapidinho!");
+            return;
+          }
+
           if (itemUnicoQtdState.stage === "confirm_single" && itemUnicoQtdState.produtoSugerido) {
             const confirmarMesmo =
               ehConfirmacaoPositiva(texto) ||
@@ -1991,36 +1991,42 @@ const AgentePage: React.FC = () => {
       // Produtos relevantes (só na navegação)
       let produtosFoco: Produto[] = [];
       let produtosMatchDireto: Produto[] = [];
+      let contextoDetectado: string | undefined;
       if (wFlowState === FLOW_STATES.BROWSING) {
         const buscar = (t: string, cat: Produto[]) =>
           wordKeysEnabled ? filtrarProdutosWordKeys(t, cat) : filtrarProdutos(t, cat);
 
-        const filtrado = buscar(texto, produtos);
-        produtosMatchDireto = filtrado;
-        if (filtrado.length > 0) {
-          // Mantém os matches no topo, mas adiciona diversidade para o agente
-          // conseguir sugerir alternativas quando faltar algum item pedido.
-          produtosFoco = combinarProdutosFoco(filtrado.slice(0, 14), produtos, 20);
+        // Contexto situacional tem prioridade sobre busca literal
+        const termosContexto = detectarContexto(texto);
+        const nomeContexto = detectarNomeContexto(texto);
+        if (termosContexto.length > 0) {
+          contextoDetectado = nomeContexto ?? undefined;
+          const porContexto: Produto[] = [];
+          const ids = new Set<string>();
+          for (const termo of termosContexto) {
+            for (const p of buscar(termo, produtos).slice(0, 4)) {
+              if (!ids.has(p.id)) { ids.add(p.id); porContexto.push(p); }
+            }
+            if (porContexto.length >= 20) break;
+          }
+          if (porContexto.length > 0) {
+            produtosFoco = porContexto.slice(0, 20);
+            produtosMatchDireto = produtosFoco;
+          }
+          // Se contexto detectado mas sem produtos: produtosFoco fica vazio
+          // → a IA pergunta o que o cliente precisa para aquela data
         } else {
-          const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
-          const pareceBuscaNova = palavrasLongas.length >= 2;
-          if (!pareceBuscaNova && !ehSaudacaoCurta(texto)) {
-            // Confirmação curta ("sim", "1", "pode"): reutiliza últimos produtos mostrados
-            produtosFoco = ultimosProdutosMostradosRef.current;
+          const filtrado = buscar(texto, produtos);
+          produtosMatchDireto = filtrado;
+          if (filtrado.length > 0) {
+            // Mantém os matches no topo, mas adiciona diversidade para o agente
+            produtosFoco = combinarProdutosFoco(filtrado.slice(0, 14), produtos, 20);
           } else {
-            // Tenta detectar contexto situacional (ex: "vou fazer um churrasco")
-            const termosContexto = detectarContexto(texto);
-            if (termosContexto.length > 0) {
-              const porContexto: Produto[] = [];
-              const ids = new Set<string>();
-              for (const termo of termosContexto) {
-                for (const p of buscar(termo, produtos).slice(0, 4)) {
-                  if (!ids.has(p.id)) { ids.add(p.id); porContexto.push(p); }
-                }
-                if (porContexto.length >= 20) break;
-              }
-              produtosFoco = porContexto.slice(0, 20);
-              produtosMatchDireto = produtosFoco;
+            const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
+            const pareceBuscaNova = palavrasLongas.length >= 2;
+            if (!pareceBuscaNova && !ehSaudacaoCurta(texto)) {
+              // Confirmação curta ("sim", "1", "pode"): reutiliza últimos produtos mostrados
+              produtosFoco = ultimosProdutosMostradosRef.current;
             } else {
               // Sem contexto detectado: amostra por categoria para o agente ter IDs reais
               const porCategoria = new Map<string, Produto[]>();
@@ -2058,7 +2064,8 @@ const AgentePage: React.FC = () => {
         fewShot,
         nomeEstabelecimento,
         formasPagamento,
-        lojaConfig ?? undefined
+        lojaConfig ?? undefined,
+        contextoDetectado
       );
 
       // ---- Streaming ----
@@ -2094,9 +2101,10 @@ const AgentePage: React.FC = () => {
           }]);
         }
 
-        const displayText = limparMarkdownBasico(rawText.replace(/[[^]]*(?:]|$)/g, ""));
+        const displayText = limparMarkdownBasico(rawText.replace(/\[[^\]]*(?:\]|$)/g, ""));
+        const skeletonCount = (rawText.match(/\[SHOW:/g) ?? []).length;
         setMensagens(prev =>
-          prev.map(m => m.id === tempId ? { ...m, content: displayText || "..." } : m)
+          prev.map(m => m.id === tempId ? { ...m, content: displayText || "...", skeletonCardCount: skeletonCount } : m)
         );
       }
 
@@ -2772,6 +2780,14 @@ const AgentePage: React.FC = () => {
               )}
 
               {/* Cards de produto — carrossel único */}
+              {!msg.produtosCard && msg.skeletonCardCount && msg.skeletonCardCount > 0 && (
+                <div className={styles.produtosCarousel}>
+                  {Array.from({ length: msg.skeletonCardCount }).map((_, i) => (
+                    <div key={i} className={styles.skeletonCard} />
+                  ))}
+                </div>
+              )}
+
               {msg.produtosCard && msg.produtosCard.length > 0 && (() => {
                 const isCarousel = carouselEnabled;
                 const attachDrag = (el: HTMLDivElement | null) => {
