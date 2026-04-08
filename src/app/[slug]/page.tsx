@@ -2833,7 +2833,7 @@ const AgentePage: React.FC = () => {
               {/* Cards de produto — carrossel único */}
               {!msg.produtosCard && (msg.skeletonCardCount ?? 0) > 0 && (
                 <div className={styles.produtosCarousel}>
-                  {Array.from({ length: msg.skeletonCardCount }).map((_, i) => (
+                  {Array.from({ length: msg.skeletonCardCount ?? 0 }).map((_, i) => (
                     <div key={i} className={styles.skeletonCard} />
                   ))}
                 </div>
