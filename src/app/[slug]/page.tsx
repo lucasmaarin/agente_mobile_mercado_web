@@ -1612,8 +1612,16 @@ const AgentePage: React.FC = () => {
 
         if (itemUnicoQtdState) {
           // Se o usuário pediu um produto diferente do estado atual, reseta e processa normalmente
-          const termoDiferente = itemUnicoExtraido &&
+          const termoDiferenteExplicito = itemUnicoExtraido &&
             normalizar(itemUnicoExtraido.termoBusca) !== normalizar(itemUnicoQtdState.termoBusca);
+          // Também detecta busca por produto diferente sem quantificador explícito
+          const novasBuscasDiferentes = !itemUnicoExtraido && (() => {
+            const resultados = wordKeysEnabled ? filtrarProdutosWordKeys(texto, produtos) : filtrarProdutos(texto, produtos);
+            if (resultados.length === 0) return false;
+            const idsAtuais = new Set(itemUnicoQtdState.candidatos.map(p => p.id));
+            return resultados.every(p => !idsAtuais.has(p.id));
+          })();
+          const termoDiferente = termoDiferenteExplicito || novasBuscasDiferentes;
           if (termoDiferente) {
             setItemUnicoQtdState(null);
             // Cai no fluxo normal abaixo (não retorna)
@@ -1704,12 +1712,23 @@ const AgentePage: React.FC = () => {
             return;
           }
 
-          await salvarRespostaLocal(
-            `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
-            itemUnicoQtdState.candidatos.slice(0, 6),
-            ["Finalizar pedido 🛒", "Continuar comprando"]
-          );
-          return;
+          // Verifica se o usuário está buscando um produto diferente (sem resultado no catálogo)
+          const naoMencionaTermoAtual = !textoNormalizado.includes(normalizar(itemUnicoQtdState.termoBusca));
+          const pareceBuscaNovaProduto = naoMencionaTermoAtual &&
+            !ehConfirmacaoPositiva(texto) &&
+            !ehCancelamento(texto) &&
+            textoNormalizado.split(/\s+/).filter(w => w.length >= 3).length >= 2;
+          if (pareceBuscaNovaProduto) {
+            setItemUnicoQtdState(null);
+            // Cai no fluxo normal (LLM responde sobre o novo produto/termo)
+          } else {
+            await salvarRespostaLocal(
+              `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+              itemUnicoQtdState.candidatos.slice(0, 6),
+              ["Finalizar pedido 🛒", "Continuar comprando"]
+            );
+            return;
+          }
           } // fecha else (termo diferente)
         }
 
@@ -2127,7 +2146,12 @@ const AgentePage: React.FC = () => {
         const displayText = limparMarkdownBasico(rawText.replace(/\[[^\]]*(?:\]|$)/g, ""));
         const skeletonCount = (rawText.match(/\[SHOW:/g) ?? []).length;
         setMensagens(prev =>
-          prev.map(m => m.id === tempId ? { ...m, content: displayText || "...", skeletonCardCount: skeletonCount } : m)
+          prev.map(m => m.id === tempId ? {
+            ...m,
+            content: displayText || "...",
+            // só seta skeletonCardCount quando há SHOW tags — nunca seta 0 para não render "0"
+            ...(skeletonCount > 0 ? { skeletonCardCount: skeletonCount } : {}),
+          } : m)
         );
       }
 
@@ -2215,11 +2239,14 @@ const AgentePage: React.FC = () => {
             m.id === tempId
               ? {
                   ...m,
-                  content:      cleanTextFormatado,
-                  produtosCard: temCards ? produtosParaExibir : undefined,
-                  suggestions:  resultado.suggestions.length > 0
+                  content:           cleanTextFormatado,
+                  produtosCard:      temCards ? produtosParaExibir : undefined,
+                  skeletonCardCount: undefined, // limpa para não renderizar "0"
+                  suggestions:       resultado.suggestions.length > 0
                     ? resultado.suggestions
-                    : undefined,
+                    : (temCards && wFlowState === FLOW_STATES.BROWSING
+                        ? ["Finalizar pedido 🛒", "Continuar comprando"]
+                        : undefined),
                 }
               : m
           )
@@ -2652,11 +2679,11 @@ const AgentePage: React.FC = () => {
 
       {/* Sidebar do carrinho */}
       <div className={`${styles.agCarrinhoSidebar} ${mostrarCarrinho ? styles.agCarrinhoSidebarOpen : ''}`}>
-        <button className={styles.agCarrinhoSidebarClose} onClick={() => setMostrarCarrinho(false)}>
+        {mostrarCarrinho && <button className={styles.agCarrinhoSidebarClose} onClick={() => setMostrarCarrinho(false)}>
           <X size={22} />
-        </button>
+        </button>}
 
-        <div className={styles.agCarrinhoInner}>
+        {mostrarCarrinho && <div className={styles.agCarrinhoInner}>
           {/* Contador de itens */}
           <div className={styles.agQuantCarrinho}>
             <p className={styles.agQuantContent}>
@@ -2745,7 +2772,7 @@ const AgentePage: React.FC = () => {
               </button>
             </div>
           )}
-        </div>
+        </div>}
       </div>
 
       {/* Chat wrapper — fundo arredondado */}
@@ -2787,7 +2814,7 @@ const AgentePage: React.FC = () => {
                     Reenviar código
                   </button>
                 </div>
-              ) : (
+              ) : msg.content.trim() ? (
               <div
                 className={`${styles.messageBubble} ${
                   msg.role === "user" ? styles.bubbleUser : styles.bubbleAgent
@@ -2801,7 +2828,7 @@ const AgentePage: React.FC = () => {
                 ))}
                 <span className={styles.timestamp}>{formatarHora(msg.timestamp)}</span>
               </div>
-              )}
+              ) : null}
 
               {/* Cards de produto — carrossel único */}
               {!msg.produtosCard && (msg.skeletonCardCount ?? 0) > 0 && (
