@@ -180,8 +180,8 @@ export default function HomePage() {
         )}
 
         <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+          display: "flex",
+          flexDirection: "column",
           gap: 16,
         }}>
           {filtrados.map(e => (
