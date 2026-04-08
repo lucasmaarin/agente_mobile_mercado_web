@@ -82,7 +82,7 @@ export default function HomePage() {
   });
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f2ff", fontFamily: "var(--font-inter, 'Segoe UI', sans-serif)" }}>
+    <div style={{ height: "100dvh", overflowY: "auto", background: "#f0f2ff", fontFamily: "var(--font-inter, 'Segoe UI', sans-serif)" }}>
 
       {/* ── Hero ── */}
       <div style={{

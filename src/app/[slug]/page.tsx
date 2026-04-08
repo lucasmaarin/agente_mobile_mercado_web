@@ -71,7 +71,9 @@ const STOPWORDS_BUSCA = new Set([
   'algo', 'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
   'novo', 'nova', 'lista', 'pedido', 'compra', 'compras', 'item', 'itens',
   'ha', 'ai', 'ah', 'so', 'ate', 'ou', 'que', 'se', 'ja', 'la', 'ca',
-  'tudo', 'nada', 'ainda', 'agora', 'aqui', 'ali', 'isso', 'esse', 'essa', 'esses', 'essas'
+  'tudo', 'nada', 'ainda', 'agora', 'aqui', 'ali', 'isso', 'esse', 'essa', 'esses', 'essas',
+  // descritores de embalagem — nunca são nomes de produto
+  'caixinha', 'caixa', 'garrafa', 'lata', 'saquinho', 'pacote', 'pote', 'vidro', 'sachê', 'sachê'
 ]);
 
 const ALIASES_BUSCA: Record<string, string[]> = {
@@ -283,12 +285,27 @@ function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
     }
 
     const temLeite = palavrasBase.includes('leite');
-    const temCaixinha = palavrasBase.includes('caixinha') || palavrasBase.includes('caixa');
+    // Detecta "caixinha" no texto original (antes de virar stopword)
+    const textoN = normalizar(texto);
+    const temCaixinha = textoN.includes('caixinha') || textoN.includes('caixa');
     if (temLeite && temCaixinha) {
-      const pareceLeiteCaixinha =
-        nomeN.includes('leite') &&
-        (nomeN.includes('integral') || nomeN.includes('uht') || nomeN.includes('1lt') || nomeN.includes('1l') || nomeN.includes('litro') || nomeN.includes(' lt'));
-      if (pareceLeiteCaixinha) score += 22;
+      if (nomeN.includes('leite')) {
+        // Tudo que claramente NÃO é leite de caixinha → penalidade forte
+        const ehExcluido =
+          nomeN.includes(' po') || nomeN.includes('po ') || nomeN.includes('em po') ||
+          nomeN.includes('instantaneo') || nomeN.includes('instantanea') ||
+          nomeN.includes('condensado') ||
+          nomeN.includes('coco') ||
+          nomeN.includes('colonia') ||
+          nomeN.includes('soja') || nomeN.includes('aveia') || nomeN.includes('amendoa') ||
+          descN.includes('leite em po') || descN.includes('leite condensado');
+        if (ehExcluido) {
+          score -= 60; // força exclusão
+        } else {
+          // Boost para leite líquido em caixa
+          score += 22;
+        }
+      }
     }
 
     if (temLeite && palavrasBase.includes('po')) {
@@ -2189,7 +2206,7 @@ const AgentePage: React.FC = () => {
       const forcarPedido = pendingOrderConfirmRef.current && !resultado.shouldCreateOrder;
 
       // Substituir mensagem temporária pela versão final com cards
-      const cleanTextFormatado = limparMarkdownBasico(resultado.cleanText);
+      const cleanTextFormatado = limparMarkdownBasico(resultado.cleanText.replace(/\[[^\]]*\]/g, '').trim());
       const temCards = produtosParaExibir.length > 0;
 
       if (cleanTextFormatado || temCards) {
@@ -2787,7 +2804,7 @@ const AgentePage: React.FC = () => {
               )}
 
               {/* Cards de produto — carrossel único */}
-              {!msg.produtosCard && msg.skeletonCardCount && msg.skeletonCardCount > 0 && (
+              {!msg.produtosCard && (msg.skeletonCardCount ?? 0) > 0 && (
                 <div className={styles.produtosCarousel}>
                   {Array.from({ length: msg.skeletonCardCount }).map((_, i) => (
                     <div key={i} className={styles.skeletonCard} />
