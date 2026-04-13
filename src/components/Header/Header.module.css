@@ -1,38 +1,5 @@
-/* ════════════════════════════════════════
-   VARIÁVEIS — edite aqui para personalizar
-   ════════════════════════════════════════ */
+/* ── Header ── */
 .header {
-  /* Preço */
-  --price-symbol-color: #4ade80;   /* cor do "R$" */
-  --price-value-color:  #ffffff;   /* cor do valor numérico */
-  --price-symbol-size:  22px;      /* tamanho do "R$" */
-  --price-value-size:   22px;      /* tamanho do valor numérico */
-
-  /* Logo */
-  --logo-width:         100px;
-  --logo-height:        60px;
-
-  /* Hambúrguer */
-  --bar-width:          26px;
-  --bar-height:         2.5px;
-  --bar-gap:            5px;       /* espaço entre as barras */
-
-  /* Carrinho (pill) */
-  --cart-font-size:     10px;
-
-  /* "MENU" label */
-  --menu-label-size:    8px;
-
-  /* Info strip */
-  --info-strip-width:   100%;
-  --info-strip-max:     100%;
-  --info-open-color:    #4ade80;   /* "Aberto" */
-  --info-closed-color:  #dc2626;   /* "Fechado" */
-  --info-item-color:    #4ade80;   /* ícones e textos (relógio, entrega) */
-  --star-color:         #f59e0b;   /* estrela de avaliação */
-
-/* ════════════════════════════════════════ */
-
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -42,490 +9,120 @@
   z-index: 100;
   box-sizing: border-box;
   padding-top: max(0px, env(safe-area-inset-top));
-  border-radius: 0 0 26px 26px;   /* arredondamento inferior — edite aqui */
+  background: transparent;
+  border-bottom: none;
 }
 
-/* ── Linha topo: logo | preço | menu ── */
+/* ── Linha principal: hamburguer | nome | carrinho + preço ── */
 .topRow {
   display: flex;
   align-items: center;
-  padding: 16px 16px 14px;
-  gap: 8px;
-  align-items: flex-end;    /* itens alinhados à base */
+  padding: 18px 16px;
+  gap: 10px;
 }
 
-/* ── Logo ── */
-.logoArea {
-  flex-shrink: 0;
-  width: var(--logo-width);
-  height: var(--logo-height);
-  position: relative;
-  overflow: visible;
-  top: 10px;
-}
-
-.logoWrapper {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: var(--logo-width);
-  height: var(--logo-height);
-}
-
-.logoImg {
-  object-fit: contain;
-  width: 100%;
-  height: 100%;
-}
-
-/* ── Preço ── */
-.priceArea {
-  position: absolute;      /* centralizado no header independente dos lados */
-  left: 0;
-  right: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  pointer-events: none;    /* cliques passam para elementos abaixo */
-  gap: 6px;
-}
-
-.priceRow {
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-}
-
-.priceSymbol {
-  font-size: var(--price-symbol-size);
-  font-weight: 700;
-  color: var(--price-symbol-color);
-  line-height: 1;
-}
-
-.priceValue {
-  font-size: var(--price-value-size);
-  font-weight: 800;
-  color: var(--price-value-color);
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
-
-/* ── Contagem do carrinho (largura fixa para não mover os parênteses) ── */
-.cartCountNum {
-  display: inline-block;
-  min-width: 1.6em;
-  text-align: center;
-  padding: 0 2px;
-}
-
-/* ── Botão carrinho (pill curto, centralizado) ── */
-.cartStrip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  padding: 5px 18px;
-  border: none;
-  cursor: pointer;
-  font-size: var(--cart-font-size);
-  font-weight: 400;
-  color: #fff;
-  letter-spacing: 0.06em;
-  border-radius: 20px 20px 0 0;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-  transition: opacity 0.15s;
-  width: fit-content;
-}
-
-.cartStrip:active {
-  opacity: 0.8;
-}
-
-/* ── Menu ── */
-.menuArea {
-  flex-shrink: 0;
-  margin-left: auto;   /* sempre no canto direito */
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 6px;
-  min-width: 52px;
-}
-
-.ofertasImg {
-  display: none;
-  width: 34px;
-  height: 34px;
-  flex-shrink: 0;
-  align-self: center;
-}
-
+/* ── Botão hamburguer (esquerda) ── */
 .menuButton {
   background: none;
   border: none;
   cursor: pointer;
   display: flex;
-  align-items: center;
-  padding: 4px 6px;
-  -webkit-tap-highlight-color: transparent;
-  align-self: center;
-}
-
-.menuLabel {
-  font-size: 6px;           /* menor — edite aqui */
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.85);
-  letter-spacing: 0.08em;
-  line-height: 1;
-}
-
-.menuIconImg {
-  display: block;
-  width: var(--bar-width);
-  height: auto;
-  filter: brightness(0) invert(1); /* branco */
-}
-
-/* Hambúrguer animado */
-.menuIcon {
-  display: flex;
   flex-direction: column;
-  gap: var(--bar-gap);
-  width: var(--bar-width);
+  gap: 5px;
+  padding: 4px;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  justify-content: center;
 }
 
-.bar {
+.menuBar {
   display: block;
-  width: var(--bar-width);
-  height: var(--bar-height);
-  background: #fff;
+  width: 18px;
+  height: 2px;
+  background: #979691;
   border-radius: 2px;
-  transform-origin: center;
-  transition: transform 0.25s ease, opacity 0.2s ease, width 0.25s ease;
 }
 
-.menuIconOpen .bar:nth-child(1) {
-  transform: translateY(7.5px) rotate(45deg);
-}
-.menuIconOpen .bar:nth-child(2) {
-  opacity: 0;
-  width: 0;
-}
-.menuIconOpen .bar:nth-child(3) {
-  transform: translateY(-7.5px) rotate(-45deg);
-}
-
-/* ── Wrapper do strip (colado na base do header) ── */
-.cartStripWrapper {
-  display: flex;
-  justify-content: center;
-  padding-bottom: 0;
-}
-
-/* ── Faixa info — diretamente abaixo do header ── */
-.infoStripOuter {
-  position: fixed;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: center;
-  z-index: 99;
-  /* top é calculado inline via style */
-}
-
-.infoStrip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;        /* espaço entre grupos — edite aqui */
-  padding: 7px 20px;
-  background: rgba(255, 255, 255, 0.72);   /* transparência — edite aqui (0=invisível, 1=sólido) */
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  border-radius: 0;
-  font-size: 12px;
+/* ── Nome do estabelecimento ── */
+.nomeEstab {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #979691;
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
-  width: 98%;                      /* largura — edite aqui */
+  text-overflow: ellipsis;
+  margin-left: 8px;
 }
 
-.infoGroup {
-  display: flex;
-  align-items: center;
-  gap: 3px;         /* espaço entre "Aberto" e "até XX:XX" — edite aqui */
-}
-
-.infoAberto {
-  color: #4ade80;   /* "Aberto" verde — edite aqui */
-  font-weight: 700;
-  font-size: 14px;
-}
-
-.infoAbertoSuffix {
-  color: #6b7280;      /* "até 20:00" cinza — edite aqui */
-  font-weight: 400;
-  font-size: 12px;
-}
-
-.infoFechado {
-  color: #dc2626;   /* vermelho — edite aqui */
-  font-weight: 700;
-  font-size: 12px;
-}
-
-.infoDivider {
-  display: none;
-}
-
-.infoItem {
-  display: flex;
-  align-items: center;
-  gap: 2px;         /* espaço ícone ↔ texto — edite aqui */
-  color: #6b7280;   /* texto dos itens cinza — edite aqui */
-  font-weight: 400;
-  font-size: 12px;  /* tamanho fonte itens — edite aqui */
-}
-
-.infoItem svg {
-  color: #4ade80;   /* ícones verdes — edite aqui */
-}
-
-.infoItem .starIcon,
-.starIcon {
-  color: #f59e0b !important;   /* amarelo — edite aqui */
-  fill: #f59e0b !important;
-}
-
-.ratingText {
-  color: #111;   /* número da avaliação — preto */
-}
-
-/* ── Backdrop ── */
-.settingsBackdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 500;
-  -webkit-backdrop-filter: blur(2px);
-  backdrop-filter: blur(2px);
-}
-
-/* ── Settings panel (slide-in from right) ── */
-.settingsPanel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 92%;
-  max-width: 420px;
-  background: #f9fafb;
-  z-index: 600;
+/* ── Área do carrinho (direita) ── */
+.cartArea {
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
-  transform: translateX(100%);
-  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
-}
-
-.settingsPanelOpen {
-  transform: translateX(0);
-}
-
-/* ── Panel header ── */
-.settingsHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px 20px;
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  align-items: flex-end;
+  gap: 2px;
   flex-shrink: 0;
-}
-
-.settingsTitle {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.settingsClose {
   background: none;
   border: none;
   cursor: pointer;
-  color: #6b7280;
+  padding: 4px 2px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cartTop {
   display: flex;
   align-items: center;
-  padding: 4px;
-  border-radius: 8px;
-  transition: background 0.15s;
-}
-
-.settingsClose:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-/* ── Scrollable body ── */
-.settingsBody {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px 20px 32px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-/* ── Section ── */
-.settingsSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 4px 0 20px;
-}
-
-.settingsSectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 2px;
-}
-
-.settingsSectionTitle svg {
-  color: #3632f8;
-}
-
-.settingsDivider {
-  height: 1px;
-  background: #e5e7eb;
-  margin: 4px 0 20px;
-  flex-shrink: 0;
-}
-
-/* ── Fields ── */
-.settingsField {
-  display: flex;
-  flex-direction: column;
   gap: 5px;
-}
-
-.settingsFieldRow {
-  display: flex;
-  gap: 10px;
-}
-
-.settingsLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-.settingsInput {
-  border: 1.5px solid #e5e7eb;
-  border-radius: 10px;
-  padding: 10px 12px;
-  font-size: 0.88rem;
-  color: #111827;
   background: #fff;
-  outline: none;
-  transition: border-color 0.15s;
-  width: 100%;
-  box-sizing: border-box;
+  border-radius: 20px;
+  padding: 5px 10px 5px 8px;
 }
 
-.settingsInput:focus {
-  border-color: #3632f8;
+.cartIcon {
+  color: #111;
+  flex-shrink: 0;
 }
 
-/* ── Save row ── */
-.settingsSaveRow {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 4px;
-}
-
-.settingsFeedback {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #10b981;
-}
-
-.settingsSaveBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 18px;
-  border-radius: 10px;
-  border: none;
-  background: #3632f8;
-  color: #fff;
-  font-size: 0.82rem;
+.priceText {
+  font-size: 0.88rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-  flex-shrink: 0;
+  color: #111;
+  white-space: nowrap;
 }
 
-.settingsSaveBtn:hover:not(:disabled) {
-  background: #2b28d6;
+.cartLabel {
+  font-size: 0.65rem;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
-.settingsSaveBtn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+/* ── Desktop: elementos maiores ── */
+@media (min-width: 768px) {
+  .topRow {
+    padding: 22px 28px;
+    gap: 14px;
+  }
 
-/* ── Toggle row (test settings) ── */
-.settingsToggleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  cursor: pointer;
-  padding: 4px 0;
-}
+  .menuBar {
+    width: 28px;
+    height: 3px;
+  }
 
-.settingsToggleLabel {
-  font-size: 0.88rem;
-  color: #111827;
-  font-weight: 500;
-}
+  .nomeEstab {
+    font-size: 1.05rem;
+    margin-left: 12px;
+  }
 
-.settingsCheckbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: #3632f8;
-  flex-shrink: 0;
-}
+  .cartTop {
+    padding: 7px 14px 7px 11px;
+    gap: 7px;
+  }
 
-/* ── Logout ── */
-.settingsLogoutBtn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1.5px solid #fee2e2;
-  background: #fff;
-  color: #ef4444;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s;
-  margin-top: 4px;
-}
+  .priceText {
+    font-size: 1.05rem;
+  }
 
-.settingsLogoutBtn:hover {
-  background: #fef2f2;
+  .cartLabel {
+    font-size: 0.78rem;
+  }
 }

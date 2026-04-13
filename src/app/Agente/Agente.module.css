@@ -5,7 +5,9 @@
 .container {
   height: 100vh;
   height: 100dvh;
-  background-color: #ffffff;   /* branco atrás do chat */
+  background-image: url('/background.webp');
+  background-size: cover;
+  background-position: center;
   font-family: inherit;
   display: flex;
   flex-direction: column;
@@ -19,8 +21,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background-color: #f5f5f7;   /* fundo do chat */
-  border-radius: 26px 26px 0 0; /* topo arredondado igual ao bottom do header */
+  background: transparent;
 }
 
 /* ========================================= */
@@ -153,14 +154,56 @@
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
-  background-color: #f5f5f7;
-  padding: 16px 12px;
+  background: transparent;
+  padding: 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   scroll-behavior: smooth;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+/* ── Welcome card ── */
+.welcomeCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 4px 16px;
+}
+
+.welcomeCardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.welcomeCardLogo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.welcomeCardSubtitle {
+  font-size: 0.78rem;
+  color: #374151;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.welcomeCardGreeting {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+  line-height: 1.3;
+}
+
+.welcomeCardHeading {
+  font-size: 1.55rem;
+  font-weight: 400;
+  color: #111827;
+  line-height: 1.2;
 }
 
 .messagesContainer::-webkit-scrollbar {
@@ -281,38 +324,136 @@
 }
 
 /* ========================================= */
-/* 8. INPUT DE MENSAGEM                      */
+/* 8. BARRA INFERIOR (input + info strip)    */
 /* ========================================= */
+
+.bottomBar {
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
+  border-radius: 20px;
+  margin: 0 16px 16px;
+  flex-shrink: 0;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+}
 
 .inputContainer {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
-  /* Empurra acima da barra do navegador no iOS */
-  padding-bottom: max(12px, env(safe-area-inset-bottom));
-  background-color: #fff;
-  border-top: 1px solid #e5e7eb;
+  padding: 10px 14px;
+}
+
+@media (max-width: 767px) {
+  .inputContainer {
+    padding: 14px 14px;
+  }
+  .bottomBar {
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+.infoBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 14px 8px;
+  flex-wrap: wrap;
+}
+
+.infoBarItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.infoBarItem svg {
+  color: #4ade80;
   flex-shrink: 0;
 }
 
+.infoBarAberto {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.infoBarFechado {
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.infoBarStar {
+  color: #f59e0b !important;
+  fill: #f59e0b !important;
+}
+
+@media (min-width: 768px) {
+  .infoBarItem {
+    font-size: 14px;
+  }
+  .infoBarAberto,
+  .infoBarFechado {
+    font-size: 14px;
+  }
+  .infoBar {
+    gap: 20px;
+    padding: 6px 20px 12px;
+  }
+}
+
+/* ========================================= */
+/* 9. INPUT DE MENSAGEM                      */
+/* ========================================= */
+
 .messageInput {
   flex: 1;
-  border: 1.5px solid #e5e7eb;
+  border: none;
   border-radius: 24px;
   padding: 10px 16px;
   font-size: 0.9rem;
   outline: none;
-  background-color: #f9fafb;
+  background: transparent;
   transition: border-color 0.2s;
 }
 
 .messageInput:focus {
-  border-color: #3632f8;
-  background-color: #fff;
+  background: transparent;
 }
 
 .messageInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Textarea para o chat normal (suporte a quebra de linha) */
+.messageTextarea {
+  flex: 1;
+  border: none;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  background: transparent;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+  min-height: 40px;
+  max-height: 120px;
+  display: block;
+}
+
+.messageTextarea:focus {
+  background: transparent;
+}
+
+.messageTextarea:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -430,6 +571,44 @@
   flex: 0 0 140px;
   height: 256px;
   display: flex;
+}
+
+/* Card "Ver todos" no fim do carrossel */
+.verTodosCard {
+  flex: 0 0 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #fff;
+  border: 1.5px solid #193281;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  padding: 12px;
+  width: 100%;
+}
+
+.verTodosCard:hover {
+  background: #f0f4ff;
+}
+
+.verTodosIcon {
+  font-size: 2.4rem;
+  font-weight: 300;
+  color: #193281;
+  line-height: 1;
+}
+
+.verTodosLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #193281;
+  white-space: nowrap;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .skeletonCard {
@@ -1084,7 +1263,8 @@
 
 .selectionChips {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   margin-top: 8px;
   padding: 0 2px;
@@ -1093,34 +1273,32 @@
 .selectionChip {
   display: inline-flex;
   align-items: center;
-  padding: 7px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #3632f8;
+  gap: 10px;
+  padding: 13px 22px;
+  border-radius: 50px;
+  border: none;
   background: #fff;
-  color: #3632f8;
-  font-size: 0.82rem;
-  font-weight: 600;
+  color: #111;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s;
   white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(54,50,248,0.08);
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
 }
 
 .selectionChip:hover {
-  background: #3632f8;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(54,50,248,0.18);
+  background: #f5f5f5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
 }
 
 .selectionChipDanger {
-  border-color: #e53935;
   color: #e53935;
 }
 
 .selectionChipDanger:hover {
-  background: #e53935;
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(229,57,53,0.18);
+  background: #fff5f5;
+  box-shadow: 0 2px 8px rgba(229,57,53,0.12);
 }
 
 /* ========================================= */

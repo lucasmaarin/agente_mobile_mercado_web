@@ -9,9 +9,46 @@ import Image from "next/image";
 import styles from "../Agente/Agente.module.css";
 import { auth, db } from "@/lib/firebase";
 import Header from "@/components/Header/Header";
-import type { InfoEstabelecimento } from "@/components/Header/Header";
+import WelcomeCard from "@/components/Chat/WelcomeCard";
+import InfoBar from "@/components/Chat/InfoBar";
+import AuthCheckboxCard from "@/components/Chat/AuthCheckboxCard";
 import CheckoutModal from "@/components/CheckoutModal/CheckoutModal";
 import { validatePhone } from "@/lib/validation";
+import { useEstabelecimento } from "@/hooks/useEstabelecimento";
+import {
+  normalizar,
+  filtrarProdutos,
+  filtrarProdutosWordKeys,
+  selecionarCardsPorTermos,
+  combinarProdutosFoco,
+  buscarAlternativasPorTermo,
+  buildIndiceCategoria,
+  detectarContexto,
+  detectarNomeContexto,
+  extrairPalavrasBaseBusca,
+  traduzirAbreviacoes,
+  sugerirCorrecaoOrtografica,
+} from "@/lib/productSearch";
+import {
+  limparMarkdownBasico,
+  ehSaudacaoCurta,
+  ehIntencaoSemProduto,
+  ehIntencaoCheckout,
+  ehAcaoContinuarComprando,
+  ehAcaoAlterarItem,
+  ehConfirmacaoPositiva,
+  ehCancelamento,
+  ehEscolhaAutomatica,
+  ehEscolhaVariacao,
+  encontrarIndiceEscolhido,
+  extrairItensListaComQuantidade,
+  extrairItensSimples,
+  formatarResumoCarrinho,
+  adicionarItemAoCarrinhoFn,
+  proximoIndicePendenteFn,
+  montarNomeCompletoUsuario,
+  NUMERO_POR_TEXTO,
+} from "@/lib/chatUtils";
 
 import {
   FLOW_STATES,
@@ -38,502 +75,16 @@ import {
   sincronizarItemCarrinho,
   removerItemCarrinhoFirestore,
   limparCarrinhoFirestore,
-  buscarLogoEstabelecimento,
-  buscarNomeEstabelecimento,
-  buscarFormasPagamento,
-  buscarConfigLoja,
-  ConfigLoja,
-  buscarInfoEstabelecimento,
   criarUsuarioNovo,
   atualizarNomeUsuario,
   atualizarDadosUsuario,
   ExemploConversa,
   DELIVERY_PRICE,
+  buscarPedidosDoUsuario,
+  Pedido,
 } from "@/services/firestore";
 import { Timestamp } from "firebase/firestore";
 
-// ============================================================
-// UTILITÁRIOS DE FILTRAGEM DE PRODUTOS
-// ============================================================
-
-/** Remove acentos e converte para minúsculas para comparação */
-function normalizar(s: string): string {
-  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-}
-
-const STOPWORDS_BUSCA = new Set([
-  'oi', 'ola', 'boa', 'bom', 'dia', 'tarde', 'noite', 'olas', 'ola', 'hello', 'hi', 'hey', 'boas',
-  'obrigado', 'obrigada', 'brigado', 'brigada', 'valeu', 'vlw', 'tks',
-  'tem', 'tenho', 'quero', 'queria', 'preciso', 'procuro', 'busco',
-  'me', 'pra', 'para', 'com', 'sem', 'um', 'uma', 'uns', 'umas', 'dos', 'das',
-  'por', 'favor', 'pode', 'poderia', 'gostaria', 'de', 'do', 'da', 'em', 'tal', 'coisa',
-  'mais', 'opcao', 'opcoes', 'outro', 'outros', 'outra', 'outras', 'tipo', 'tipos',
-  'algo', 'algum', 'alguma', 'alguns', 'algumas', 'qual', 'quais', 'voce', 'nao', 'sim',
-  'novo', 'nova', 'lista', 'pedido', 'compra', 'compras', 'item', 'itens',
-  'ha', 'ai', 'ah', 'so', 'ate', 'ou', 'que', 'se', 'ja', 'la', 'ca',
-  'tudo', 'nada', 'ainda', 'agora', 'aqui', 'ali', 'isso', 'esse', 'essa', 'esses', 'essas',
-  // descritores de embalagem — nunca são nomes de produto
-  'caixinha', 'caixa', 'garrafa', 'lata', 'saquinho', 'pacote', 'pote', 'vidro', 'sachê', 'sachê'
-]);
-
-const ALIASES_BUSCA: Record<string, string[]> = {
-  caixinha: ['caixa', 'integral', 'uht', '1lt', '1l', 'litro', 'lt'],
-  caixa:    ['caixinha', 'integral', 'uht', '1lt', '1l', 'litro', 'lt'],
-  po:       ['po', 'instantaneo', 'instantanea'],
-  peito:    ['peito', 'file'],
-  file:     ['file', 'peito'],
-};
-
-/**
- * Mapa de situações/contextos → termos de produto relevantes.
- * Usado quando o cliente descreve uma situação em vez de citar um produto diretamente.
- */
-const CONTEXTOS_SITUACIONAIS: Record<string, string[]> = {
-  'churrasco':        ['carne', 'frango', 'linguica', 'carvao'],
-  'macarronada':      ['macarrao', 'molho tomate', 'queijo ralado'],
-  'feijoada':         ['feijao preto', 'carne seca', 'linguica', 'farofa'],
-  'farofa':           ['farinha mandioca', 'manteiga'],
-  'pizza':            ['queijo mussarela', 'molho tomate'],
-  'vitamina':         ['banana', 'aveia', 'leite'],
-  'compras do mes':   ['arroz', 'feijao', 'oleo', 'acucar', 'sal', 'farinha', 'cafe', 'leite'],
-  'natal':            ['natal', 'panetone', 'chocotone', 'tender', 'peru', 'chester', 'espumante', 'nozes', 'castanha'],
-  'natalino':         ['natal', 'panetone', 'chocotone', 'tender', 'peru', 'chester'],
-  'pascoa':           ['pascoa', 'ovo pascoa', 'ovo de pascoa', 'coelho', 'trufa'],
-  'festa junina':     ['festa junina', 'junina', 'canjica', 'pamonha', 'pipoca', 'amendoim'],
-  'reveillon':        ['reveillon', 'espumante', 'lentilha'],
-  'ano novo':         ['ano novo', 'espumante', 'lentilha'],
-  'dia dos namorados':['namorados', 'vinho', 'espumante', 'bombom', 'trufa'],
-  'dia das maes':     ['maes', 'vinho', 'espumante', 'bombom'],
-  'dia dos pais':     ['pais', 'whisky', 'vinho'],
-  'carnaval':         ['carnaval', 'energetico'],
-};
-
-/** Detecta situações contextuais na mensagem e retorna termos de busca relevantes */
-function detectarContexto(texto: string): string[] {
-  const t = normalizar(texto);
-  const termos = new Set<string>();
-  for (const [contexto, keywords] of Object.entries(CONTEXTOS_SITUACIONAIS)) {
-    if (t.includes(normalizar(contexto))) {
-      keywords.forEach(k => termos.add(k));
-    }
-  }
-  return Array.from(termos);
-}
-
-/** Retorna o nome do primeiro contexto situacional detectado no texto */
-function detectarNomeContexto(texto: string): string | null {
-  const t = normalizar(texto);
-  for (const contexto of Object.keys(CONTEXTOS_SITUACIONAIS)) {
-    if (t.includes(normalizar(contexto))) return contexto;
-  }
-  return null;
-}
-
-/**
- * Retorna termos de busca relevantes com base no horário e dia da semana,
- * usados como recomendação inicial quando não há dados de comportamento do cliente.
- */
-
-function variantesToken(token: string): string[] {
-  const t = normalizar(token);
-  const vars = new Set<string>([t]);
-  if (t.length > 4 && t.endsWith('es')) vars.add(t.slice(0, -2));
-  if (t.length > 3 && t.endsWith('s')) vars.add(t.slice(0, -1));
-  return Array.from(vars);
-}
-
-function extrairPalavrasBaseBusca(texto: string): string[] {
-  return normalizar(texto)
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS_BUSCA.has(w));
-}
-
-function ehSaudacaoCurta(texto: string): boolean {
-  const t = normalizar(texto).replace(/[^a-z0-9\s]/g, ' ').trim().replace(/\s+/g, ' ');
-  return new Set([
-    'oi',
-    'ola',
-    'bom dia',
-    'boa tarde',
-    'boa noite',
-    'e ai',
-    'tudo bem',
-    'blz',
-  ]).has(t);
-}
-
-function ehIntencaoSemProduto(texto: string): boolean {
-  const t = normalizar(texto);
-  return (
-    t.includes('lista de compras') ||
-    t.includes('tenho uma lista') ||
-    t.includes('novo pedido') ||
-    t.includes('fazer um pedido') ||
-    t.includes('fazer pedido') ||
-    t.includes('comecar pedido') ||
-    t.includes('iniciar pedido') ||
-    t.includes('quero pedir') ||
-    t.includes('vou pedir')
-  );
-}
-
-function ehIntencaoCheckout(texto: string): boolean {
-  const t = normalizar(texto);
-  return (
-    t.includes("finalizar") ||
-    t.includes("fechar pedido") ||
-    t.includes("finaliza pedido") ||
-    t.includes("finalizar pedido") ||
-    t.includes("pagar") ||
-    t.includes("checkout")
-  );
-}
-
-function ehAcaoContinuarComprando(texto: string): boolean {
-  const t = normalizar(texto).replace(/[.!?]/g, "").trim();
-  return (
-    t === "continuar" ||
-    t.includes("continuar compr") ||
-    t.includes("seguir compr") ||
-    t.includes("mais produtos") ||
-    t.includes("continuar compra") ||
-    t.includes("pode continuar")
-  );
-}
-
-function ehAcaoAlterarItem(texto: string): boolean {
-  const t = normalizar(texto).replace(/[.!?]/g, "").trim();
-  return (
-    t === "alterar" ||
-    t.includes("alterar") ||
-    t.includes("trocar") ||
-    t.includes("substituir") ||
-    t.includes("mudar item")
-  );
-}
-
-function expandirPalavrasBusca(palavrasBase: string[]): string[] {
-  const expandidas = new Set<string>();
-  for (const palavra of palavrasBase) {
-    for (const variante of variantesToken(palavra)) {
-      expandidas.add(variante);
-      for (const alias of ALIASES_BUSCA[variante] ?? []) {
-        expandidas.add(normalizar(alias));
-      }
-    }
-  }
-  return Array.from(expandidas).filter((w) => w.length >= 2);
-}
-
-/**
- * Constrói o índice compacto de categorias → subcategorias (gerado 1x).
- * Formato: "- Mercearia: Maionese, Feijão, Arroz\n- Bebidas: ..."
- */
-function buildIndiceCategoria(produtos: Produto[]): string {
-  const mapa = new Map<string, { nome: string; subcats: Set<string> }>();
-  for (const p of produtos) {
-    const chave = p.categoryId || p.category;
-    if (!mapa.has(chave)) mapa.set(chave, { nome: p.category, subcats: new Set() });
-    if (p.subcategory) mapa.get(chave)!.subcats.add(p.subcategory);
-  }
-  // Formato compacto: "Mercearia(Maionese,Feijão,Arroz) | Bebidas(Suco,Refrigerante)"
-  return Array.from(mapa.values())
-    .map(({ nome, subcats }) => `${nome}(${Array.from(subcats).join(',')})`)
-    .join(' | ');
-}
-
-/**
- * Filtra produtos relevantes para a mensagem do usuário com scoring de relevância.
- * Garante que pelo menos os top-3 de cada palavra-chave entrem no resultado,
- * permitindo atender pedidos com múltiplos itens de uma vez (ex: "macarrão, ovos, toddy").
- * Limite global de 20 produtos para não estourar o prompt.
- */
-function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
-  const palavrasBase = extrairPalavrasBaseBusca(texto);
-
-  if (palavrasBase.length === 0) return [];
-
-  const palavras = expandirPalavrasBusca(palavrasBase);
-  const fraseBase = palavrasBase.join(' ');
-
-  const comScore = produtos.map((p) => {
-    const nomeN   = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN    = normalizar(p.category);
-    const descN   = normalizar(p.description || '');
-    const alvo    = `${nomeN} ${subcatN} ${catN} ${descN}`;
-
-    let score = 0;
-
-    if (fraseBase.length >= 5) {
-      if (nomeN.includes(fraseBase)) score += 45;
-      else if (subcatN.includes(fraseBase)) score += 30;
-      else if (alvo.includes(fraseBase)) score += 18;
-    }
-
-    const todosBasePresentes = palavrasBase.every((w) => alvo.includes(w));
-    if (todosBasePresentes) score += 20;
-
-    for (const w of palavras) {
-      if (subcatN === w)            score += 12;
-      else if (subcatN.includes(w)) score += 8;
-      else if (nomeN.includes(w))   score += 6;
-      else if (catN === w)          score += 5;
-      else if (catN.includes(w))    score += 3;
-      else if (descN.includes(w))   score += 2;
-    }
-
-    const temLeite = palavrasBase.includes('leite');
-    // Detecta "caixinha" no texto original (antes de virar stopword)
-    const textoN = normalizar(texto);
-    const temCaixinha = textoN.includes('caixinha') || textoN.includes('caixa');
-    if (temLeite && temCaixinha) {
-      if (nomeN.includes('leite')) {
-        // Tudo que claramente NÃO é leite de caixinha → penalidade forte
-        const ehExcluido =
-          nomeN.includes(' po') || nomeN.includes('po ') || nomeN.includes('em po') ||
-          nomeN.includes('instantaneo') || nomeN.includes('instantanea') ||
-          nomeN.includes('condensado') ||
-          nomeN.includes('coco') ||
-          nomeN.includes('colonia') ||
-          nomeN.includes('soja') || nomeN.includes('aveia') || nomeN.includes('amendoa') ||
-          descN.includes('leite em po') || descN.includes('leite condensado');
-        if (ehExcluido) {
-          score -= 60; // força exclusão
-        } else {
-          // Boost para leite líquido em caixa
-          score += 22;
-        }
-      }
-    }
-
-    if (temLeite && palavrasBase.includes('po')) {
-      const pareceLeitePo =
-        nomeN.includes('leite') &&
-        (nomeN.includes('po') || nomeN.includes('instantaneo'));
-      if (pareceLeitePo) score += 22;
-    }
-
-    if (temLeite && palavrasBase.includes('condensado')) {
-      const pareceLeiteCondensado =
-        nomeN.includes('leite') && nomeN.includes('condensado');
-      if (pareceLeiteCondensado) score += 22;
-      // Penaliza leite em pó quando o pedido é leite condensado
-      if (nomeN.includes('po') || nomeN.includes('instantaneo') || subcatN.includes('po')) score -= 20;
-    }
-
-    if (palavrasBase.includes('frango') && palavrasBase.includes('peito')) {
-      if (nomeN.includes('frango') && (nomeN.includes('peito') || nomeN.includes('file'))) {
-        score += 24;
-      }
-    }
-
-    if (palavrasBase.includes('frango') && palavrasBase.includes('inteiro')) {
-      if (nomeN.includes('frango') && nomeN.includes('inteiro')) {
-        score += 24;
-      }
-    }
-
-    // Bônus: produto começa com o primeiro termo da busca (produto principal)
-    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) {
-      score += 15;
-    }
-
-    // Penalidade: termo aparece apenas como descritor de sabor ("ao X", "com X")
-    // Ex: buscar "leite" não deve retornar "Chocolate ao Leite"
-    for (const w of palavrasBase) {
-      const apareceComoSabor = (nomeN.includes('ao ' + w) || nomeN.includes('c/ ' + w) || nomeN.includes('com ' + w));
-      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
-      if (apareceComoSabor && !apareceComoProduto) {
-        score -= 18;
-      }
-    }
-
-    return { produto: p, score };
-  }).filter(({ score }) => score > 0);
-
-  const garantidos = new Set<string>();
-
-  // Produtos que combinam TODAS as palavras-chave (nome de produto composto, ex: "macarrão parafuso")
-  const matchamTodos = palavrasBase.length >= 2
-    ? comScore.filter(({ produto: p }) => {
-        const alvo = `${normalizar(p.name)} ${normalizar(p.subcategory)} ${normalizar(p.category)} ${normalizar(p.description || '')}`;
-        return palavrasBase.every((w) => alvo.includes(w));
-      })
-    : [];
-
-  if (matchamTodos.length > 0) {
-    // Há produtos que casam com o nome composto → garante só eles
-    matchamTodos
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-      .forEach(({ produto: p }) => garantidos.add(p.id));
-  } else {
-    // Nenhum produto cobre todas as palavras → trata como lista de itens distintos
-    // (ex: "macarrão, ovos, toddy") e garante top-3 por palavra
-    // Se a busca é composta (2+ palavras), exige score mínimo para evitar falsos positivos
-    // (ex: "leite condensado" não deve trazer chocolates "ao leite" que só pontuam por "leite")
-    const scoreMinComposto = palavrasBase.length >= 2 ? 12 : 0;
-    for (const w of palavrasBase) {
-      comScore
-        .filter(({ produto: p, score }) => {
-          if (score < scoreMinComposto) return false;
-          const nomeN   = normalizar(p.name);
-          const subcatN = normalizar(p.subcategory);
-          const catN    = normalizar(p.category);
-          return nomeN.includes(w) || subcatN.includes(w) || catN.includes(w);
-        })
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .forEach(({ produto: p }) => garantidos.add(p.id));
-    }
-  }
-
-  const ordenados = comScore.sort((a, b) => b.score - a.score);
-  const resultado: Produto[] = [];
-
-  if (matchamTodos.length > 0) {
-    // Produto composto encontrado (ex: "leite condensado") → retorna só esses
-    for (const { produto } of ordenados) {
-      if (garantidos.has(produto.id)) resultado.push(produto);
-    }
-  } else {
-    for (const { produto } of ordenados) {
-      if (garantidos.has(produto.id)) resultado.push(produto);
-    }
-    for (const { produto } of ordenados) {
-      if (!garantidos.has(produto.id)) resultado.push(produto);
-    }
-  }
-
-  return resultado.slice(0, 20);
-}
-
-/**
- * Busca usando wordKeys/searchIndex do Firestore.
- * Converte o termo para maiúsculo e checa se algum token dos arrays começa com o prefixo.
- * Mais precisa que a busca por string simples.
- */
-function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] {
-  const palavrasBase = extrairPalavrasBaseBusca(texto);
-  if (palavrasBase.length === 0) return [];
-
-  const prefixos = palavrasBase.map(p => p.toUpperCase());
-
-  const comScore = produtos.map((p) => {
-    const todosKeys = [...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
-    const nomeN   = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN    = normalizar(p.category);
-    let score = 0;
-
-    for (const pref of prefixos) {
-      if (todosKeys.some(k => k === pref))             score += 15; // match exato
-      else if (todosKeys.some(k => k.startsWith(pref))) score += 8; // match por prefixo
-    }
-
-    // Bônus: todos os prefixos encontrados = produto cobre toda a busca
-    const todosPresentes = prefixos.every(pref => todosKeys.some(k => k.startsWith(pref)));
-    if (todosPresentes && prefixos.length > 1) score += 20;
-
-    // Bônus: produto começa com o primeiro termo da busca
-    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) score += 15;
-
-    // Penalidade: termo aparece apenas como descritor de sabor ("ao X", "com X")
-    // Ex: buscar "leite" não deve retornar "Chocolate ao Leite"
-    for (const w of palavrasBase) {
-      const apareceComoSabor = nomeN.includes('ao ' + w) || nomeN.includes('c/ ' + w) || nomeN.includes('com ' + w);
-      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
-      if (apareceComoSabor && !apareceComoProduto) score -= 18;
-    }
-
-    return { produto: p, score };
-  }).filter(({ score }) => score > 0);
-
-  return comScore
-    .sort((a, b) => b.score - a.score)
-    .map(({ produto }) => produto)
-    .slice(0, 20);
-}
-
-function selecionarCardsPorTermos(
-  termos: string[],
-  candidatos: Produto[],
-  limite: number
-): Produto[] {
-  const selecionados: Produto[] = [];
-  const ids = new Set<string>();
-  const termosUnicos = Array.from(new Set(termos));
-
-  const combinaTermo = (p: Produto, termo: string) => {
-    const nome = normalizar(p.name);
-    const sub = normalizar(p.subcategory);
-    const cat = normalizar(p.category);
-    const desc = normalizar(p.description || '');
-    return nome.includes(termo) || sub.includes(termo) || cat.includes(termo) || desc.includes(termo);
-  };
-
-  for (const termo of termosUnicos) {
-    const encontrado = candidatos.find((p) => !ids.has(p.id) && combinaTermo(p, termo));
-    if (!encontrado) continue;
-    ids.add(encontrado.id);
-    selecionados.push(encontrado);
-    if (selecionados.length >= limite) return selecionados;
-  }
-
-  for (const p of candidatos) {
-    if (selecionados.length >= limite) break;
-    if (ids.has(p.id)) continue;
-    ids.add(p.id);
-    selecionados.push(p);
-  }
-
-  return selecionados;
-}
-
-function combinarProdutosFoco(
-  prioritarios: Produto[],
-  catalogo: Produto[],
-  limite: number = 20
-): Produto[] {
-  const resultado: Produto[] = [];
-  const ids = new Set<string>();
-
-  const push = (p: Produto) => {
-    if (resultado.length >= limite) return;
-    if (ids.has(p.id)) return;
-    ids.add(p.id);
-    resultado.push(p);
-  };
-
-  prioritarios.forEach(push);
-  if (resultado.length >= limite) return resultado;
-
-  const categoriasPrioritarias = new Set(
-    prioritarios.map((p) => p.categoryId || p.category)
-  );
-  const categoriaJaInserida = new Set<string>();
-
-  // Passo 1: adiciona diversidade (1 por categoria fora das prioritárias)
-  for (const p of catalogo) {
-    if (resultado.length >= limite) break;
-    if (ids.has(p.id)) continue;
-    const cat = p.categoryId || p.category;
-    if (categoriasPrioritarias.has(cat)) continue;
-    if (categoriaJaInserida.has(cat)) continue;
-    categoriaJaInserida.add(cat);
-    push(p);
-  }
-
-  // Passo 2: completa com qualquer item restante, mantendo ordem do catálogo
-  for (const p of catalogo) {
-    if (resultado.length >= limite) break;
-    push(p);
-  }
-
-  return resultado;
-}
 
 // ============================================================
 // FLUXO LOCAL: LISTA COM QUANTIDADES
@@ -567,212 +118,6 @@ interface ItemUnicoQuantidadeState {
   produtoSugerido?: Produto;
 }
 
-function montarNomeCompletoUsuario(data: any, currentUser: User): string {
-  const nomeDireto =
-    data?.nomeCompleto ||
-    data?.fullName ||
-    data?.name ||
-    data?.nome ||
-    currentUser.displayName ||
-    "";
-
-  const nomeDiretoLimpo = String(nomeDireto).trim();
-  if (nomeDiretoLimpo.includes(" ")) return nomeDiretoLimpo;
-
-  const sobrenome = String(
-    data?.sobrenome ||
-    data?.lastName ||
-    data?.surname ||
-    ""
-  ).trim();
-
-  if (nomeDiretoLimpo && sobrenome) return `${nomeDiretoLimpo} ${sobrenome}`.trim();
-  return nomeDiretoLimpo || "Cliente";
-}
-
-const NUMERO_POR_TEXTO: Record<string, number> = {
-  um: 1,
-  uma: 1,
-  dois: 2,
-  duas: 2,
-  tres: 3,
-  "três": 3,
-  quatro: 4,
-  cinco: 5,
-  seis: 6,
-  sete: 7,
-  oito: 8,
-  nove: 9,
-  dez: 10,
-};
-
-function numeroDaString(valor: string): number | null {
-  const limpo = normalizar(valor.trim());
-  if (/^\d+$/.test(limpo)) return parseInt(limpo, 10);
-  return NUMERO_POR_TEXTO[limpo] ?? null;
-}
-
-function limparTermoItemLista(termo: string): string {
-  return termo
-    .replace(/\b(de|da|do|das|dos|com|sem|para|pra)\b/gi, " ")
-    .replace(/\b(caixa|caixas|pacote|pacotes|sacola|sacolas|unidade|unidades|lata|latas|garrafa|garrafas)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function extrairItensListaComQuantidade(texto: string): Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> {
-  const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
-  const pattern =
-    /\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b\s+([^,]+?)(?=(?:,|\be\b\s*(?:\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b|$))/gi;
-
-  for (const match of texto.matchAll(pattern)) {
-    const qtd = numeroDaString(match[1] || "");
-    if (!qtd || qtd <= 0) continue;
-    const termoOriginal = (match[2] || "").trim();
-    if (!termoOriginal) continue;
-    const termoBusca = limparTermoItemLista(termoOriginal);
-    if (!termoBusca) continue;
-    itens.push({ termoOriginal, termoBusca, quantidade: qtd });
-  }
-
-  return itens;
-}
-
-/**
- * Detecta listas simples SEM quantidade explícita: "Arroz, feijão e frango"
- * Cada item recebe quantidade=1 por padrão.
- */
-function extrairItensSimples(texto: string): Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> {
-  // Perguntas não são listas
-  if (texto.trim().endsWith('?')) return [];
-
-  // Divide por vírgula primeiro
-  const porVirgula = texto.split(',').map(p => p.trim()).filter(Boolean);
-
-  let candidatos: string[];
-  if (porVirgula.length >= 2) {
-    // Última parte pode ter " e " no final: "arroz, feijão e frango"
-    const ultima = porVirgula[porVirgula.length - 1];
-    const partsE = ultima.split(/\se\s/i).map(p => p.trim()).filter(Boolean);
-    candidatos = [...porVirgula.slice(0, -1), ...partsE];
-  } else {
-    // Sem vírgulas: tenta "X e Y" apenas (ex: "arroz e feijão")
-    const partsE = texto.split(/\se\s/i).map(p => p.trim()).filter(Boolean);
-    if (partsE.length < 2) return [];
-    candidatos = partsE;
-  }
-
-  const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
-  for (const c of candidatos) {
-    const termoOriginal = c.trim();
-    if (!termoOriginal) continue;
-    const termoBusca = limparTermoItemLista(termoOriginal);
-    // Garante que tem pelo menos uma palavra válida (não stopword)
-    const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
-    if (palavrasValidas.length === 0) continue;
-    itens.push({ termoOriginal, termoBusca, quantidade: 1 });
-  }
-  return itens;
-}
-
-function limparMarkdownBasico(texto: string): string {
-  return texto
-    .replace(/\*\*/g, "")
-    .replace(/^\s*[-*]\s+/gm, "- ")
-    // Remove linhas de confirmação de adição ao carrinho geradas pela IA
-    .split('\n')
-    .filter(linha => !/adicionei|coloquei|adicionado|colocado/i.test(linha) || !/carrinho/i.test(linha))
-    .join('\n')
-    .trim();
-}
-
-function resumirTextoQuandoHaCards(texto: string, temCards: boolean): string {
-  if (!temCards) return texto.trim();
-
-  const linhas = texto
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  const filtradas = linhas.filter((linha) => {
-    if (/^\d+\.\s+/.test(linha)) return false;           // "1. Arroz..."
-    if (/^-\s+\S/.test(linha)) return false;             // "- Arroz..." (bullet de lista)
-    if (/^•\s+\S/.test(linha)) return false;             // "• Arroz..."
-    if (/R\$\s*\d/.test(linha) && linha.length <= 90) return false; // linha com preço curta
-    return true;
-  });
-
-  const resultado = filtradas.join("\n").trim();
-  return resultado || "Encontrei estas opcoes para voce. Qual voce prefere?";
-}
-
-function buscarAlternativasPorTermo(termo: string, catalogo: Produto[], excluirId?: string): Produto[] {
-  const palavras = extrairPalavrasBaseBusca(termo);
-  const termos = palavras.length > 0 ? palavras : [normalizar(termo)];
-  return catalogo
-    .filter((p) => {
-      if (excluirId && p.id === excluirId) return false;
-      const alvo = normalizar(`${p.name} ${p.subcategory} ${p.category} ${p.description || ""}`);
-      return termos.some((t) => t.length >= 2 && alvo.includes(t));
-    })
-    .slice(0, 6);
-}
-
-function ehConfirmacaoPositiva(texto: string): boolean {
-  const t = normalizar(texto).replace(/[.!?]/g, "").trim();
-  return (
-    ["sim", "s", "ok", "pode", "confirmar", "confirmo", "certo", "isso", "1"].includes(t) ||
-    t.startsWith("confirmar")
-  );
-}
-
-function ehCancelamento(texto: string): boolean {
-  const t = normalizar(texto).replace(/[.!?]/g, "").trim();
-  return ["cancelar", "cancelo", "cancela", "nao", "não", "2", "parar", "sair"].includes(t);
-}
-
-function ehEscolhaAutomatica(texto: string): boolean {
-  const t = normalizar(texto);
-  return t.includes("popular") || t.includes("automatic") || t.includes("autom") || t.includes("preench");
-}
-
-function ehEscolhaVariacao(texto: string): boolean {
-  const t = normalizar(texto);
-  return t.includes("variedad") || t.includes("escolher") || t.includes("selecion") || t.includes("opcao") || t.includes("opção");
-}
-
-function encontrarIndiceEscolhido(texto: string, limite: number): number | null {
-  const t = normalizar(texto);
-  const m = t.match(/\b(\d+)\b/);
-  if (!m) return null;
-  const n = parseInt(m[1], 10);
-  if (n >= 1 && n <= limite) return n - 1;
-  return null;
-}
-
-function formatarResumoCarrinho(cart: CartItem[]): string {
-  if (cart.length === 0) return "Carrinho vazio.";
-  return cart
-    .map((i) => `${i.quantity}x ${i.name} - R$ ${(i.price * i.quantity).toFixed(2)}`)
-    .join("\n");
-}
-
-function adicionarItemAoCarrinhoFn(cartAtual: CartItem[], produto: Produto, quantidade: number): CartItem[] {
-  const existente = cartAtual.find((i) => i.id === produto.id);
-  if (existente) {
-    return cartAtual.map((i) =>
-      i.id === produto.id ? { ...i, quantity: i.quantity + quantidade } : i
-    );
-  }
-  return [...cartAtual, { ...produto, quantity: quantidade }];
-}
-
-function proximoIndicePendenteFn(itens: ListaPedidoItem[], atual: number): number {
-  for (let i = atual + 1; i < itens.length; i++) {
-    if (!itens[i].selecionadoId && !itens[i].cancelado) return i;
-  }
-  return -1;
-}
 
 // ============================================================
 // TIPOS
@@ -783,8 +128,10 @@ interface Mensagem {
   content: string;
   timestamp: Date;
   produtosCard?: Produto[]; // cards de produto exibidos junto à mensagem
+  termoBusca?: string;      // termo usado para buscar esses produtos (para "ver todos")
   suggestions?: string[];   // chips clicáveis gerados pelo [SUGGEST:...] do agente
   authCheckboxCard?: boolean; // card especial com checkboxes de login
+  isWelcomeCard?: boolean;    // card de apresentação inicial estilizado
   skeletonCardCount?: number; // quantidade de skeleton cards durante streaming
 }
 
@@ -901,15 +248,20 @@ const AgentePage: React.FC = () => {
   // --- Conversa (sessão no Firestore)
   const [conversaId, setConversaId] = useState<string | null>(null);
 
+  // --- Estabelecimento (via hook)
+  const {
+    logoEstabelecimento,
+    nomeEstabelecimento,
+    nomeEstabelecimentoCarregado,
+    infoEstabelecimento,
+    formasPagamento,
+    lojaConfig,
+  } = useEstabelecimento(companyId);
+
   // --- Domínio
   const [produtos, setProdutos]               = useState<Produto[]>([]);
   const [indiceCategoria, setIndiceCategoria] = useState<string>('');
   const [carrinho, setCarrinho]               = useState<CartItem[]>([]);
-  const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
-  const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>('');
-  const [nomeEstabelecimentoCarregado, setNomeEstabelecimentoCarregado] = useState<boolean>(false);
-  const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
-  const [lojaConfig, setLojaConfig] = useState<ConfigLoja | null>(null);
   const [flowState, setFlowState]             = useState<FlowState>(FLOW_STATES.BROWSING);
   const [customerData, setCustomerData]       = useState<CustomerData>({});
 
@@ -936,7 +288,10 @@ const AgentePage: React.FC = () => {
   // --- Recuperação de carrinho ao recarregar
   const [cartRecoveryPending, setCartRecoveryPending] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(136);
-  const [infoEstabelecimento, setInfoEstabelecimento] = useState<InfoEstabelecimento>({});
+
+  // --- Histórico de pedidos do usuário
+  const [pedidosCached, setPedidosCached] = useState<Pedido[]>([]);
+  const [pedidosPage, setPedidosPage] = useState(0);
 
   // --- Tour onboarding
   const [tourEtapa, setTourEtapa]     = useState<number | null>(null);
@@ -962,6 +317,7 @@ const AgentePage: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef       = useRef<HTMLInputElement>(null);
+  const textareaRef    = useRef<HTMLTextAreaElement>(null);
 
   // -------- Scroll automático --------
   useEffect(() => {
@@ -1078,25 +434,7 @@ const AgentePage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user]);
 
-  // -------- Logo do estabelecimento --------
-  useEffect(() => {
-    buscarLogoEstabelecimento(companyId)
-      .then((url) => { if (url) setLogoEstabelecimento(url); })
-      .catch(() => {});
-    buscarNomeEstabelecimento(companyId)
-      .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
-      .catch(() => {})
-      .finally(() => { setNomeEstabelecimentoCarregado(true); });
-    buscarFormasPagamento(companyId)
-      .then((formas) => { if (formas.length > 0) setFormasPagamento(formas); })
-      .catch(() => {});
-    buscarConfigLoja(companyId)
-      .then((cfg) => setLojaConfig(cfg))
-      .catch(() => {});
-    buscarInfoEstabelecimento(companyId)
-      .then((info) => setInfoEstabelecimento(info))
-      .catch(() => {});
-  }, [companyId]);
+  // (logo, nome, info do estabelecimento agora via useEstabelecimento hook)
 
   // -------- Carregar produtos + exemplos ativos + endereço salvo --------
   useEffect(() => {
@@ -1154,14 +492,16 @@ const AgentePage: React.FC = () => {
         const isNewUser = nomeCliente === 'Cliente' || !nomeCliente;
         if (!isNewUser) setFlowState(FLOW_STATES.BROWSING);
         const welcomeContent = isNewUser
-          ? `Olá! Seja bem-vindo ao ${nomeEstabelecimento || 'Mercado'}! 😊\n\nComo você gostaria de ser chamado?`
-          : `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`;
+          ? `Como você gostaria de ser chamado?`
+          : `Como posso ajudar você hoje?`;
+        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"];
         // Preserva mensagens de auth anteriores e appenda a boas-vindas
         setMensagens(prev => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
           return [...authMsgs, {
             id: 'welcome', role: 'assistant' as const,
-            content: welcomeContent, timestamp: new Date(),
+            content: welcomeContent, isWelcomeCard: true, timestamp: new Date(),
+            suggestions: welcomeSuggestions,
           }];
         });
       } catch (e) {
@@ -1170,7 +510,8 @@ const AgentePage: React.FC = () => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
           return [...authMsgs, {
             id: 'welcome', role: 'assistant' as const,
-            content: `Olá! Seja bem-vindo ao ${nomeEstabelecimento || 'Mercado'}! 😊`, timestamp: new Date(),
+            content: 'Como posso ajudar você hoje?', isWelcomeCard: true, timestamp: new Date(),
+            suggestions: ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"],
           }];
         });
       } finally {
@@ -1201,10 +542,12 @@ const AgentePage: React.FC = () => {
     setListaPedidoState(null);
     setItemUnicoQtdState(null);
     setMensagens([{
-      id:        "welcome",
-      role:      "assistant",
-      content:   `Olá, ${nomeCliente}! Tudo bem? 👋\nSou o assistente do ${nomeEstabelecimento || 'Mercado'}.\n\nPosso te ajudar a encontrar produtos e montar seu pedido rapidamente.\n\nQual produto você está procurando agora?\n\nSe preferir, cole sua lista de compras aqui e eu encontro tudo para você.`,
-      timestamp: new Date(),
+      id:            "welcome",
+      role:          "assistant",
+      content:       "Como posso ajudar você hoje?",
+      isWelcomeCard: true,
+      timestamp:     new Date(),
+      suggestions:   ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"],
     }]);
   };
 
@@ -1500,7 +843,8 @@ const AgentePage: React.FC = () => {
       const salvarRespostaLocal = async (
         content: string,
         produtosCard?: Produto[],
-        suggestions?: string[]
+        suggestions?: string[],
+        termoBusca?: string
       ) => {
         const contentFormatado = limparMarkdownBasico(content);
         setMensagens((prev) => [
@@ -1511,6 +855,7 @@ const AgentePage: React.FC = () => {
             content: contentFormatado,
             timestamp: new Date(),
             produtosCard: produtosCard && produtosCard.length > 0 ? produtosCard : undefined,
+            termoBusca: produtosCard && produtosCard.length > 0 ? termoBusca : undefined,
             suggestions: suggestions && suggestions.length > 0 ? suggestions : undefined,
           },
         ]);
@@ -1570,41 +915,107 @@ const AgentePage: React.FC = () => {
         const opcoes = item.candidatos.slice(0, 5);
         const sufixoLista = estado.itens.length > 1 ? ` (item ${index + 1} de ${estado.itens.length})` : "";
         return {
-          texto: `Estas são as opções de ${item.termoBusca} que temos hoje${sufixoLista}. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+          texto: `Estas são as opções de ${item.termoBusca} que temos hoje${sufixoLista}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
           produtosCard: opcoes,
           suggestions: ["Cancelar item"],
         };
       };
 
       if (wFlowState === FLOW_STATES.BROWSING) {
+
+        // ── Ações do menu inicial ──────────────────────────────────────────────
+
+        if (texto.includes("Montar meu pedido")) {
+          await salvarRespostaLocal(
+            "Ótimo! Cole ou escreva sua lista — pode ser com quebra de linha:\n\n" +
+            "2 leite integral\n1 arroz 5kg\n3 refrigerante\n\n" +
+            "Ou separado por vírgula:\n" +
+            "2 leite integral, 1 arroz 5kg, 3 refrigerante\n\n" +
+            "Vou buscar cada item e mostrar as opções disponíveis. Pode enviar! 👇"
+          );
+          return;
+        }
+
+        if (texto.includes("Buscar produtos")) {
+          await salvarRespostaLocal(
+            "Para buscar um produto é simples: basta digitar o nome do que você quer!\n\n" +
+            "Exemplos:\n• \"arroz\"\n• \"leite integral 1L\"\n• \"refrigerante Coca-Cola\"\n\n" +
+            "Vou mostrar as opções disponíveis para você escolher. 😊"
+          );
+          return;
+        }
+
+        if (texto.includes("🧾 Ver pedidos") || texto === "Ver pedidos") {
+          // Busca os pedidos do usuário (cache ou fresh)
+          let pedidos = pedidosCached;
+          if (pedidos.length === 0 && userDocId) {
+            try {
+              pedidos = await buscarPedidosDoUsuario(companyId, userDocId);
+              setPedidosCached(pedidos);
+            } catch {
+              pedidos = [];
+            }
+          }
+          setPedidosPage(0);
+          const slice = pedidos.slice(0, 5);
+          if (slice.length === 0) {
+            await salvarRespostaLocal(
+              "Você ainda não fez nenhum pedido por aqui. Que tal fazer o primeiro agora? 🛒",
+              undefined,
+              ["🛒 Montar meu pedido", "🧺 Buscar produtos"]
+            );
+          } else {
+            const resumo = slice.map((p, i) => {
+              const data = p.createdAt?.toDate?.()?.toLocaleDateString('pt-BR') ?? "—";
+              return `${i + 1}. Pedido #${p.orderNumber} — R$ ${p.total.toFixed(2).replace('.', ',')} — ${data}`;
+            }).join("\n");
+            const temMais = pedidos.length > 5;
+            await salvarRespostaLocal(
+              `Aqui estão seus últimos pedidos:\n\n${resumo}`,
+              undefined,
+              temMais ? ["📄 Pedidos anteriores", "🛒 Fazer um novo pedido"] : ["🛒 Fazer um novo pedido"]
+            );
+          }
+          return;
+        }
+
+        if (texto.includes("Pedidos anteriores")) {
+          const novaPagina = pedidosPage + 1;
+          const slice = pedidosCached.slice(novaPagina * 5, novaPagina * 5 + 5);
+          if (slice.length === 0) {
+            await salvarRespostaLocal("Esses são todos os seus pedidos.", undefined, ["🛒 Fazer um novo pedido"]);
+          } else {
+            setPedidosPage(novaPagina);
+            const resumo = slice.map((p, i) => {
+              const data = p.createdAt?.toDate?.()?.toLocaleDateString('pt-BR') ?? "—";
+              return `${novaPagina * 5 + i + 1}. Pedido #${p.orderNumber} — R$ ${p.total.toFixed(2).replace('.', ',')} — ${data}`;
+            }).join("\n");
+            const temMais = pedidosCached.length > (novaPagina + 1) * 5;
+            await salvarRespostaLocal(
+              `Pedidos anteriores:\n\n${resumo}`,
+              undefined,
+              temMais ? ["📄 Pedidos anteriores", "🛒 Fazer um novo pedido"] : ["🛒 Fazer um novo pedido"]
+            );
+          }
+          return;
+        }
+
+        if (texto.includes("Fazer um novo pedido")) {
+          await salvarRespostaLocal(
+            "Claro! Pode me dizer o que você precisa hoje — pode digitar os produtos ou colar sua lista de compras que eu organizo tudo para você. 🛒"
+          );
+          return;
+        }
+
+        // ── Fim das ações do menu inicial ─────────────────────────────────────
+
         const textoNormalizado = normalizar(texto);
         const itensComQtd   = extrairItensListaComQuantidade(texto);
         const itensSimples  = itensComQtd.length < 2 ? extrairItensSimples(texto) : [];
         let itensExtraidos  = itensComQtd.length >= 2 ? itensComQtd : itensSimples;
 
-        // Detecção de lista sem vírgula/e (ex: "Arroz feijão") — verifica se cada palavra
-        // bate em produtos distintos (baixo overlap entre resultados individuais)
-        if (itensExtraidos.length < 2 && !texto.trim().endsWith('?') && !listaPedidoState) {
-          const palavrasFiltradas = extrairPalavrasBaseBusca(texto).filter(w => w.length >= 3);
-          if (palavrasFiltradas.length >= 2 && palavrasFiltradas.length <= 5) {
-            const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
-            const resultados = palavrasFiltradas.map(w => ({ w, ids: new Set(buscarL(w).map(p => p.id)) }));
-            // Calcula overlap entre TODOS os pares: se todos tiverem overlap < 30% → lista separada
-            let todosBaixoOverlap = resultados.every(a => a.ids.size > 0);
-            if (todosBaixoOverlap) {
-              for (let i = 0; i < resultados.length && todosBaixoOverlap; i++) {
-                for (let j = i + 1; j < resultados.length && todosBaixoOverlap; j++) {
-                  const intersect = [...resultados[i].ids].filter(id => resultados[j].ids.has(id)).length;
-                  const menor = Math.min(resultados[i].ids.size, resultados[j].ids.size);
-                  if (intersect / menor >= 0.3) todosBaixoOverlap = false;
-                }
-              }
-            }
-            if (todosBaixoOverlap) {
-              itensExtraidos = palavrasFiltradas.map(w => ({ termoOriginal: w, termoBusca: w, quantidade: 1 }));
-            }
-          }
-        }
+        // Listas só são criadas com separadores explícitos (vírgula ou " e ").
+        // Espaço simples NÃO cria fileiras separadas — "caldo liquido em cubo" é uma busca única.
 
         // Se itensComQtd tem exatamente 1 item (ex: "um frango", "2 ovos"), usa diretamente como item único
         const itemUnicoExtraido = itensComQtd.length === 1 ? itensComQtd[0] : (itensExtraidos.length === 1 ? itensExtraidos[0] : null);
@@ -1675,17 +1086,19 @@ const AgentePage: React.FC = () => {
               };
               setItemUnicoQtdState(novoEstado);
               await salvarRespostaLocal(
-                `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+                `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
                 novoEstado.candidatos,
-                ["Finalizar pedido 🛒", "Continuar comprando"]
+                ["Finalizar pedido 🛒", "Continuar comprando"],
+                itemUnicoQtdState.termoBusca
               );
               return;
             }
 
             await salvarRespostaLocal(
-              `Esta é a opção de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+              `Esta é a opção de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               [itemUnicoQtdState.produtoSugerido],
-              ["Finalizar pedido 🛒", "Continuar comprando"]
+              ["Finalizar pedido 🛒", "Continuar comprando"],
+              itemUnicoQtdState.termoBusca
             );
             return;
           }
@@ -1723,9 +1136,10 @@ const AgentePage: React.FC = () => {
             // Cai no fluxo normal (LLM responde sobre o novo produto/termo)
           } else {
             await salvarRespostaLocal(
-              `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+              `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               itemUnicoQtdState.candidatos.slice(0, 6),
-              ["Finalizar pedido 🛒", "Continuar comprando"]
+              ["Finalizar pedido 🛒", "Continuar comprando"],
+              itemUnicoQtdState.termoBusca
             );
             return;
           }
@@ -1744,9 +1158,10 @@ const AgentePage: React.FC = () => {
             };
             setItemUnicoQtdState(novoEstadoUnico);
             await salvarRespostaLocal(
-              `Estas são as opções de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+              `Estas são as opções de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               candidatosItemUnico,
-              ["Finalizar pedido 🛒", "Continuar comprando"]
+              ["Finalizar pedido 🛒", "Continuar comprando"],
+              itemUnicoExtraido.termoBusca
             );
             return;
           }
@@ -1761,9 +1176,10 @@ const AgentePage: React.FC = () => {
               produtoSugerido: sugerido,
             });
             await salvarRespostaLocal(
-              `Esta é a opção de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+              `Esta é a opção de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               [sugerido],
-              ["Finalizar pedido 🛒", "Continuar comprando"]
+              ["Finalizar pedido 🛒", "Continuar comprando"],
+              itemUnicoExtraido.termoBusca
             );
             return;
           }
@@ -1786,8 +1202,9 @@ const AgentePage: React.FC = () => {
             const sections = estadoAtual.itens
               .filter((it) => it.candidatos.length > 0)
               .map((it) => ({
-                titulo: `Opções de ${it.termoBusca} ⤵️`,
+                titulo: `Opções de ${it.termoBusca.charAt(0).toUpperCase() + it.termoBusca.slice(1)} ⬇️`,
                 produtos: it.candidatos.slice(0, 6),
+                termoBusca: it.termoBusca,
               }));
             const itensSemCandidatos = estadoAtual.itens.filter((it) => it.candidatos.length === 0);
 
@@ -1798,15 +1215,36 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 sections[i].titulo,
                 sections[i].produtos,
-                isLast ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined
+                isLast ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
+                sections[i].termoBusca
               );
             }
             if (itensSemCandidatos.length > 0) {
-              await salvarRespostaLocal(
-                `Sem resultado para: ${itensSemCandidatos.map((it) => it.termoBusca).join(", ")}`,
-                undefined,
-                ["Finalizar pedido 🛒", "Continuar comprando"]
-              );
+              const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+              // Resolve cada item sem resultado: corrige ou informa
+              type ItemResolvido = { texto: string; produtos?: Produto[]; termoBusca?: string };
+              const resolvidos: ItemResolvido[] = [];
+              for (const item of itensSemCandidatos) {
+                const correcao = sugerirCorrecaoOrtografica(item.termoBusca, produtos);
+                if (correcao) {
+                  const candidatosCorrigidos = buscarL(correcao).slice(0, 6);
+                  if (candidatosCorrigidos.length > 0) {
+                    resolvidos.push({ texto: `Você quis dizer "${correcao}"? Aqui estão as opções ⬇️`, produtos: candidatosCorrigidos, termoBusca: correcao });
+                    continue;
+                  }
+                }
+                resolvidos.push({ texto: `Não encontrei "${item.termoBusca}" no catálogo.` });
+              }
+              // Chips apenas na última mensagem da sequência
+              for (let r = 0; r < resolvidos.length; r++) {
+                const isUltimo = r === resolvidos.length - 1;
+                await salvarRespostaLocal(
+                  resolvidos[r].texto,
+                  resolvidos[r].produtos,
+                  isUltimo ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
+                  resolvidos[r].termoBusca
+                );
+              }
             }
             return;
           }
@@ -2374,6 +1812,7 @@ const AgentePage: React.FC = () => {
     } finally {
       setEnviando(false);
       inputRef.current?.focus();
+      textareaRef.current?.focus();
     }
   };
 
@@ -2486,7 +1925,7 @@ const AgentePage: React.FC = () => {
   };
 
   // -------- Salvar resposta do agente (nível de componente, fora do enviarMensagem) --------
-  const salvarRespostaAgente = async (content: string, produtosCard?: Produto[], suggestions?: string[]) => {
+  const salvarRespostaAgente = async (content: string, produtosCard?: Produto[], suggestions?: string[], termoBusca?: string) => {
     const contentFormatado = limparMarkdownBasico(content);
     setMensagens(prev => [...prev, {
       id: `assistant-local-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -2494,6 +1933,7 @@ const AgentePage: React.FC = () => {
       content: contentFormatado,
       timestamp: new Date(),
       produtosCard: produtosCard?.length ? produtosCard : undefined,
+      termoBusca: produtosCard?.length ? termoBusca : undefined,
       suggestions: suggestions?.length ? suggestions : undefined,
     }]);
     if (conversaId && userDocId) {
@@ -2557,9 +1997,10 @@ const AgentePage: React.FC = () => {
           const opcoes = itemProx.candidatos.slice(0, 5);
           const sufixo = estado.itens.length > 1 ? ` (item ${prox + 1} de ${estado.itens.length})` : "";
           await salvarRespostaAgente(
-            `Estas são as opções de ${itemProx.termoBusca} que temos hoje${sufixo}. Para adicionar no pedido é só clicar no "+" ao lado do produto.`,
+            `Estas são as opções de ${itemProx.termoBusca} que temos hoje${sufixo}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
             opcoes,
-            ["Cancelar item"]
+            ["Cancelar item"],
+            itemProx.termoBusca
           );
         }
       }
@@ -2595,11 +2036,10 @@ const AgentePage: React.FC = () => {
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
       <div id="recaptcha-container"></div>
       <Header
-        logoUrl={precisaLogin ? '/logo.png' : (logoEstabelecimento ?? '/logo.png')}
+        nomeEstabelecimento={nomeEstabelecimento}
         cartTotal={totalCarrinho}
         cartCount={qtdItens}
         onAbrirCarrinho={() => setMostrarCarrinho(true)}
-        info={infoEstabelecimento}
         onTotalHeightChange={setHeaderOffset}
         nomeCliente={nomeCliente}
         userCpf={userCpf}
@@ -2791,29 +2231,23 @@ const AgentePage: React.FC = () => {
                 : styles.messageWrapperAgent
             }`}
           >
-            {msg.role === "assistant" && (
-              <div className={styles.agentAvatarSmall}>
-                <Image src="/logo2.jpeg" alt="Assistente" fill className={styles.agentAvatarImg} sizes="28px" />
-              </div>
-            )}
 
             <div className={styles.messageColumn}>
-              {/* Card especial: checkboxes de auth (não renderiza bubble de texto) */}
-              {msg.authCheckboxCard ? (
-                <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 300 }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem', color: '#374151', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={authKeepLogged} onChange={(e) => setAuthKeepLogged(e.target.checked)} style={{ width: 18, height: 18, accentColor: '#193281', flexShrink: 0 }} />
-                    Continuar logado
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, fontSize: '0.88rem', color: '#374151', cursor: 'pointer', lineHeight: 1.4 }}>
-                    <input type="checkbox" checked={authAcceptTerms} onChange={(e) => setAuthAcceptTerms(e.target.checked)} style={{ width: 18, height: 18, accentColor: '#193281', marginTop: 1, flexShrink: 0 }} />
-                    <span>Li e aceito os{' '}<a href="#" style={{ color: '#193281' }}>Termos de Uso</a>{' '}e a{' '}<a href="#" style={{ color: '#193281' }}>Política de Privacidade</a></span>
-                  </label>
-                  <button onClick={handleAuthResend} disabled={authSending}
-                    style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '0.82rem', cursor: 'pointer', textDecoration: 'underline', padding: 0, textAlign: 'left' }}>
-                    Reenviar código
-                  </button>
-                </div>
+              {/* Card especial: boas-vindas estilizado */}
+              {msg.isWelcomeCard ? (
+                <WelcomeCard
+                  logoUrl={logoEstabelecimento}
+                  nomeEstabelecimento={nomeEstabelecimento}
+                />
+              ) : msg.authCheckboxCard ? (
+                <AuthCheckboxCard
+                  authKeepLogged={authKeepLogged}
+                  onChangeKeepLogged={setAuthKeepLogged}
+                  authAcceptTerms={authAcceptTerms}
+                  onChangeAcceptTerms={setAuthAcceptTerms}
+                  authSending={authSending}
+                  onResend={handleAuthResend}
+                />
               ) : msg.content.trim() ? (
               <div
                 className={`${styles.messageBubble} ${
@@ -2855,15 +2289,16 @@ const AgentePage: React.FC = () => {
                   <div className={isCarousel ? styles.produtosCarousel : styles.produtosCardWrapper} ref={isCarousel ? attachDrag : undefined}>
                     {msg.produtosCard!.map((produto) => {
                       const emCarrinho = carrinho.find(i => i.id === produto.id);
-                      const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: produto.name, price: produto.price });
+                      const nomeExibido = traduzirAbreviacoes(produto.name);
+                      const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: nomeExibido, price: produto.price });
                       return (
                         <div key={produto.id} className={isCarousel ? styles.produtoCarouselItem : styles.produtoCardRow}>
                           <div className={`${styles.produtoCard} ${emCarrinho ? styles.produtoCardAtivo : ''}`}>
                             <div className={styles.produtoCardImgWrapper} onClick={abrirModal} title="Ver detalhes">
-                              <Image src={produto.image || '/prodSemImg.svg'} alt={produto.name} fill className={styles.produtoCardImg} sizes="140px" onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }} />
+                              <Image src={produto.image || '/prodSemImg.svg'} alt={nomeExibido} fill className={styles.produtoCardImg} sizes="140px" onError={(e) => { (e.target as HTMLImageElement).src = '/prodSemImg.svg'; }} />
                             </div>
                             <div className={styles.produtoCardInfo}>
-                              <p className={styles.produtoCardName} onClick={abrirModal} style={{ cursor: 'pointer' }}>{produto.name}</p>
+                              <p className={styles.produtoCardName} onClick={abrirModal} style={{ cursor: 'pointer' }}>{nomeExibido}</p>
                               <p className={styles.produtoCardPrice}>R$ {produto.price.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
                             {flowState === FLOW_STATES.BROWSING && (
@@ -2874,7 +2309,7 @@ const AgentePage: React.FC = () => {
                                     <span className={styles.produtoCardQtyNum}>{emCarrinho.quantity}</span>
                                   </>
                                 ) : null}
-                                <button className={styles.produtoCardAddBtn} onClick={() => { const emSelecao = (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) || (listaPedidoState && listaPedidoState.stage === "selecting_variant"); if (emSelecao && !emCarrinho) { selecionarVarianteCard(produto); } else { adicionarSilencioso(produto); } }} title={emCarrinho ? `Mais 1 ${produto.name}` : `Adicionar ${produto.name}`}>
+                                <button className={styles.produtoCardAddBtn} onClick={() => { const emSelecao = (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) || (listaPedidoState && listaPedidoState.stage === "selecting_variant"); if (emSelecao && !emCarrinho) { selecionarVarianteCard(produto); } else { adicionarSilencioso(produto); } }} title={emCarrinho ? `Mais 1 ${nomeExibido}` : `Adicionar ${nomeExibido}`}>
                                   <Plus size={emCarrinho ? 16 : 22} color="#193281" />
                                 </button>
                               </div>
@@ -2883,6 +2318,26 @@ const AgentePage: React.FC = () => {
                         </div>
                       );
                     })}
+
+                    {/* Card "Ver todos" — aparece no fim do carrossel quando há termoBusca */}
+                    {isCarousel && msg.termoBusca && (
+                      <div className={styles.produtoCarouselItem}>
+                        <button
+                          className={styles.verTodosCard}
+                          onClick={() => {
+                            const todos = wordKeysEnabled
+                              ? filtrarProdutosWordKeys(msg.termoBusca!, produtos)
+                              : filtrarProdutos(msg.termoBusca!, produtos);
+                            setMensagens(prev => prev.map(m =>
+                              m.id === msg.id ? { ...m, produtosCard: todos, termoBusca: undefined } : m
+                            ));
+                          }}
+                        >
+                          <span className={styles.verTodosIcon}>+</span>
+                          <span className={styles.verTodosLabel}>Ver todos</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -2987,10 +2442,7 @@ const AgentePage: React.FC = () => {
         {/* Indicador de digitação */}
         {((!precisaLogin && enviando) || authDigitando) && (
           <div className={`${styles.messageWrapper} ${styles.messageWrapperAgent}`}>
-            <div className={styles.agentAvatarSmall}>
-              <Image src="/logo2.jpeg" alt="Assistente" fill className={styles.agentAvatarImg} sizes="28px" />
-            </div>
-            <div className={`${styles.messageBubble} ${styles.bubbleAgent} ${styles.typingBubble}`}>
+              <div className={`${styles.messageBubble} ${styles.bubbleAgent} ${styles.typingBubble}`}>
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
               <span className={styles.typingDot} />
@@ -3076,41 +2528,51 @@ const AgentePage: React.FC = () => {
       )}
 
 
-      {/* Input */}
+      {/* Barra inferior: input + info strip */}
+      <div className={styles.bottomBar}>
       <div className={styles.inputContainer}>
-        <input
-          ref={inputRef}
-          type={precisaLogin && authStep !== 'code_modal' ? "tel" : "text"}
-          inputMode={precisaLogin && authStep === 'code_modal' ? "numeric" : undefined}
-          maxLength={precisaLogin && authStep === 'code_modal' ? 6 : undefined}
-          placeholder={
-            !precisaLogin
-              ? (transcrevendo ? "Transcrevendo..." : gravando ? "Gravando..." : "Digite sua mensagem...")
-              : authStep === 'code_modal'
-              ? "000000"
-              : "(11) 99999-9999"
-          }
-          className={styles.messageInput}
-          style={precisaLogin && authStep === 'code_modal' ? { letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.1rem', fontWeight: 700 } : undefined}
-          value={
-            !precisaLogin ? inputText :
-            authStep === 'code_modal' ? authCode :
-            authPhone
-          }
-          onChange={(e) => {
-            if (!precisaLogin) { setInputText(e.target.value); }
-            else if (authStep === 'code_modal') { setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setAuthCodeError(''); }
-            else { setAuthPhone(formatPhoneAuth(e.target.value)); }
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              if (!precisaLogin) enviarMensagem();
-              else if (authStep === 'code_modal') handleAuthVerifyCode();
-              else handleAuthSendCode();
-            }
-          }}
-          disabled={precisaLogin ? (authSending || authStep === 'validating' || (authStep === 'code_modal' && !authAcceptTerms)) : (enviando || (process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (gravando || transcrevendo)))}
-        />
+        {precisaLogin ? (
+          <input
+            ref={inputRef}
+            type={authStep !== 'code_modal' ? "tel" : "text"}
+            inputMode={authStep === 'code_modal' ? "numeric" : undefined}
+            maxLength={authStep === 'code_modal' ? 6 : undefined}
+            placeholder={authStep === 'code_modal' ? "000000" : "(11) 99999-9999"}
+            className={styles.messageInput}
+            style={authStep === 'code_modal' ? { letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.1rem', fontWeight: 700 } : undefined}
+            value={authStep === 'code_modal' ? authCode : authPhone}
+            onChange={(e) => {
+              if (authStep === 'code_modal') { setAuthCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setAuthCodeError(''); }
+              else { setAuthPhone(formatPhoneAuth(e.target.value)); }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                if (authStep === 'code_modal') handleAuthVerifyCode();
+                else handleAuthSendCode();
+              }
+            }}
+            disabled={authSending || authStep === 'validating' || (authStep === 'code_modal' && !authAcceptTerms)}
+          />
+        ) : (
+          <textarea
+            ref={textareaRef}
+            rows={1}
+            placeholder={!produtosCarregados ? "Carregando produtos..." : transcrevendo ? "Transcrevendo..." : gravando ? "Gravando..." : "Digite sua mensagem..."}
+            className={styles.messageTextarea}
+            value={inputText}
+            onChange={(e) => {
+              setInputText(e.target.value);
+              // Auto-resize
+              e.target.style.height = 'auto';
+              e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+            }}
+            onKeyDown={(e) => {
+              // Enter quebra linha; envio só pelo botão
+            }}
+            disabled={enviando || !produtosCarregados || (process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (gravando || transcrevendo))}
+          />
+        )}
         {!precisaLogin && process.env.NEXT_PUBLIC_VOICE_ENABLED === 'true' && (
           <button
             className={`${styles.micButton} ${gravando ? styles.micButtonGravando : ""}`}
@@ -3133,7 +2595,7 @@ const AgentePage: React.FC = () => {
             else handleAuthSendCode();
           }}
           disabled={
-            !precisaLogin ? (!inputText.trim() || enviando) :
+            !precisaLogin ? (!inputText.trim() || enviando || !produtosCarregados) :
             authStep === 'code_modal' ? (authCode.length !== 6 || !authAcceptTerms || authSending) :
             (!authPhone.trim() || authSending || authStep === 'validating')
           }
@@ -3145,8 +2607,11 @@ const AgentePage: React.FC = () => {
             <Send size={20} />
           )}
         </button>
-      </div>
+      </div>{/* /inputContainer */}
 
+      {/* Info strip — dentro da barra inferior, só quando logado */}
+      {!precisaLogin && <InfoBar info={infoEstabelecimento} />}
+      </div>{/* /bottomBar */}
 
       </div>{/* /chatWrapper */}
 

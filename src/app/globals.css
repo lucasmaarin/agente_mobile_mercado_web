@@ -19,7 +19,7 @@
   --font-size-4xl: 2.25rem;   /* 36px */
 
   /* Pesos de fonte */
-  --font-weight-normal: 400;
+  --font-weight-normal: 300;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
@@ -60,7 +60,7 @@ body,
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-base);
-  font-weight: var(--font-weight-normal);
+  font-weight: 300;
   line-height: var(--line-height-normal);
   color: #1a1a2e;
   -webkit-font-smoothing: antialiased;

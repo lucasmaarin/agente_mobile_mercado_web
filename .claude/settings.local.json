@@ -43,7 +43,10 @@
       "Bash(find c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src -name login* -o -name *login*)",
       "Bash(grep -rn criarUsuarioNovo c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/lib/ --include=*.ts)",
       "Bash(grep -rn validatePhone c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/lib/ --include=*.ts)",
-      "Bash(awk 'NR>=2573 && NR<=3161' '/c/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx')"
+      "Bash(awk 'NR>=2573 && NR<=3161' '/c/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx')",
+      "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/next.config*)",
+      "Bash(node -e ':*)",
+      "Bash(npx next:*)"
     ]
   }
 }

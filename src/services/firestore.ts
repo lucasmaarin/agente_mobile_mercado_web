@@ -483,14 +483,18 @@ export async function salvarEnderecoDefault(
   }
 }
 
-// Estrutura: Agentes/AgenteVendas/{userId}/{conversaId}/mensagens
-// {userId} é o nome da subcoleção (não um documento direto)
-// Dados do usuário ficam em Agentes/AgenteVendas/{userId}/dados
-const AGENTE_DOC = doc(db, 'Agentes', 'AgenteVendas');
-const AGENTE_VENDAS_USER_DOC = (userId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, 'dados');
-const CONVERSAS_COL = (userId: string) => collection(db, 'Agentes', 'AgenteVendas', userId);
-const CONVERSA_DOC = (userId: string, conversaId: string) => doc(db, 'Agentes', 'AgenteVendas', userId, conversaId);
-const MENSAGENS_COL = (userId: string, conversaId: string) => collection(db, 'Agentes', 'AgenteVendas', userId, conversaId, 'mensagens');
+// Estrutura:
+//   AgenteVendas/{userId}                              ← dados do usuário (nome, createdAt)
+//   AgenteVendas/{userId}/conversas/{conversaId}       ← dados da conversa
+//   AgenteVendas/{userId}/conversas/{conversaId}/mensagens/{msgId}  ← mensagens
+const USUARIO_DOC  = (userId: string) =>
+  doc(db, 'AgenteVendas', userId);
+const CONVERSAS_COL = (userId: string) =>
+  collection(db, 'AgenteVendas', userId, 'conversas');
+const CONVERSA_DOC  = (userId: string, conversaId: string) =>
+  doc(db, 'AgenteVendas', userId, 'conversas', conversaId);
+const MENSAGENS_COL = (userId: string, conversaId: string) =>
+  collection(db, 'AgenteVendas', userId, 'conversas', conversaId, 'mensagens');
 
 export type StatusConversa =
   | 'ativa'
@@ -533,23 +537,17 @@ export interface DadosMensagem {
   tokensUsados:      number | null;
 }
 
-async function garantirDocAgente() {
-  await setDoc(AGENTE_DOC, {
-    nome:       'AgenteVendas',
-    descricao:  'Agente de vendas IA — Mobile Mercado',
-    criadoEm:   Timestamp.now(),
-  }, { merge: true });
-}
-
 export async function criarConversa(
   userId:      string,
   clienteNome: string,
   flowState:   FlowState
 ): Promise<string> {
-  await garantirDocAgente();
-  await setDoc(AGENTE_VENDAS_USER_DOC(userId), {
+  // Garante que o documento do usuário existe com dados básicos
+  await setDoc(USUARIO_DOC(userId), {
     userId,
+    nome:      clienteNome,
     updatedAt: Timestamp.now(),
+    createdAt: Timestamp.now(),
   }, { merge: true });
 
   const now = Timestamp.now();
@@ -693,7 +691,6 @@ const EXEMPLOS_COL = () =>
 export async function salvarExemplo(
   dados: Omit<ExemploConversa, 'exemploId'>
 ): Promise<string> {
-  await garantirDocAgente();
   const ref = await addDoc(EXEMPLOS_COL(), { ...dados, exemploId: '' });
   await updateDoc(ref, { exemploId: ref.id });
   return ref.id;
@@ -756,6 +753,23 @@ export async function buscarPedidosPorEstabelecimento(
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => d.data() as Pedido);
+}
+
+export async function buscarPedidosDoUsuario(
+  companyId: string,
+  clientId: string,
+  limite = 50
+): Promise<Pedido[]> {
+  const companyRef = doc(db, `estabelecimentos/${companyId}`);
+  const q = query(
+    collection(db, 'PurchaseRequests'),
+    where('companyReference', '==', companyRef),
+    where('clientId', '==', clientId),
+    orderBy('createdAt', 'desc'),
+    limit(limite)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() } as Pedido));
 }
 
 export async function atualizarStatusPedido(

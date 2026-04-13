@@ -1,0 +1,56 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 4px 14px 8px;
+  flex-wrap: wrap;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.item svg {
+  color: #4ade80;
+  flex-shrink: 0;
+}
+
+.aberto {
+  color: #16a34a;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.fechado {
+  color: #dc2626;
+  font-weight: 700;
+  font-size: 11px;
+}
+
+.star {
+  color: #f59e0b !important;
+  fill: #f59e0b !important;
+}
+
+@media (min-width: 768px) {
+  .item {
+    font-size: 14px;
+  }
+
+  .aberto,
+  .fechado {
+    font-size: 14px;
+  }
+
+  .bar {
+    gap: 20px;
+    padding: 6px 20px 12px;
+  }
+}
