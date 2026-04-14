@@ -9,7 +9,7 @@
   z-index: 100;
   box-sizing: border-box;
   padding-top: max(0px, env(safe-area-inset-top));
-  background: transparent;
+  background: #EEEDE6;
   border-bottom: none;
 }
 
@@ -17,7 +17,7 @@
 .topRow {
   display: flex;
   align-items: center;
-  padding: 18px 16px;
+  padding: 14px 16px;
   gap: 10px;
 }
 
@@ -41,11 +41,25 @@
   height: 2px;
   background: #979691;
   border-radius: 2px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.menuBarTop {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.menuBarMid {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.menuBarBot {
+  transform: translateY(-7px) rotate(-45deg);
 }
 
 /* ── Nome do estabelecimento ── */
 .nomeEstab {
-  font-size: 0.75rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #979691;
   flex: 1;
@@ -59,8 +73,8 @@
 .cartArea {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: center;
+  gap: 3px;
   flex-shrink: 0;
   background: none;
   border: none;
@@ -72,10 +86,12 @@
 .cartTop {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 5px;
   background: #fff;
   border-radius: 20px;
-  padding: 5px 10px 5px 8px;
+  padding: 10px 22px;
+  min-width: 115px;
 }
 
 .cartIcon {
@@ -94,12 +110,13 @@
   font-size: 0.65rem;
   color: #6b7280;
   white-space: nowrap;
+  text-align: center;
 }
 
 /* ── Desktop: elementos maiores ── */
 @media (min-width: 768px) {
   .topRow {
-    padding: 22px 28px;
+    padding: 14px 28px;
     gap: 14px;
   }
 

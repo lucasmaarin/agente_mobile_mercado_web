@@ -5,6 +5,7 @@
 .container {
   height: 100vh;
   height: 100dvh;
+  background-color: #EEEDE6;
   background-image: url('/background.webp');
   background-size: cover;
   background-position: center;
@@ -14,6 +15,12 @@
   overflow: hidden;
   /* padding-top definido dinamicamente via inline style no page.tsx */
   padding-top: 136px; /* fallback inicial */
+}
+
+@media (min-width: 768px) {
+  .container {
+    background-image: none;
+  }
 }
 
 .chatWrapper {
@@ -445,8 +452,14 @@
   overflow-y: auto;
   line-height: 1.4;
   min-height: 40px;
-  max-height: 120px;
+  max-height: 18vh;
   display: block;
+}
+
+@media (min-width: 768px) {
+  .messageTextarea {
+    max-height: 8vh;
+  }
 }
 
 .messageTextarea:focus {
@@ -542,7 +555,7 @@
   height: 256px;
 }
 
-/* Carrossel horizontal (> 2 produtos) — chega até a borda direita */
+/* Carrossel horizontal — chega até a borda direita do chat */
 .produtosCarousel {
   display: flex;
   flex-direction: row;
@@ -554,8 +567,9 @@
   scrollbar-width: none;
   user-select: none;
   cursor: grab;
-  /* avatar(28) + gap(8) + messagesContainer padding(12+12) + margem(12) = 72px */
-  width: calc(100vw - 72px);
+  /* Parte do left-padding (32px) + cancela right-padding (32px) via margin-right */
+  width: calc(100vw - 32px);
+  margin-right: -32px;
   max-width: none;
 }
 
@@ -664,6 +678,8 @@
   cursor: pointer;
   transition: opacity 0.15s;
   flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .produtoCardImgWrapper:hover {
@@ -698,6 +714,8 @@
   width: 100%;
   padding: 0;
   transition: color 0.15s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* "+" ao lado dos controles de quantidade — botão compacto */
@@ -905,6 +923,8 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
   padding: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .produtoCardQtyBtn:hover {

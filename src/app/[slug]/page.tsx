@@ -31,6 +31,7 @@ import {
 } from "@/lib/productSearch";
 import {
   limparMarkdownBasico,
+  limparTermoItemLista,
   ehSaudacaoCurta,
   ehIntencaoSemProduto,
   ehIntencaoCheckout,
@@ -1459,6 +1460,31 @@ const AgentePage: React.FC = () => {
           await salvarRespostaLocal(resposta);
           return;
         }
+
+        // ── Busca local direta (sem quantidade, sem lista) ──────────────────
+        // Quando o usuário digita um produto sem quantidade (ex: "frango"),
+        // tenta buscar localmente e mostrar o carrossel sem chamar o LLM.
+        if (!listaPedidoState && !texto.trim().endsWith("?") && !ehSaudacaoCurta(texto)) {
+          const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+          const resultadosDiretos = buscarL(texto).slice(0, 6);
+          if (resultadosDiretos.length > 0) {
+            const termoBuscaLimpo = limparTermoItemLista(texto);
+            setItemUnicoQtdState({
+              termoBusca: termoBuscaLimpo,
+              quantidade: 1,
+              stage: "choose_other",
+              candidatos: resultadosDiretos,
+            });
+            await salvarRespostaLocal(
+              `Estas são as opções de ${termoBuscaLimpo} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              resultadosDiretos,
+              ["Finalizar pedido 🛒", "Continuar comprando"],
+              termoBuscaLimpo
+            );
+            return;
+          }
+        }
+        // ────────────────────────────────────────────────────────────────────
       }
 
       // Histórico para a API

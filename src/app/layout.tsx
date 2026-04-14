@@ -54,7 +54,7 @@ export default function RootLayout({
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
         <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
-        <meta name="theme-color" content="#0186EC" />
+        <meta name="theme-color" content="#EEEDE6" />
       </head>
       <body className={inter.className} suppressHydrationWarning={true}>
         <AuthProvider>

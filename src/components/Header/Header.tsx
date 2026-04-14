@@ -70,9 +70,9 @@ const Header: React.FC<HeaderProps> = ({
             onClick={() => setMenuAberto((v) => !v)}
             aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
           >
-            <span className={styles.menuBar} />
-            <span className={styles.menuBar} />
-            <span className={styles.menuBar} />
+            <span className={`${styles.menuBar} ${menuAberto ? styles.menuBarTop : ""}`} />
+            <span className={`${styles.menuBar} ${menuAberto ? styles.menuBarMid : ""}`} />
+            <span className={`${styles.menuBar} ${menuAberto ? styles.menuBarBot : ""}`} />
           </button>
           <span className={styles.nomeEstab}>{nomeEstabelecimento}</span>
 

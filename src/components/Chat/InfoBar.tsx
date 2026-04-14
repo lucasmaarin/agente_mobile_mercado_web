@@ -11,10 +11,13 @@ const InfoBar: React.FC<InfoBarProps> = ({ info }) => {
   return (
     <div className={styles.bar}>
       {info.aberto === false ? (
-        <span className={styles.fechado}>Fechado</span>
+        <span className={styles.item}>
+          <span className={styles.fechado}>Fechado</span>
+        </span>
       ) : (
-        <span className={styles.aberto}>
-          Aberto{info.horarioFechamento ? ` até ${info.horarioFechamento}` : ""}
+        <span className={styles.item}>
+          <span className={styles.aberto}>Aberto</span>
+          {info.horarioFechamento ? ` até ${info.horarioFechamento}` : ""}
         </span>
       )}
 
