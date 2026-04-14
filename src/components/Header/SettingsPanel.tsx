@@ -236,6 +236,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
                 </>
               )}
 
+
               {/* Logout */}
               <button className={styles.logoutBtn} onClick={handleLogout}>
                 <LogOut size={16} />

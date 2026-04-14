@@ -38,6 +38,7 @@ export interface Produto {
   stock: number;
   searchIndex: string[];
   wordKeys: string[];
+  tags?: string[];
 }
 
 export interface CartItem {

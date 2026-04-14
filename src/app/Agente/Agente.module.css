@@ -555,7 +555,7 @@
   height: 256px;
 }
 
-/* Carrossel horizontal — chega até a borda direita do chat */
+/* Carrossel horizontal — ocupa 100vw, quebrando os dois lados do padding */
 .produtosCarousel {
   display: flex;
   flex-direction: row;
@@ -564,13 +564,15 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 8px;
+  padding-left: 32px;   /* recua o primeiro card visualmente; some ao scrolar */
   scrollbar-width: none;
   user-select: none;
   cursor: grab;
-  /* Parte do left-padding (32px) + cancela right-padding (32px) via margin-right */
-  width: calc(100vw - 32px);
-  margin-right: -32px;
+  width: 100vw;
+  margin-left: -32px;   /* quebra o padding esquerdo do container */
+  margin-right: -32px;  /* quebra o padding direito do container */
   max-width: none;
+  box-sizing: border-box;
 }
 
 .produtosCarousel:active {

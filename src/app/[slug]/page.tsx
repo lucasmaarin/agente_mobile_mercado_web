@@ -1466,7 +1466,8 @@ const AgentePage: React.FC = () => {
         // tenta buscar localmente e mostrar o carrossel sem chamar o LLM.
         if (!listaPedidoState && !texto.trim().endsWith("?") && !ehSaudacaoCurta(texto)) {
           const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
-          const resultadosDiretos = buscarL(texto).slice(0, 6);
+          const todosResultadosDiretos = buscarL(texto);
+          const resultadosDiretos = todosResultadosDiretos.slice(0, 6);
           if (resultadosDiretos.length > 0) {
             const termoBuscaLimpo = limparTermoItemLista(texto);
             setItemUnicoQtdState({
@@ -1477,7 +1478,7 @@ const AgentePage: React.FC = () => {
             });
             await salvarRespostaLocal(
               `Estas são as opções de ${termoBuscaLimpo} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
-              resultadosDiretos,
+              todosResultadosDiretos,
               ["Finalizar pedido 🛒", "Continuar comprando"],
               termoBuscaLimpo
             );
@@ -2313,7 +2314,7 @@ const AgentePage: React.FC = () => {
                 };
                 return (
                   <div className={isCarousel ? styles.produtosCarousel : styles.produtosCardWrapper} ref={isCarousel ? attachDrag : undefined}>
-                    {msg.produtosCard!.map((produto) => {
+                    {(msg.termoBusca ? msg.produtosCard!.slice(0, 6) : msg.produtosCard!).map((produto) => {
                       const emCarrinho = carrinho.find(i => i.id === produto.id);
                       const nomeExibido = traduzirAbreviacoes(produto.name);
                       const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: nomeExibido, price: produto.price });
@@ -2345,17 +2346,14 @@ const AgentePage: React.FC = () => {
                       );
                     })}
 
-                    {/* Card "Ver todos" — aparece no fim do carrossel quando há termoBusca */}
-                    {isCarousel && msg.termoBusca && (
+                    {/* Card "Ver todos" — aparece quando há mais de 6 produtos salvos */}
+                    {isCarousel && msg.termoBusca && (msg.produtosCard?.length ?? 0) > 6 && (
                       <div className={styles.produtoCarouselItem}>
                         <button
                           className={styles.verTodosCard}
                           onClick={() => {
-                            const todos = wordKeysEnabled
-                              ? filtrarProdutosWordKeys(msg.termoBusca!, produtos)
-                              : filtrarProdutos(msg.termoBusca!, produtos);
                             setMensagens(prev => prev.map(m =>
-                              m.id === msg.id ? { ...m, produtosCard: todos, termoBusca: undefined } : m
+                              m.id === msg.id ? { ...m, termoBusca: undefined } : m
                             ));
                           }}
                         >

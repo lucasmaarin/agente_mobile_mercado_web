@@ -5,6 +5,31 @@ export function normalizar(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+/**
+ * Expande uma tag "#TioDito" em tokens normalizados ["tio", "dito"].
+ * Remove o # inicial e divide por camelCase, números e hífens.
+ */
+export function expandirTag(tag: string): string[] {
+  const semHash = tag.replace(/^#/, "");
+  // Token completo normalizado (ex: "1Kg" → "1kg", "CarneMoida" → "carnemoida")
+  const tokenCompleto = normalizar(semHash);
+  // Divide camelCase e dígito-letra: "TioDito" → ["tio","dito"], "1Kg" → ["1","kg"]
+  const partes = semHash
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Za-z])(\d)/g,  "$1 $2")
+    .replace(/(\d)([A-Za-z])/g,  "$1 $2")
+    .split(/[\s\-_]+/)
+    .map(normalizar)
+    .filter((t) => t.length >= 1);
+  // Retorna partes + token completo (para match de "1kg" contra #1Kg)
+  return Array.from(new Set([...partes, tokenCompleto]));
+}
+
+/** Retorna todos os tokens normalizados das tags de um produto. */
+function tokensTagsProduto(tags: string[]): string[] {
+  return tags.flatMap(expandirTag);
+}
+
 export const STOPWORDS_BUSCA = new Set([
   "oi", "ola", "boa", "bom", "dia", "tarde", "noite", "olas", "hello", "hi", "hey", "boas",
   "obrigado", "obrigada", "brigado", "brigada", "valeu", "vlw", "tks",
@@ -16,12 +41,20 @@ export const STOPWORDS_BUSCA = new Set([
   "novo", "nova", "lista", "pedido", "compra", "compras", "item", "itens",
   "ha", "ai", "ah", "so", "ate", "ou", "que", "se", "ja", "la", "ca",
   "tudo", "nada", "ainda", "agora", "aqui", "ali", "isso", "esse", "essa", "esses", "essas",
-  "caixinha", "caixa", "garrafa", "lata", "saquinho", "pacote", "pote", "vidro",
+  // embalagens removidas das stopwords — são especificadores válidos (ex: "leite de caixinha")
 ]);
 
 export const ALIASES_BUSCA: Record<string, string[]> = {
-  caixinha: ["caixa", "integral", "uht", "1lt", "1l", "litro", "lt"],
-  caixa:    ["caixinha", "integral", "uht", "1lt", "1l", "litro", "lt"],
+  // embalagens → tokens de tag equivalentes
+  caixinha: ["tetrapak"],
+  caixa:    ["tetrapak"],
+  garrafa:  ["garrafa", "pet", "vidro"],
+  lata:     ["lata", "aluminio"],
+  saquinho: ["saquinho", "sachet"],
+  pacote:   ["pacote", "pct"],
+  pote:     ["pote", "bandeja"],
+  vidro:    ["vidro", "vd"],
+  // outros
   po:       ["po", "instantaneo", "instantanea"],
   peito:    ["peito", "file"],
   file:     ["file", "peito"],
@@ -117,8 +150,27 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
     const catN    = normalizar(p.category);
     const descN   = normalizar(p.description || "");
     const alvo    = `${nomeN} ${subcatN} ${catN} ${descN}`;
+    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
 
     let score = 0;
+
+    // ── Tags (campo mais preciso — pontuação mais alta) ──────────────────
+    if (tagTokens.length > 0) {
+      const cobreTagPalavra = (w: string) => {
+        if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+        // verifica aliases (ex: "caixinha" → "tetrapak")
+        return (ALIASES_BUSCA[w] ?? []).some((alias) => {
+          const aN = normalizar(alias);
+          return tagTokens.some((t) => t === aN || t.startsWith(aN));
+        });
+      };
+      for (const w of palavrasBase) {
+        if (tagTokens.includes(w))      score += 22;
+        else if (cobreTagPalavra(w))    score += 16;
+      }
+      const todosNasTags = palavrasBase.length > 0 && palavrasBase.every(cobreTagPalavra);
+      if (todosNasTags) score += 25;
+    }
 
     if (fraseBase.length >= 5) {
       if (nomeN.includes(fraseBase)) score += 45;
@@ -187,43 +239,70 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
 
   const garantidos = new Set<string>();
 
+  // Verifica se um produto cobre uma palavra via texto, tags ou aliases de embalagem
+  const cobrePalavra = (p: Produto, w: string): boolean => {
+    const nomeN   = normalizar(p.name);
+    const subcatN = normalizar(p.subcategory);
+    const catN    = normalizar(p.category);
+    const descN   = normalizar(p.description || "");
+    if (nomeN.includes(w) || subcatN.includes(w) || catN.includes(w) || descN.includes(w)) return true;
+    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
+    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+    // Verifica aliases da palavra (ex: "caixinha" → "tetrapak")
+    const aliasesDeW = ALIASES_BUSCA[w] ?? [];
+    for (const alias of aliasesDeW) {
+      const aN = normalizar(alias);
+      if (nomeN.includes(aN) || subcatN.includes(aN) || catN.includes(aN) || descN.includes(aN)) return true;
+      if (tagTokens.some((t) => t === aN || t.startsWith(aN))) return true;
+    }
+    return false;
+  };
+
   const matchamTodos = palavrasBase.length >= 2
     ? comScore.filter(({ produto: p }) => {
-        const alvo = `${normalizar(p.name)} ${normalizar(p.subcategory)} ${normalizar(p.category)} ${normalizar(p.description || "")}`;
-        return palavrasBase.every((w) => alvo.includes(w));
+        if (!palavrasBase.every((w) => cobrePalavra(p, w))) return false;
+        // O termo principal é a primeira palavra que NÃO seja quantidade/peso/embalagem
+        // (ex: "1kg de carne" → primário = "carne", não "1kg")
+        const ehQuantidade = (w: string) => /^\d+\s*(?:kg|g|ml|l|lt|un|pc|pct|gr)$/.test(w);
+        const primario = palavrasBase.find((w) => !ehQuantidade(w)) ?? palavrasBase[0];
+        const nomeN   = normalizar(p.name);
+        const subcatN = normalizar(p.subcategory);
+        const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
+        const temTag = tagTokens.some((t) => t === primario || t.startsWith(primario));
+        return nomeN.startsWith(primario) || subcatN.startsWith(primario) || subcatN === primario || temTag;
       })
     : [];
 
+  const ordenados = comScore.sort((a, b) => b.score - a.score);
+
   if (matchamTodos.length > 0) {
-    matchamTodos.sort((a, b) => b.score - a.score).slice(0, 6).forEach(({ produto: p }) => garantidos.add(p.id));
-  } else {
-    const scoreMinComposto = palavrasBase.length >= 2 ? 12 : 0;
+    // Multi-palavra com todos os termos cobertos: usa apenas esses
+    matchamTodos.sort((a, b) => b.score - a.score).forEach(({ produto: p }) => garantidos.add(p.id));
+  } else if (palavrasBase.length >= 2) {
+    // Multi-palavra sem correspondência completa: garante ao menos 1 por palavra, score mínimo 12
     for (const w of palavrasBase) {
       comScore
-        .filter(({ produto: p, score }) => {
-          if (score < scoreMinComposto) return false;
-          const nomeN   = normalizar(p.name);
-          const subcatN = normalizar(p.subcategory);
-          const catN    = normalizar(p.category);
-          return nomeN.includes(w) || subcatN.includes(w) || catN.includes(w);
-        })
+        .filter(({ produto: p, score }) => score >= 12 && cobrePalavra(p, w))
         .sort((a, b) => b.score - a.score)
         .slice(0, 3)
         .forEach(({ produto: p }) => garantidos.add(p.id));
     }
+  } else {
+    // Palavra única: mostra todos que cobrem o termo, ordenados por score
+    comScore
+      .filter(({ produto: p }) => cobrePalavra(p, palavrasBase[0]))
+      .sort((a, b) => b.score - a.score)
+      .forEach(({ produto: p }) => garantidos.add(p.id));
   }
 
-  const ordenados = comScore.sort((a, b) => b.score - a.score);
   const resultado: Produto[] = [];
 
-  if (matchamTodos.length > 0) {
-    for (const { produto } of ordenados) {
-      if (garantidos.has(produto.id)) resultado.push(produto);
-    }
-  } else {
-    for (const { produto } of ordenados) {
-      if (garantidos.has(produto.id)) resultado.push(produto);
-    }
+  for (const { produto } of ordenados) {
+    if (garantidos.has(produto.id)) resultado.push(produto);
+  }
+
+  // Só preenche com não-garantidos se não houve nenhum produto garantido
+  if (resultado.length === 0) {
     for (const { produto } of ordenados) {
       if (!garantidos.has(produto.id)) resultado.push(produto);
     }
@@ -243,7 +322,20 @@ export function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Pro
     const nomeN   = normalizar(p.name);
     const subcatN = normalizar(p.subcategory);
     const catN    = normalizar(p.category);
+    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
     let score = 0;
+
+    // ── Tags (pontuação mais alta — campo curado) ────────────────────────
+    if (tagTokens.length > 0) {
+      for (const w of palavrasBase) {
+        if (tagTokens.includes(w))                        score += 22;
+        else if (tagTokens.some((t) => t.startsWith(w))) score += 14;
+      }
+      const todosNasTags = palavrasBase.length > 0 && palavrasBase.every((w) =>
+        tagTokens.some((t) => t === w || t.startsWith(w))
+      );
+      if (todosNasTags) score += 25;
+    }
 
     for (const pref of prefixos) {
       if (todosKeys.some((k) => k === pref)) score += 15;
