@@ -20,14 +20,20 @@ interface UseEstabelecimentoResult {
 
 const LOGO_OVERRIDES: Record<string, string> = {
   jQQjHTCc2zW1tuZMQzGF:    '/logos/zerograu_logo.png',
-  'estabelecimento-teste':  '/logos/vidal_logo.png',
+  q0IPIusmpEq3pHbMyfWY:    '/logos/vidal_logo.png',
+};
+
+const NOME_OVERRIDES: Record<string, string> = {
+  q0IPIusmpEq3pHbMyfWY: 'Vidal',
 };
 
 export function useEstabelecimento(companyId: string): UseEstabelecimentoResult {
   const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(
     LOGO_OVERRIDES[companyId] ?? null
   );
-  const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>("");
+  const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>(
+    NOME_OVERRIDES[companyId] ?? ""
+  );
   const [nomeEstabelecimentoCarregado, setNomeEstabelecimentoCarregado] = useState(false);
   const [infoEstabelecimento, setInfoEstabelecimento] = useState<InfoEstabelecimento>({});
   const [formasPagamento, setFormasPagamento] = useState<string[]>([]);
@@ -42,10 +48,14 @@ export function useEstabelecimento(companyId: string): UseEstabelecimentoResult 
         .catch(() => {});
     }
 
-    buscarNomeEstabelecimento(companyId)
-      .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
-      .catch(() => {})
-      .finally(() => setNomeEstabelecimentoCarregado(true));
+    if (!NOME_OVERRIDES[companyId]) {
+      buscarNomeEstabelecimento(companyId)
+        .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
+        .catch(() => {})
+        .finally(() => setNomeEstabelecimentoCarregado(true));
+    } else {
+      setNomeEstabelecimentoCarregado(true);
+    }
 
     buscarFormasPagamento(companyId)
       .then((formas) => { if (formas.length > 0) setFormasPagamento(formas); })

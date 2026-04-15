@@ -18,5 +18,5 @@ export const SLUG_PARA_COMPANY_ID: Record<string, string> = Object.fromEntries(
 // Redirecionamento temporário de dados: companyId → ID real usado nas queries
 // Use quando o estabelecimento ainda não tem dados próprios no Firestore
 export const COMPANY_DATA_SOURCE: Record<string, string> = {
-  XAXMOP6aweRbBAb0gUvU: 'estabelecimento-teste',
+  XAXMOP6aweRbBAb0gUvU: 'q0IPIusmpEq3pHbMyfWY',
 };
