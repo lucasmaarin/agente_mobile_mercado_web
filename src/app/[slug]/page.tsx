@@ -499,7 +499,7 @@ const AgentePage: React.FC = () => {
         const welcomeContent = isNewUser
           ? `Como você gostaria de ser chamado?`
           : `Como posso ajudar você hoje?`;
-        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"];
+        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"];
         // Preserva mensagens de auth anteriores e appenda a boas-vindas
         setMensagens(prev => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
@@ -516,7 +516,7 @@ const AgentePage: React.FC = () => {
           return [...authMsgs, {
             id: 'welcome', role: 'assistant' as const,
             content: 'Como posso ajudar você hoje?', isWelcomeCard: true, timestamp: new Date(),
-            suggestions: ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"],
+            suggestions: ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"],
           }];
         });
       } finally {
@@ -552,7 +552,7 @@ const AgentePage: React.FC = () => {
       content:       "Como posso ajudar você hoje?",
       isWelcomeCard: true,
       timestamp:     new Date(),
-      suggestions:   ["🛒 Montar meu pedido", "🧺 Buscar produtos", "🧾 Ver pedidos"],
+      suggestions:   ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"],
     }]);
   };
 
@@ -950,7 +950,7 @@ const AgentePage: React.FC = () => {
           return;
         }
 
-        if (texto.includes("🧾 Ver pedidos") || texto === "Ver pedidos") {
+        if (texto.includes("Ver pedidos") || texto === "Ver pedidos") {
           // Busca os pedidos do usuário (cache ou fresh)
           let pedidos = pedidosCached;
           if (pedidos.length === 0 && userDocId) {

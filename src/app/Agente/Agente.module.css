@@ -1288,7 +1288,7 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 14px;
   padding: 0 2px;
 }
 
@@ -1300,7 +1300,7 @@
   border-radius: 50px;
   border: none;
   background: #fff;
-  color: #111;
+  color: #3D3C38;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -1698,6 +1698,20 @@
 
   .agTotalItens {
     font-size: 3vh;
+  }
+}
+
+@media (max-width: 767px) {
+
+  /* Cards de produto levemente menores */
+  .produtoCarouselItem {
+    flex: 0 0 128px;
+    height: 238px;
+  }
+
+  .skeletonCard {
+    flex: 0 0 128px;
+    height: 238px;
   }
 }
 
