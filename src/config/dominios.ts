@@ -14,3 +14,9 @@ export const DOMAIN_SLUGS: Record<string, string> = {
 export const SLUG_PARA_COMPANY_ID: Record<string, string> = Object.fromEntries(
   Object.values(DOMAIN_SLUGS).map(id => [id.toLowerCase(), id])
 );
+
+// Redirecionamento temporário de dados: companyId → ID real usado nas queries
+// Use quando o estabelecimento ainda não tem dados próprios no Firestore
+export const COMPANY_DATA_SOURCE: Record<string, string> = {
+  XAXMOP6aweRbBAb0gUvU: 'estabelecimento-teste',
+};

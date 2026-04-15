@@ -46,7 +46,12 @@
       "Bash(awk 'NR>=2573 && NR<=3161' '/c/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/src/app/[slug]/page.tsx')",
       "Bash(ls c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/next.config*)",
       "Bash(node -e ':*)",
-      "Bash(npx next:*)"
+      "Bash(npx next:*)",
+      "Bash(where msedge *)",
+      "Bash(where chrome *)",
+      "Read(//c/Program Files/Google/Chrome/Application/**)",
+      "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --print-to-pdf=\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/instrucoes-agente.pdf\" \"file:///c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/analise-documentacao-busca.html\")"
     ]
   }
 }

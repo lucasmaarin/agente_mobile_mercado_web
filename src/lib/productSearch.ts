@@ -141,271 +141,98 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const palavrasBase = extrairPalavrasBaseBusca(texto);
   if (palavrasBase.length === 0) return [];
 
-  const palavras = expandirPalavrasBusca(palavrasBase);
-  const fraseBase = palavrasBase.join(" ");
+  // Debug: verificar entrada
+  if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
+    console.log('[filtrarProdutos]', { texto, palavrasBase, totalProdutos: produtos.length });
+  }
 
-  const comScore = produtos.map((p) => {
-    const nomeN   = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN    = normalizar(p.category);
-    const descN   = normalizar(p.description || "");
-    const alvo    = `${nomeN} ${subcatN} ${catN} ${descN}`;
+  const cobreTagPalavra = (tagTokens: string[], w: string): boolean => {
+    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+    return (ALIASES_BUSCA[w] ?? []).some((alias) => {
+      const aN = normalizar(alias);
+      return tagTokens.some((t) => t === aN || t.startsWith(aN));
+    });
+  };
+
+  // Primeiro: busca por TAGS
+  const comTagScore = produtos.map((p) => {
     const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
+    if (tagTokens.length === 0) return { produto: p, score: 0, pela: 'nenhuma' };
 
     let score = 0;
-
-    // ── Tags (campo mais preciso — pontuação mais alta) ──────────────────
-    if (tagTokens.length > 0) {
-      const cobreTagPalavra = (w: string) => {
-        if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
-        // verifica aliases (ex: "caixinha" → "tetrapak")
-        return (ALIASES_BUSCA[w] ?? []).some((alias) => {
-          const aN = normalizar(alias);
-          return tagTokens.some((t) => t === aN || t.startsWith(aN));
-        });
-      };
-      for (const w of palavrasBase) {
-        if (tagTokens.includes(w))      score += 22;
-        else if (cobreTagPalavra(w))    score += 16;
-      }
-      const todosNasTags = palavrasBase.length > 0 && palavrasBase.every(cobreTagPalavra);
-      if (todosNasTags) score += 25;
+    for (const w of palavrasBase) {
+      if (tagTokens.includes(w))               score += 22;
+      else if (cobreTagPalavra(tagTokens, w))  score += 16;
     }
+    const todosNasTags = palavrasBase.every((w) => cobreTagPalavra(tagTokens, w));
+    if (todosNasTags) score += 25;
 
-    if (fraseBase.length >= 5) {
-      if (nomeN.includes(fraseBase)) score += 45;
+    return { produto: p, score, pela: 'tags' };
+  }).filter(({ score }) => score > 0);
+
+  if (comTagScore.length > 0) {
+    const resultado = comTagScore
+      .sort((a, b) => b.score - a.score)
+      .map(({ produto }) => produto)
+      .slice(0, 20);
+    if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
+      console.log('[filtrarProdutos] Encontrados por TAGS:', resultado.length);
+    }
+    return resultado;
+  }
+
+  // Se não encontrou por tags, busca por NOME/CATEGORIA/DESCRIÇÃO
+  const comTextScore = produtos.map((p) => {
+    const nomeN = normalizar(p.name);
+    const subcatN = normalizar(p.subcategory);
+    const catN = normalizar(p.category);
+    const descN = normalizar(p.description || "");
+    const alvo = `${nomeN} ${subcatN} ${catN} ${descN}`;
+    const fraseBase = palavrasBase.join(" ");
+    
+    let score = 0;
+
+    if (fraseBase.length >= 4) {
+      if (nomeN.includes(fraseBase)) score += 35;
       else if (subcatN.includes(fraseBase)) score += 30;
-      else if (alvo.includes(fraseBase)) score += 18;
+      else if (alvo.includes(fraseBase)) score += 15;
     }
-
-    const todosBasePresentes = palavrasBase.every((w) => alvo.includes(w));
-    if (todosBasePresentes) score += 20;
-
-    for (const w of palavras) {
-      if (subcatN === w)            score += 12;
-      else if (subcatN.includes(w)) score += 8;
-      else if (nomeN.includes(w))   score += 6;
-      else if (catN === w)          score += 5;
-      else if (catN.includes(w))    score += 3;
-      else if (descN.includes(w))   score += 2;
-    }
-
-    const temLeite = palavrasBase.includes("leite");
-    const textoN = normalizar(texto);
-    const temCaixinha = textoN.includes("caixinha") || textoN.includes("caixa");
-    if (temLeite && temCaixinha) {
-      if (nomeN.includes("leite")) {
-        const ehExcluido =
-          nomeN.includes(" po") || nomeN.includes("po ") || nomeN.includes("em po") ||
-          nomeN.includes("instantaneo") || nomeN.includes("instantanea") ||
-          nomeN.includes("condensado") || nomeN.includes("coco") ||
-          nomeN.includes("colonia") || nomeN.includes("soja") ||
-          nomeN.includes("aveia") || nomeN.includes("amendoa") ||
-          descN.includes("leite em po") || descN.includes("leite condensado");
-        if (ehExcluido) score -= 60;
-        else score += 22;
-      }
-    }
-
-    if (temLeite && palavrasBase.includes("po")) {
-      const pareceLeitePo = nomeN.includes("leite") && (nomeN.includes("po") || nomeN.includes("instantaneo"));
-      if (pareceLeitePo) score += 22;
-    }
-
-    if (temLeite && palavrasBase.includes("condensado")) {
-      const pareceLeiteCondensado = nomeN.includes("leite") && nomeN.includes("condensado");
-      if (pareceLeiteCondensado) score += 22;
-      if (nomeN.includes("po") || nomeN.includes("instantaneo") || subcatN.includes("po")) score -= 20;
-    }
-
-    if (palavrasBase.includes("frango") && palavrasBase.includes("peito")) {
-      if (nomeN.includes("frango") && (nomeN.includes("peito") || nomeN.includes("file"))) score += 24;
-    }
-
-    if (palavrasBase.includes("frango") && palavrasBase.includes("inteiro")) {
-      if (nomeN.includes("frango") && nomeN.includes("inteiro")) score += 24;
-    }
-
-    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) score += 15;
 
     for (const w of palavrasBase) {
-      const apareceComoSabor = nomeN.includes("ao " + w) || nomeN.includes("c/ " + w) || nomeN.includes("com " + w);
-      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
-      if (apareceComoSabor && !apareceComoProduto) score -= 18;
+      if (nomeN.startsWith(w)) score += 10;
+      else if (nomeN.includes(w)) score += 6;
+      else if (subcatN.includes(w)) score += 5;
+      else if (catN.includes(w)) score += 4;
+      else if (descN.includes(w)) score += 2;
     }
 
-    // ── Penalidade: ração/pet food quando a busca não é de pet ───────────
+    // Penalidade: ração/pet food quando não é pet
     const termoPet = palavrasBase.some((w) =>
       ["racao", "raca", "pet", "cachorro", "gato", "cao", "felino", "canino"].includes(w)
     );
     const ehProdutoPet =
       catN.includes("racao") || catN.includes("pet") || catN.includes("animal") ||
-      subcatN.includes("racao") || subcatN.includes("pet") || subcatN.includes("animal") ||
-      nomeN.startsWith("racao") || nomeN.includes("whiskas") || nomeN.includes("pedigree") ||
-      nomeN.includes("love dog") || nomeN.includes("premier") || nomeN.includes("golden");
+      subcatN.includes("racao") || subcatN.includes("pet") || subcatN.includes("animal");
     if (ehProdutoPet && !termoPet) score -= 80;
 
     return { produto: p, score };
   }).filter(({ score }) => score > 0);
 
-  const garantidos = new Set<string>();
-
-  /**
-   * Verifica se uma tag específica cobre a palavra buscada.
-   * Regra: apenas o PRIMEIRO token do composto é o identificador primário.
-   * Ex: #CremeDeLeite → primeiro token "creme" → "leite" NÃO bate.
-   * Para multi-palavra, exige que TODOS os termos apareçam como tokens consecutivos
-   * (ex: busca "carne moida" bate em #CarneMoida porque "carne" e "moida" são tokens adjacentes).
-   */
-  const tagCobre = (tag: string, w: string): boolean => {
-    const semHash = tag.replace(/^#/, "");
-    const fullN   = normalizar(semHash); // ex: "cremedelite", "carnemoida"
-    // 1. Token completo bate
-    if (fullN === w || fullN.startsWith(w)) return true;
-    // 2. Primeiro token do composto bate (identificador primário)
-    const partes = semHash
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/([A-Za-z])(\d)/g, "$1 $2")
-      .replace(/(\d)([A-Za-z])/g, "$1 $2")
-      .split(/[\s\-_]+/)
-      .map(normalizar)
-      .filter((t) => t.length >= 1);
-    if (partes.length > 0 && (partes[0] === w || partes[0].startsWith(w))) return true;
-    // 3. Multi-palavra: APENAS se for um composto real (tokens consecutivos, não dispersos)
-    // Ex: "carne moida" bate em "carnemoida" (partes = ["carne", "moida"]),
-    // MAS NÃO bate em uma tag que tenha "carne" e "moida" separadas como #CarneBrancaComMoida
-    // (partes = ["carne", "branca", "com", "moida"])
-    if (palavrasBase.length > 1) {
-      // Verifica se todos os termos aparecem como tokens CONSECUTIVOS
-      const primeiroTermo = palavrasBase[0];
-      let inicioIdx = -1;
-      for (let i = 0; i < partes.length; i++) {
-        if (partes[i] === primeiroTermo || partes[i].startsWith(primeiroTermo)) {
-          inicioIdx = i;
-          break;
-        }
-      }
-      if (inicioIdx >= 0) {
-        let todosConsecutivos = true;
-        for (let i = 1; i < palavrasBase.length; i++) {
-          const idx = inicioIdx + i;
-          if (idx >= partes.length || !partes[idx].startsWith(palavrasBase[i])) {
-            todosConsecutivos = false;
-            break;
-          }
-        }
-        if (todosConsecutivos) return true;
-      }
-    }
-    return false;
-  };
-
-  // Verifica se um produto cobre uma palavra via texto, tags ou aliases de embalagem
-  const cobrePalavra = (p: Produto, w: string): boolean => {
-    const nomeN   = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN    = normalizar(p.category);
-    const descN   = normalizar(p.description || "");
-    if (nomeN.includes(w) || subcatN.includes(w) || catN.includes(w) || descN.includes(w)) return true;
-    // Tags: usa regra de primeiro token para compostos
-    if ((p.tags ?? []).some((tag) => tagCobre(tag, w))) return true;
-    // Verifica aliases da palavra (ex: "caixinha" → "tetrapak")
-    const aliasesDeW = ALIASES_BUSCA[w] ?? [];
-    for (const alias of aliasesDeW) {
-      const aN = normalizar(alias);
-      if (nomeN.includes(aN) || subcatN.includes(aN) || catN.includes(aN) || descN.includes(aN)) return true;
-      if ((p.tags ?? []).some((tag) => tagCobre(tag, aN))) return true;
-    }
-    return false;
-  };
-
-  // ── Fallback progressivo: tenta encontrar com TODOS os termos primeiro ──
-  const ehQuantidade = (w: string) => /^\d+\s*(?:kg|g|ml|l|lt|un|pc|pct|gr)$/.test(w);
-  const termosValidos = palavrasBase.filter((w) => !ehQuantidade(w));
-  
-  // Nível 1: Produtos que cobrem TODAS as palavras (e.g., leite + caixa)
-  const withAll = comScore.filter(({ produto: p }) => 
-    termosValidos.length > 0 && termosValidos.every((w) => cobrePalavra(p, w))
-  );
-  
-  // Nível 2: Se não houver com todas, tenta com o termo principal
-  const primaryTerm = termosValidos.length > 0 ? termosValidos[0] : palavrasBase[0];
-  const withPrimary = withAll.length === 0 
-    ? comScore.filter(({ produto: p }) => cobrePalavra(p, primaryTerm))
-    : [];
-
-  const melhorNivel = withAll.length > 0 ? withAll : (withPrimary.length > 0 ? withPrimary : comScore);
-
-  melhorNivel
+  const resultado = comTextScore
     .sort((a, b) => b.score - a.score)
-    .forEach(({ produto: p }) => garantidos.add(p.id));
+    .map(({ produto }) => produto)
+    .slice(0, 20);
 
-  const resultado: Produto[] = [];
-
-  // Ordena por score (maior primeiro)
-  const ordenados = comScore.sort((a, b) => b.score - a.score);
+  if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
+    console.log('[filtrarProdutos] Encontrados por TEXT:', resultado.length);
+  }
   
-  // Prioriza produtos que cobrem todos os termos, depois apenas principal, depois tudo
-  for (const { produto } of ordenados) {
-    if (garantidos.has(produto.id)) resultado.push(produto);
-  }
-
-  // Só preenche com não-prioritários se não houve nenhum produto prioritário
-  if (resultado.length === 0) {
-    for (const { produto } of ordenados) {
-      if (!garantidos.has(produto.id)) resultado.push(produto);
-    }
-  }
-
-  return resultado.slice(0, 20);
+  return resultado;
 }
 
 export function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] {
-  const palavrasBase = extrairPalavrasBaseBusca(texto);
-  if (palavrasBase.length === 0) return [];
-
-  const prefixos = palavrasBase.map((p) => p.toUpperCase());
-
-  const comScore = produtos.map((p) => {
-    const todosKeys = [...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
-    const nomeN   = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN    = normalizar(p.category);
-    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
-    let score = 0;
-
-    // ── Tags (pontuação mais alta — campo curado) ────────────────────────
-    if (tagTokens.length > 0) {
-      for (const w of palavrasBase) {
-        if (tagTokens.includes(w))                        score += 22;
-        else if (tagTokens.some((t) => t.startsWith(w))) score += 14;
-      }
-      const todosNasTags = palavrasBase.length > 0 && palavrasBase.every((w) =>
-        tagTokens.some((t) => t === w || t.startsWith(w))
-      );
-      if (todosNasTags) score += 25;
-    }
-
-    for (const pref of prefixos) {
-      if (todosKeys.some((k) => k === pref)) score += 15;
-      else if (todosKeys.some((k) => k.startsWith(pref))) score += 8;
-    }
-
-    const todosPresentes = prefixos.every((pref) => todosKeys.some((k) => k.startsWith(pref)));
-    if (todosPresentes && prefixos.length > 1) score += 20;
-
-    if (palavrasBase.length > 0 && nomeN.startsWith(palavrasBase[0])) score += 15;
-
-    for (const w of palavrasBase) {
-      const apareceComoSabor = nomeN.includes("ao " + w) || nomeN.includes("c/ " + w) || nomeN.includes("com " + w);
-      const apareceComoProduto = nomeN.startsWith(w) || subcatN.includes(w) || catN === w;
-      if (apareceComoSabor && !apareceComoProduto) score -= 18;
-    }
-
-    return { produto: p, score };
-  }).filter(({ score }) => score > 0);
-
-  return comScore.sort((a, b) => b.score - a.score).map(({ produto }) => produto).slice(0, 20);
+  // Usa a mesma lógica de filtrarProdutos (somente tags)
+  return filtrarProdutos(texto, produtos);
 }
 
 export function selecionarCardsPorTermos(termos: string[], candidatos: Produto[], limite: number): Produto[] {
@@ -443,32 +270,39 @@ export function combinarProdutosFoco(prioritarios: Produto[], catalogo: Produto[
   const resultado: Produto[] = [];
   const ids = new Set<string>();
 
-  const push = (p: Produto) => {
-    if (resultado.length >= limite) return;
-    if (ids.has(p.id)) return;
-    ids.add(p.id);
-    resultado.push(p);
-  };
-
-  prioritarios.forEach(push);
-  if (resultado.length >= limite) return resultado;
-
-  const categoriasPrioritarias = new Set(prioritarios.map((p) => p.categoryId || p.category));
-  const categoriaJaInserida = new Set<string>();
-
-  for (const p of catalogo) {
+  // Adiciona prioritários em ordem de score (determinístico)
+  for (const p of prioritarios) {
     if (resultado.length >= limite) break;
     if (ids.has(p.id)) continue;
+    ids.add(p.id);
+    resultado.push(p);
+  }
+  
+  if (resultado.length >= limite) return resultado;
+
+  // Ordenação determinística por ID para evitar variação na ordem
+  const categoriasJaInseridas = new Map<string, number>(); // pista: quantos já inserimos dessa categoria
+  const catalogoOrdenado = [...catalogo].sort((a, b) => a.id.localeCompare(b.id));
+
+  for (const p of catalogoOrdenado) {
+    if (resultado.length >= limite) break;
+    if (ids.has(p.id)) continue;
+    
     const cat = p.categoryId || p.category;
-    if (categoriasPrioritarias.has(cat)) continue;
-    if (categoriaJaInserida.has(cat)) continue;
-    categoriaJaInserida.add(cat);
-    push(p);
+    // Só insere 1 produto por categoria para diversidade
+    if (categoriasJaInseridas.has(cat)) continue;
+    
+    ids.add(p.id);
+    resultado.push(p);
+    categoriasJaInseridas.set(cat, 1);
   }
 
-  for (const p of catalogo) {
+  // Se ainda não bateu o limite, preenche com resto (ordenado)
+  for (const p of catalogoOrdenado) {
     if (resultado.length >= limite) break;
-    push(p);
+    if (ids.has(p.id)) continue;
+    ids.add(p.id);
+    resultado.push(p);
   }
 
   return resultado;
@@ -559,22 +393,16 @@ export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): 
 // ── Verificação de cobertura completa ───────────────────────────────────────
 
 /**
- * Retorna true se o produto cobre TODAS as palavras da busca
- * (via nome, categoria, subcategoria, descrição, tags ou aliases).
+ * Retorna true se o produto cobre TODAS as palavras da busca via tags ou aliases.
  */
 export function produtoCobreTermos(produto: Produto, palavras: string[]): boolean {
-  const nomeN   = normalizar(produto.name);
-  const subcatN = normalizar(produto.subcategory);
-  const catN    = normalizar(produto.category);
-  const descN   = normalizar(produto.description || "");
   const tagTokens = produto.tags ? tokensTagsProduto(produto.tags) : [];
 
   const cobre = (w: string): boolean => {
-    if (nomeN.includes(w) || subcatN.includes(w) || catN.includes(w) || descN.includes(w)) return true;
     if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
     return (ALIASES_BUSCA[w] ?? []).some((alias) => {
       const aN = normalizar(alias);
-      return nomeN.includes(aN) || subcatN.includes(aN) || catN.includes(aN) || tagTokens.some((t) => t === aN || t.startsWith(aN));
+      return tagTokens.some((t) => t === aN || t.startsWith(aN));
     });
   };
 

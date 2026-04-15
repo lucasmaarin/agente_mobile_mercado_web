@@ -62,7 +62,7 @@ import {
   FewShotExemplo,
   buildSystemPrompt,
 } from "@/lib/buildSystemPrompt";
-import { SLUG_PARA_COMPANY_ID } from "@/config/dominios";
+import { SLUG_PARA_COMPANY_ID, COMPANY_DATA_SOURCE } from "@/config/dominios";
 import { parseAgentResponse, COLLECTING_FIELD, NEXT_STATE, nextStateAfterPayment } from "@/lib/parseAgentResponse";
 import {
   getProducts,
@@ -114,6 +114,7 @@ interface ListaPedidoState {
 
 interface ItemUnicoQuantidadeState {
   termoBusca: string;
+  termoDisplay: string;
   quantidade: number;
   stage: "confirm_single" | "choose_other";
   candidatos: Produto[];
@@ -208,6 +209,8 @@ const AgentePage: React.FC = () => {
   const params = useParams();
   const rawSlug = params.slug as string;
   const companyId = SLUG_PARA_COMPANY_ID[rawSlug.toLowerCase()] ?? rawSlug;
+  // ID usado para buscar dados (produtos, config, pedidos) — pode ser diferente do companyId
+  const dataCompanyId = COMPANY_DATA_SOURCE[companyId] ?? companyId;
 
   // --- Auth
   const [user, setUser]           = useState<User | null>(null);
@@ -258,7 +261,7 @@ const AgentePage: React.FC = () => {
     infoEstabelecimento,
     formasPagamento,
     lojaConfig,
-  } = useEstabelecimento(companyId);
+  } = useEstabelecimento(dataCompanyId);
 
   // --- Domínio
   const [produtos, setProdutos]               = useState<Produto[]>([]);
@@ -441,7 +444,7 @@ const AgentePage: React.FC = () => {
   // -------- Carregar produtos + exemplos ativos + endereço salvo --------
   useEffect(() => {
     if (!user || !userDocId) return;
-    getProducts(companyId)
+    getProducts(dataCompanyId)
       .then((data) => {
         setProdutos(data);
         setIndiceCategoria(buildIndiceCategoria(data));
@@ -917,7 +920,7 @@ const AgentePage: React.FC = () => {
         const opcoes = item.candidatos.slice(0, 5);
         const sufixoLista = estado.itens.length > 1 ? ` (item ${index + 1} de ${estado.itens.length})` : "";
         return {
-          texto: `Estas são as opções de ${item.termoBusca} que temos hoje${sufixoLista}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+          texto: `Estas são as opções de ${item.termoOriginal ?? item.termoBusca} que temos hoje${sufixoLista}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
           produtosCard: opcoes,
           suggestions: ["Cancelar item"],
         };
@@ -952,7 +955,7 @@ const AgentePage: React.FC = () => {
           let pedidos = pedidosCached;
           if (pedidos.length === 0 && userDocId) {
             try {
-              pedidos = await buscarPedidosDoUsuario(companyId, userDocId);
+              pedidos = await buscarPedidosDoUsuario(dataCompanyId, userDocId);
               setPedidosCached(pedidos);
             } catch {
               pedidos = [];
@@ -1021,7 +1024,16 @@ const AgentePage: React.FC = () => {
 
         // Se itensComQtd tem exatamente 1 item (ex: "um frango", "2 ovos"), usa diretamente como item único
         const itemUnicoExtraido = itensComQtd.length === 1 ? itensComQtd[0] : (itensExtraidos.length === 1 ? itensExtraidos[0] : null);
-        const podeIniciarLista = !listaPedidoState && itensExtraidos.length >= 2;
+        const podeIniciarLista = itensExtraidos.length >= 2;
+
+        // Variável local que reflete se há lista ativa APÓS o reset.
+        // setListaPedidoState é assíncrono — não podemos confiar no valor do estado
+        // logo abaixo do set. Usamos esta variável para decisões síncronas.
+        const estadoListaAtivo = podeIniciarLista ? null : listaPedidoState;
+
+        if (podeIniciarLista) {
+          setListaPedidoState(null);
+        }
 
         if (itemUnicoQtdState) {
           // Se o usuário pediu um produto diferente do estado atual, reseta e processa normalmente
@@ -1088,7 +1100,7 @@ const AgentePage: React.FC = () => {
               };
               setItemUnicoQtdState(novoEstado);
               await salvarRespostaLocal(
-                `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+                `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
                 novoEstado.candidatos,
                 ["Finalizar pedido 🛒", "Continuar comprando"],
                 itemUnicoQtdState.termoBusca
@@ -1097,7 +1109,7 @@ const AgentePage: React.FC = () => {
             }
 
             await salvarRespostaLocal(
-              `Esta é a opção de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Esta é a opção de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               [itemUnicoQtdState.produtoSugerido],
               ["Finalizar pedido 🛒", "Continuar comprando"],
               itemUnicoQtdState.termoBusca
@@ -1138,7 +1150,7 @@ const AgentePage: React.FC = () => {
             // Cai no fluxo normal (LLM responde sobre o novo produto/termo)
           } else {
             await salvarRespostaLocal(
-              `Estas são as opções de ${itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               itemUnicoQtdState.candidatos.slice(0, 6),
               ["Finalizar pedido 🛒", "Continuar comprando"],
               itemUnicoQtdState.termoBusca
@@ -1154,13 +1166,16 @@ const AgentePage: React.FC = () => {
           if (candidatosItemUnico.length > 1) {
             const novoEstadoUnico: ItemUnicoQuantidadeState = {
               termoBusca: itemUnicoExtraido.termoBusca,
+              termoDisplay: itemUnicoExtraido.termoOriginal
+                ? itemUnicoExtraido.termoOriginal.charAt(0).toUpperCase() + itemUnicoExtraido.termoOriginal.slice(1).toLowerCase()
+                : itemUnicoExtraido.termoBusca,
               quantidade: itemUnicoExtraido.quantidade,
               stage: "choose_other",
               candidatos: candidatosItemUnico,
             };
             setItemUnicoQtdState(novoEstadoUnico);
             await salvarRespostaLocal(
-              `Estas são as opções de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Estas são as opções de ${novoEstadoUnico.termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               candidatosItemUnico,
               ["Finalizar pedido 🛒", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
@@ -1172,6 +1187,9 @@ const AgentePage: React.FC = () => {
             const sugerido = candidatosItemUnico[0];
             setItemUnicoQtdState({
               termoBusca: itemUnicoExtraido.termoBusca,
+              termoDisplay: itemUnicoExtraido.termoOriginal
+                ? itemUnicoExtraido.termoOriginal.charAt(0).toUpperCase() + itemUnicoExtraido.termoOriginal.slice(1).toLowerCase()
+                : itemUnicoExtraido.termoBusca,
               quantidade: itemUnicoExtraido.quantidade,
               stage: "confirm_single",
               candidatos: candidatosItemUnico,
@@ -1187,19 +1205,27 @@ const AgentePage: React.FC = () => {
           }
         }
 
-        if (listaPedidoState || podeIniciarLista) {
-          const estadoAtual: ListaPedidoState = listaPedidoState
-            ? { ...listaPedidoState, itens: listaPedidoState.itens.map((it) => ({ ...it })) }
-            : {
+        // SEMPRE reseta listaPedidoState para criar nova busca
+        // (mesmo que peça a mesma lista novamente)
+        if (podeIniciarLista) {
+          // SEMPRE reseta listaPedidoState para criar nova busca
+          // (mesmo que peça a mesma lista novamente)
+          setListaPedidoState(null);
+        }
+
+        if (estadoListaAtivo || podeIniciarLista) {
+          const estadoAtual: ListaPedidoState = !estadoListaAtivo
+            ? {
                 stage: "await_confirm",
                 currentIndex: 0,
                 itens: itensExtraidos.map((it) => ({
                   ...it,
                   candidatos: (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6),
                 })),
-              };
+              }
+            : { ...estadoListaAtivo, itens: estadoListaAtivo.itens.map((it) => ({ ...it })) };
 
-          if (!listaPedidoState) {
+          if (!estadoListaAtivo) {
             const buscarL2 = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
 
             // Verifica cada item: se os candidatos não cobrem todas as palavras,
@@ -1216,7 +1242,7 @@ const AgentePage: React.FC = () => {
 
               if (temCobertura) {
                 sections.push({
-                  titulo: `Opções de ${it.termoBusca.charAt(0).toUpperCase() + it.termoBusca.slice(1)} ⬇️`,
+                  titulo: `Opções de ${(it.termoOriginal ?? it.termoBusca).charAt(0).toUpperCase() + (it.termoOriginal ?? it.termoBusca).slice(1)} ⬇️`,
                   produtos: it.candidatos,
                   termoBusca: it.termoBusca,
                 });
@@ -1501,14 +1527,16 @@ const AgentePage: React.FC = () => {
           if (todosResultadosDiretos.length > 0 && temCorrespondenciaCompleta) {
             // Resultado completo — mostra normalmente
             const termoBuscaLimpo = limparTermoItemLista(texto);
+            const termoDisplay = texto.trim().charAt(0).toUpperCase() + texto.trim().slice(1).toLowerCase();
             setItemUnicoQtdState({
               termoBusca: termoBuscaLimpo,
+              termoDisplay,
               quantidade: 1,
               stage: "choose_other",
               candidatos: todosResultadosDiretos.slice(0, 6),
             });
             await salvarRespostaLocal(
-              `Estas são as opções de ${termoBuscaLimpo} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Estas são as opções de ${termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               todosResultadosDiretos,
               ["Finalizar pedido 🛒", "Continuar comprando"],
               termoBuscaLimpo
@@ -1574,40 +1602,34 @@ const AgentePage: React.FC = () => {
           // Se contexto detectado mas sem produtos: produtosFoco fica vazio
           // → a IA pergunta o que o cliente precisa para aquela data
         } else {
+          // Busca normal por texto
           const filtrado = buscar(texto, produtos);
           produtosMatchDireto = filtrado;
+          
+          // Lógica SIMPLES e DETERMINÍSTICA:
+          // Se encontrou produtos, mostra eles. Ponto.
+          // Sem mistura de categorias, sem amostra aleatória.
           if (filtrado.length > 0) {
-            // Se é busca específica (multi-palavra), mostra APENAS os matches — sem misturar outras categorias
-            // Caso contrário (busca genérica), adiciona diversidade para o agente ter opções
-            const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
-            const ehBuscaEspecifica = palavrasLongas.length >= 2;
-            if (ehBuscaEspecifica) {
-              // Busca específica: mostra apenas os produtos encontrados, até 20
-              produtosFoco = filtrado.slice(0, 20);
-            } else {
-              // Busca genérica: mistura com diversidade de categorias
-              produtosFoco = combinarProdutosFoco(filtrado.slice(0, 14), produtos, 20);
-            }
+            produtosFoco = filtrado.slice(0, 20);
           } else {
-            const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
-            const pareceBuscaNova = palavrasLongas.length >= 2;
-            if (!pareceBuscaNova && !ehSaudacaoCurta(texto)) {
-              // Confirmação curta ("sim", "1", "pode"): reutiliza últimos produtos mostrados
-              produtosFoco = ultimosProdutosMostradosRef.current;
+            // Se não encontrou, tenta apenas pelo primeiro termo
+            const palavrasBase = extrairPalavrasBaseBusca(texto);
+            if (palavrasBase.length > 0) {
+              const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
+              if (filtroTermoPrincipal.length > 0) {
+                produtosFoco = filtroTermoPrincipal.slice(0, 20);
+              } else {
+                // Último recurso: usa cache APENAS se confirmação óbvia
+                const confirmacaoObvia = ehSaudacaoCurta(texto) || 
+                                         ["sim", "ok", "pode", "vamo", "cla", "1", "2", "3", "4", "5", "tudo", "todos"].some(
+                                           (t) => normalizar(texto).trim().startsWith(t)
+                                         );
+                produtosFoco = (confirmacaoObvia && ultimosProdutosMostradosRef.current.length > 0) 
+                  ? ultimosProdutosMostradosRef.current 
+                  : [];
+              }
             } else {
-              // Sem contexto detectado: amostra por categoria para o agente ter IDs reais
-              const porCategoria = new Map<string, Produto[]>();
-              for (const p of produtos) {
-                const cat = p.categoryId || p.category;
-                if (!porCategoria.has(cat)) porCategoria.set(cat, []);
-                porCategoria.get(cat)!.push(p);
-              }
-              const amostra: Produto[] = [];
-              for (const prods of porCategoria.values()) {
-                amostra.push(...prods.slice(0, 3));
-                if (amostra.length >= 20) break;
-              }
-              produtosFoco = amostra.slice(0, 20);
+              produtosFoco = [];
             }
           }
         }
@@ -1872,7 +1894,6 @@ const AgentePage: React.FC = () => {
         }
       }
 
-      // ---- Salvar no Firestore com estado correto (não-fatal) ----
       if (cid && userDocId && !resultado.shouldCreateOrder) {
         salvarMensagem(
           cid, userDocId, "assistant", cleanTextFormatado,
@@ -1885,6 +1906,7 @@ const AgentePage: React.FC = () => {
           customerDataColetado: wCustomerData,
         }).catch(console.error);
       }
+
     } catch (e) {
       console.error("Erro ao chamar agente:", e);
       setMensagens((prev) => [
@@ -2084,7 +2106,7 @@ const AgentePage: React.FC = () => {
           const opcoes = itemProx.candidatos.slice(0, 5);
           const sufixo = estado.itens.length > 1 ? ` (item ${prox + 1} de ${estado.itens.length})` : "";
           await salvarRespostaAgente(
-            `Estas são as opções de ${itemProx.termoBusca} que temos hoje${sufixo}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+            `Estas são as opções de ${itemProx.termoOriginal ?? itemProx.termoBusca} que temos hoje${sufixo}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
             opcoes,
             ["Cancelar item"],
             itemProx.termoBusca

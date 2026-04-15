@@ -239,6 +239,7 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
         barCode:       data.barCode      ?? '',
         searchIndex:   Array.isArray(data.searchIndex) ? data.searchIndex : [],
         wordKeys:      Array.isArray(data.wordKeys)    ? data.wordKeys    : [],
+        tags:          Array.isArray(data.tags)        ? data.tags        : [],
         stock,
       };
     })

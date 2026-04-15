@@ -18,8 +18,15 @@ interface UseEstabelecimentoResult {
   lojaConfig: ConfigLoja | null;
 }
 
+const LOGO_OVERRIDES: Record<string, string> = {
+  jQQjHTCc2zW1tuZMQzGF:    '/logos/zerograu_logo.png',
+  'estabelecimento-teste':  '/logos/vidal_logo.png',
+};
+
 export function useEstabelecimento(companyId: string): UseEstabelecimentoResult {
-  const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(null);
+  const [logoEstabelecimento, setLogoEstabelecimento] = useState<string | null>(
+    LOGO_OVERRIDES[companyId] ?? null
+  );
   const [nomeEstabelecimento, setNomeEstabelecimento] = useState<string>("");
   const [nomeEstabelecimentoCarregado, setNomeEstabelecimentoCarregado] = useState(false);
   const [infoEstabelecimento, setInfoEstabelecimento] = useState<InfoEstabelecimento>({});
@@ -29,9 +36,11 @@ export function useEstabelecimento(companyId: string): UseEstabelecimentoResult 
   useEffect(() => {
     if (!companyId) return;
 
-    buscarLogoEstabelecimento(companyId)
-      .then((url) => { if (url) setLogoEstabelecimento(url); })
-      .catch(() => {});
+    if (!LOGO_OVERRIDES[companyId]) {
+      buscarLogoEstabelecimento(companyId)
+        .then((url) => { if (url) setLogoEstabelecimento(url); })
+        .catch(() => {});
+    }
 
     buscarNomeEstabelecimento(companyId)
       .then((nome) => { if (nome) setNomeEstabelecimento(nome); })
