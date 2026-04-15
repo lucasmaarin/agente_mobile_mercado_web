@@ -250,6 +250,56 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
 
   const garantidos = new Set<string>();
 
+  /**
+   * Verifica se uma tag específica cobre a palavra buscada.
+   * Regra: apenas o PRIMEIRO token do composto é o identificador primário.
+   * Ex: #CremeDeLeite → primeiro token "creme" → "leite" NÃO bate.
+   * Para multi-palavra, exige que TODOS os termos apareçam como tokens consecutivos
+   * (ex: busca "carne moida" bate em #CarneMoida porque "carne" e "moida" são tokens adjacentes).
+   */
+  const tagCobre = (tag: string, w: string): boolean => {
+    const semHash = tag.replace(/^#/, "");
+    const fullN   = normalizar(semHash); // ex: "cremedelite", "carnemoida"
+    // 1. Token completo bate
+    if (fullN === w || fullN.startsWith(w)) return true;
+    // 2. Primeiro token do composto bate (identificador primário)
+    const partes = semHash
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/([A-Za-z])(\d)/g, "$1 $2")
+      .replace(/(\d)([A-Za-z])/g, "$1 $2")
+      .split(/[\s\-_]+/)
+      .map(normalizar)
+      .filter((t) => t.length >= 1);
+    if (partes.length > 0 && (partes[0] === w || partes[0].startsWith(w))) return true;
+    // 3. Multi-palavra: APENAS se for um composto real (tokens consecutivos, não dispersos)
+    // Ex: "carne moida" bate em "carnemoida" (partes = ["carne", "moida"]),
+    // MAS NÃO bate em uma tag que tenha "carne" e "moida" separadas como #CarneBrancaComMoida
+    // (partes = ["carne", "branca", "com", "moida"])
+    if (palavrasBase.length > 1) {
+      // Verifica se todos os termos aparecem como tokens CONSECUTIVOS
+      const primeiroTermo = palavrasBase[0];
+      let inicioIdx = -1;
+      for (let i = 0; i < partes.length; i++) {
+        if (partes[i] === primeiroTermo || partes[i].startsWith(primeiroTermo)) {
+          inicioIdx = i;
+          break;
+        }
+      }
+      if (inicioIdx >= 0) {
+        let todosConsecutivos = true;
+        for (let i = 1; i < palavrasBase.length; i++) {
+          const idx = inicioIdx + i;
+          if (idx >= partes.length || !partes[idx].startsWith(palavrasBase[i])) {
+            todosConsecutivos = false;
+            break;
+          }
+        }
+        if (todosConsecutivos) return true;
+      }
+    }
+    return false;
+  };
+
   // Verifica se um produto cobre uma palavra via texto, tags ou aliases de embalagem
   const cobrePalavra = (p: Produto, w: string): boolean => {
     const nomeN   = normalizar(p.name);
@@ -257,62 +307,50 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
     const catN    = normalizar(p.category);
     const descN   = normalizar(p.description || "");
     if (nomeN.includes(w) || subcatN.includes(w) || catN.includes(w) || descN.includes(w)) return true;
-    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
-    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+    // Tags: usa regra de primeiro token para compostos
+    if ((p.tags ?? []).some((tag) => tagCobre(tag, w))) return true;
     // Verifica aliases da palavra (ex: "caixinha" → "tetrapak")
     const aliasesDeW = ALIASES_BUSCA[w] ?? [];
     for (const alias of aliasesDeW) {
       const aN = normalizar(alias);
       if (nomeN.includes(aN) || subcatN.includes(aN) || catN.includes(aN) || descN.includes(aN)) return true;
-      if (tagTokens.some((t) => t === aN || t.startsWith(aN))) return true;
+      if ((p.tags ?? []).some((tag) => tagCobre(tag, aN))) return true;
     }
     return false;
   };
 
-  const matchamTodos = palavrasBase.length >= 2
-    ? comScore.filter(({ produto: p }) => {
-        if (!palavrasBase.every((w) => cobrePalavra(p, w))) return false;
-        // O termo principal é a primeira palavra que NÃO seja quantidade/peso/embalagem
-        // (ex: "1kg de carne" → primário = "carne", não "1kg")
-        const ehQuantidade = (w: string) => /^\d+\s*(?:kg|g|ml|l|lt|un|pc|pct|gr)$/.test(w);
-        const primario = palavrasBase.find((w) => !ehQuantidade(w)) ?? palavrasBase[0];
-        const nomeN   = normalizar(p.name);
-        const subcatN = normalizar(p.subcategory);
-        const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
-        const temTag = tagTokens.some((t) => t === primario || t.startsWith(primario));
-        return nomeN.startsWith(primario) || subcatN.startsWith(primario) || subcatN === primario || temTag;
-      })
+  // ── Fallback progressivo: tenta encontrar com TODOS os termos primeiro ──
+  const ehQuantidade = (w: string) => /^\d+\s*(?:kg|g|ml|l|lt|un|pc|pct|gr)$/.test(w);
+  const termosValidos = palavrasBase.filter((w) => !ehQuantidade(w));
+  
+  // Nível 1: Produtos que cobrem TODAS as palavras (e.g., leite + caixa)
+  const withAll = comScore.filter(({ produto: p }) => 
+    termosValidos.length > 0 && termosValidos.every((w) => cobrePalavra(p, w))
+  );
+  
+  // Nível 2: Se não houver com todas, tenta com o termo principal
+  const primaryTerm = termosValidos.length > 0 ? termosValidos[0] : palavrasBase[0];
+  const withPrimary = withAll.length === 0 
+    ? comScore.filter(({ produto: p }) => cobrePalavra(p, primaryTerm))
     : [];
 
-  const ordenados = comScore.sort((a, b) => b.score - a.score);
+  const melhorNivel = withAll.length > 0 ? withAll : (withPrimary.length > 0 ? withPrimary : comScore);
 
-  if (matchamTodos.length > 0) {
-    // Multi-palavra com todos os termos cobertos: usa apenas esses
-    matchamTodos.sort((a, b) => b.score - a.score).forEach(({ produto: p }) => garantidos.add(p.id));
-  } else if (palavrasBase.length >= 2) {
-    // Multi-palavra sem correspondência completa: garante ao menos 1 por palavra, score mínimo 12
-    for (const w of palavrasBase) {
-      comScore
-        .filter(({ produto: p, score }) => score >= 12 && cobrePalavra(p, w))
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .forEach(({ produto: p }) => garantidos.add(p.id));
-    }
-  } else {
-    // Palavra única: mostra todos que cobrem o termo, ordenados por score
-    comScore
-      .filter(({ produto: p }) => cobrePalavra(p, palavrasBase[0]))
-      .sort((a, b) => b.score - a.score)
-      .forEach(({ produto: p }) => garantidos.add(p.id));
-  }
+  melhorNivel
+    .sort((a, b) => b.score - a.score)
+    .forEach(({ produto: p }) => garantidos.add(p.id));
 
   const resultado: Produto[] = [];
 
+  // Ordena por score (maior primeiro)
+  const ordenados = comScore.sort((a, b) => b.score - a.score);
+  
+  // Prioriza produtos que cobrem todos os termos, depois apenas principal, depois tudo
   for (const { produto } of ordenados) {
     if (garantidos.has(produto.id)) resultado.push(produto);
   }
 
-  // Só preenche com não-garantidos se não houve nenhum produto garantido
+  // Só preenche com não-prioritários se não houve nenhum produto prioritário
   if (resultado.length === 0) {
     for (const { produto } of ordenados) {
       if (!garantidos.has(produto.id)) resultado.push(produto);
@@ -516,6 +554,31 @@ export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): 
   }
 
   return melhor;
+}
+
+// ── Verificação de cobertura completa ───────────────────────────────────────
+
+/**
+ * Retorna true se o produto cobre TODAS as palavras da busca
+ * (via nome, categoria, subcategoria, descrição, tags ou aliases).
+ */
+export function produtoCobreTermos(produto: Produto, palavras: string[]): boolean {
+  const nomeN   = normalizar(produto.name);
+  const subcatN = normalizar(produto.subcategory);
+  const catN    = normalizar(produto.category);
+  const descN   = normalizar(produto.description || "");
+  const tagTokens = produto.tags ? tokensTagsProduto(produto.tags) : [];
+
+  const cobre = (w: string): boolean => {
+    if (nomeN.includes(w) || subcatN.includes(w) || catN.includes(w) || descN.includes(w)) return true;
+    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+    return (ALIASES_BUSCA[w] ?? []).some((alias) => {
+      const aN = normalizar(alias);
+      return nomeN.includes(aN) || subcatN.includes(aN) || catN.includes(aN) || tagTokens.some((t) => t === aN || t.startsWith(aN));
+    });
+  };
+
+  return palavras.every(cobre);
 }
 
 // ── Detecção de marca desconhecida ──────────────────────────────────────────

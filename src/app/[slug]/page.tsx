@@ -28,6 +28,7 @@ import {
   extrairPalavrasBaseBusca,
   traduzirAbreviacoes,
   sugerirCorrecaoOrtografica,
+  produtoCobreTermos,
 } from "@/lib/productSearch";
 import {
   limparMarkdownBasico,
@@ -1199,20 +1200,57 @@ const AgentePage: React.FC = () => {
               };
 
           if (!listaPedidoState) {
-            // Um carrossel por item da lista — cada um como mensagem separada
-            const sections = estadoAtual.itens
-              .filter((it) => it.candidatos.length > 0)
-              .map((it) => ({
-                titulo: `Opções de ${it.termoBusca.charAt(0).toUpperCase() + it.termoBusca.slice(1)} ⬇️`,
-                produtos: it.candidatos.slice(0, 6),
-                termoBusca: it.termoBusca,
-              }));
-            const itensSemCandidatos = estadoAtual.itens.filter((it) => it.candidatos.length === 0);
+            const buscarL2 = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+
+            // Verifica cada item: se os candidatos não cobrem todas as palavras,
+            // tenta fallback progressivo (ex: "Arroz Artur" → avisa e mostra "Arroz")
+            type SectionItem = { titulo: string; produtos: Produto[]; termoBusca: string };
+            type FallbackItem = { texto: string; produtos?: Produto[]; termoBusca?: string };
+            const sections: SectionItem[] = [];
+            const fallbacks: FallbackItem[] = [];
+
+            for (const it of estadoAtual.itens) {
+              const palavrasIt = extrairPalavrasBaseBusca(it.termoBusca);
+              const temCobertura = it.candidatos.length > 0 &&
+                (palavrasIt.length < 2 || it.candidatos.some((p) => produtoCobreTermos(p, palavrasIt)));
+
+              if (temCobertura) {
+                sections.push({
+                  titulo: `Opções de ${it.termoBusca.charAt(0).toUpperCase() + it.termoBusca.slice(1)} ⬇️`,
+                  produtos: it.candidatos,
+                  termoBusca: it.termoBusca,
+                });
+              } else if (palavrasIt.length >= 2) {
+                // Fallback progressivo
+                let achou = false;
+                for (let i = palavrasIt.length - 1; i >= 1; i--) {
+                  const subTermo = palavrasIt.slice(0, i).join(" ");
+                  const parciais = buscarL2(subTermo);
+                  if (parciais.length > 0) {
+                    const sub = subTermo.charAt(0).toUpperCase() + subTermo.slice(1);
+                    fallbacks.push({
+                      texto: `Não encontrei **${it.termoBusca}**, mas temos opções de ${sub} ⬇️`,
+                      produtos: parciais,
+                      termoBusca: subTermo,
+                    });
+                    achou = true;
+                    break;
+                  }
+                }
+                if (!achou) fallbacks.push({ texto: `Não encontrei "${it.termoBusca}" no catálogo.` });
+              } else if (it.candidatos.length === 0) {
+                fallbacks.push({ texto: `Não encontrei "${it.termoBusca}" no catálogo.` });
+              }
+            }
+
+            const itensSemCandidatos: typeof estadoAtual.itens = []; // já tratados acima
 
             setListaPedidoState(estadoAtual);
 
+            const totalMensagens = sections.length + fallbacks.length;
+
             for (let i = 0; i < sections.length; i++) {
-              const isLast = i === sections.length - 1 && itensSemCandidatos.length === 0;
+              const isLast = i === sections.length - 1 && fallbacks.length === 0;
               await salvarRespostaLocal(
                 sections[i].titulo,
                 sections[i].produtos,
@@ -1220,32 +1258,19 @@ const AgentePage: React.FC = () => {
                 sections[i].termoBusca
               );
             }
-            if (itensSemCandidatos.length > 0) {
-              const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
-              // Resolve cada item sem resultado: corrige ou informa
-              type ItemResolvido = { texto: string; produtos?: Produto[]; termoBusca?: string };
-              const resolvidos: ItemResolvido[] = [];
-              for (const item of itensSemCandidatos) {
-                const correcao = sugerirCorrecaoOrtografica(item.termoBusca, produtos);
-                if (correcao) {
-                  const candidatosCorrigidos = buscarL(correcao).slice(0, 6);
-                  if (candidatosCorrigidos.length > 0) {
-                    resolvidos.push({ texto: `Você quis dizer "${correcao}"? Aqui estão as opções ⬇️`, produtos: candidatosCorrigidos, termoBusca: correcao });
-                    continue;
-                  }
-                }
-                resolvidos.push({ texto: `Não encontrei "${item.termoBusca}" no catálogo.` });
-              }
-              // Chips apenas na última mensagem da sequência
-              for (let r = 0; r < resolvidos.length; r++) {
-                const isUltimo = r === resolvidos.length - 1;
-                await salvarRespostaLocal(
-                  resolvidos[r].texto,
-                  resolvidos[r].produtos,
-                  isUltimo ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
-                  resolvidos[r].termoBusca
-                );
-              }
+
+            for (let r = 0; r < fallbacks.length; r++) {
+              const isUltimo = r === fallbacks.length - 1;
+              await salvarRespostaLocal(
+                fallbacks[r].texto,
+                fallbacks[r].produtos,
+                isUltimo ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
+                fallbacks[r].termoBusca
+              );
+            }
+
+            if (totalMensagens === 0) {
+              await salvarRespostaLocal("Não encontrei nenhum dos itens da lista no catálogo.", undefined, ["Continuar comprando"]);
             }
             return;
           }
@@ -1466,15 +1491,21 @@ const AgentePage: React.FC = () => {
         // tenta buscar localmente e mostrar o carrossel sem chamar o LLM.
         if (!listaPedidoState && !texto.trim().endsWith("?") && !ehSaudacaoCurta(texto)) {
           const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+          const palavrasBusca = extrairPalavrasBaseBusca(texto);
           const todosResultadosDiretos = buscarL(texto);
-          const resultadosDiretos = todosResultadosDiretos.slice(0, 6);
-          if (resultadosDiretos.length > 0) {
+
+          // Verifica se algum resultado cobre TODAS as palavras da busca
+          const temCorrespondenciaCompleta = palavrasBusca.length < 2 ||
+            todosResultadosDiretos.some((p) => produtoCobreTermos(p, palavrasBusca));
+
+          if (todosResultadosDiretos.length > 0 && temCorrespondenciaCompleta) {
+            // Resultado completo — mostra normalmente
             const termoBuscaLimpo = limparTermoItemLista(texto);
             setItemUnicoQtdState({
               termoBusca: termoBuscaLimpo,
               quantidade: 1,
               stage: "choose_other",
-              candidatos: resultadosDiretos,
+              candidatos: todosResultadosDiretos.slice(0, 6),
             });
             await salvarRespostaLocal(
               `Estas são as opções de ${termoBuscaLimpo} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
@@ -1485,11 +1516,9 @@ const AgentePage: React.FC = () => {
             return;
           }
 
-          // Nenhum resultado — tenta busca progressiva removendo palavras
-          // Ex: "Arroz Artur" → tenta "Arroz" → encontra → avisa que não tem "Arroz Artur"
-          const palavrasBusca = extrairPalavrasBaseBusca(texto);
+          // Resultado parcial ou sem resultado — busca progressiva removendo palavras
+          // Ex: "Arroz Artur" → nenhum produto tem Artur → tenta "Arroz" → avisa
           if (palavrasBusca.length >= 2) {
-            // Tenta sub-termos removendo palavras da direita até encontrar resultado
             for (let i = palavrasBusca.length - 1; i >= 1; i--) {
               const subTermo = palavrasBusca.slice(0, i).join(" ");
               const resultadosParciais = buscarL(subTermo);
@@ -1548,8 +1577,17 @@ const AgentePage: React.FC = () => {
           const filtrado = buscar(texto, produtos);
           produtosMatchDireto = filtrado;
           if (filtrado.length > 0) {
-            // Mantém os matches no topo, mas adiciona diversidade para o agente
-            produtosFoco = combinarProdutosFoco(filtrado.slice(0, 14), produtos, 20);
+            // Se é busca específica (multi-palavra), mostra APENAS os matches — sem misturar outras categorias
+            // Caso contrário (busca genérica), adiciona diversidade para o agente ter opções
+            const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
+            const ehBuscaEspecifica = palavrasLongas.length >= 2;
+            if (ehBuscaEspecifica) {
+              // Busca específica: mostra apenas os produtos encontrados, até 20
+              produtosFoco = filtrado.slice(0, 20);
+            } else {
+              // Busca genérica: mistura com diversidade de categorias
+              produtosFoco = combinarProdutosFoco(filtrado.slice(0, 14), produtos, 20);
+            }
           } else {
             const palavrasLongas = normalizar(texto).split(/\s+/).filter(w => w.length >= 4);
             const pareceBuscaNova = palavrasLongas.length >= 2;
