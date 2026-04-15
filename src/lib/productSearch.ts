@@ -234,6 +234,17 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
       if (apareceComoSabor && !apareceComoProduto) score -= 18;
     }
 
+    // ── Penalidade: ração/pet food quando a busca não é de pet ───────────
+    const termoPet = palavrasBase.some((w) =>
+      ["racao", "raca", "pet", "cachorro", "gato", "cao", "felino", "canino"].includes(w)
+    );
+    const ehProdutoPet =
+      catN.includes("racao") || catN.includes("pet") || catN.includes("animal") ||
+      subcatN.includes("racao") || subcatN.includes("pet") || subcatN.includes("animal") ||
+      nomeN.startsWith("racao") || nomeN.includes("whiskas") || nomeN.includes("pedigree") ||
+      nomeN.includes("love dog") || nomeN.includes("premier") || nomeN.includes("golden");
+    if (ehProdutoPet && !termoPet) score -= 80;
+
     return { produto: p, score };
   }).filter(({ score }) => score > 0);
 
@@ -505,6 +516,91 @@ export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): 
   }
 
   return melhor;
+}
+
+// ── Detecção de marca desconhecida ──────────────────────────────────────────
+
+/**
+ * Extrai todas as marcas reconhecidas do catálogo a partir das tags.
+ * Uma tag é considerada marca se aparecer em produtos de pelo menos 2 categorias
+ * distintas OU se for token de tag que não aparece em nenhum nome/subcategoria/categoria
+ * como palavra de produto (ou seja, é exclusivamente uma marca).
+ */
+export function extrairMarcasDoCatalogo(catalogo: Produto[]): string[] {
+  // Mapa: token → Set de categorias onde aparece
+  const tokenCats = new Map<string, Set<string>>();
+  // Tokens que aparecem em nome/subcategoria/categoria (são descritores, não marcas)
+  const tokensDescritivos = new Set<string>();
+
+  for (const p of catalogo) {
+    const catKey = normalizar(p.category);
+    // Coleta tokens descritivos do nome/cat/subcat
+    for (const fonte of [p.name, p.category, p.subcategory]) {
+      normalizar(fonte || "").split(/\s+/).forEach((w) => {
+        if (w.length >= 3) tokensDescritivos.add(w);
+      });
+    }
+    // Coleta tokens de tags e associa às categorias
+    for (const tag of p.tags ?? []) {
+      for (const token of expandirTag(tag)) {
+        if (token.length < 3 || /^\d+$/.test(token)) continue;
+        if (!tokenCats.has(token)) tokenCats.set(token, new Set());
+        tokenCats.get(token)!.add(catKey);
+      }
+    }
+  }
+
+  const marcas: string[] = [];
+  for (const [token, cats] of tokenCats) {
+    // É marca se aparece em múltiplas categorias OU se não é um descritor de produto
+    const isDescritor = tokensDescritivos.has(token);
+    if (!isDescritor || cats.size >= 2) {
+      // Formata para exibição: capitaliza primeiro caractere
+      marcas.push(token.charAt(0).toUpperCase() + token.slice(1));
+    }
+  }
+
+  return Array.from(new Set(marcas)).sort();
+}
+
+/**
+ * Detecta se o texto contém uma marca desconhecida no catálogo.
+ * Retorna { marcaSuspeita, termoProduto } se detectado, ou null caso contrário.
+ *
+ * Lógica: extrai palavras da busca; a busca completa retorna 0 resultados;
+ * alguma palavra não aparece em nenhum produto (nem nome, nem tag) → marca desconhecida.
+ */
+export function detectarMarcaDesconhecida(
+  texto: string,
+  catalogo: Produto[]
+): { marcaSuspeita: string; termoProduto: string } | null {
+  const palavras = extrairPalavrasBaseBusca(texto);
+  if (palavras.length < 2) return null;
+
+  // Coleta todos os tokens presentes no catálogo (nome, subcat, cat, tags)
+  const tokensConhecidos = new Set<string>();
+  for (const p of catalogo) {
+    for (const fonte of [p.name, p.category, p.subcategory, p.description || ""]) {
+      normalizar(fonte).split(/\s+/).forEach((w) => { if (w.length >= 2) tokensConhecidos.add(w); });
+    }
+    for (const tag of p.tags ?? []) {
+      expandirTag(tag).forEach((t) => tokensConhecidos.add(t));
+    }
+  }
+
+  // Palavra que não existe em lugar nenhum do catálogo → marca desconhecida
+  const ehQuantidade = (w: string) => /^\d+\s*(?:kg|g|ml|l|lt|un|pc|pct|gr)$/.test(w);
+  const palavrasDesconhecidas = palavras.filter(
+    (w) => !ehQuantidade(w) && !tokensConhecidos.has(w)
+  );
+
+  if (palavrasDesconhecidas.length === 0) return null;
+
+  // A marca suspeita é a palavra desconhecida; o produto é o restante
+  const marcaSuspeita = palavrasDesconhecidas[0];
+  const termoProduto = palavras.filter((w) => w !== marcaSuspeita).join(" ");
+
+  return termoProduto ? { marcaSuspeita, termoProduto } : null;
 }
 
 // ── Busca de alternativas ────────────────────────────────────────────────────

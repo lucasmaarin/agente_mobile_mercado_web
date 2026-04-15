@@ -1484,6 +1484,28 @@ const AgentePage: React.FC = () => {
             );
             return;
           }
+
+          // Nenhum resultado — tenta busca progressiva removendo palavras
+          // Ex: "Arroz Artur" → tenta "Arroz" → encontra → avisa que não tem "Arroz Artur"
+          const palavrasBusca = extrairPalavrasBaseBusca(texto);
+          if (palavrasBusca.length >= 2) {
+            // Tenta sub-termos removendo palavras da direita até encontrar resultado
+            for (let i = palavrasBusca.length - 1; i >= 1; i--) {
+              const subTermo = palavrasBusca.slice(0, i).join(" ");
+              const resultadosParciais = buscarL(subTermo);
+              if (resultadosParciais.length > 0) {
+                const termoOriginalFormatado = limparTermoItemLista(texto);
+                const subTermoFormatado = subTermo.charAt(0).toUpperCase() + subTermo.slice(1);
+                await salvarRespostaLocal(
+                  `Não encontrei **${termoOriginalFormatado}**, mas temos opções de ${subTermoFormatado} ⬇️`,
+                  resultadosParciais,
+                  ["Finalizar pedido 🛒", "Continuar comprando"],
+                  subTermo
+                );
+                return;
+              }
+            }
+          }
         }
         // ────────────────────────────────────────────────────────────────────
       }

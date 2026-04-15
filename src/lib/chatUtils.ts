@@ -135,11 +135,18 @@ export function numeroDaString(valor: string): number | null {
 }
 
 export function limparTermoItemLista(termo: string): string {
-  return termo
-    .replace(/\b(de|da|do|das|dos|com|sem|para|pra)\b/gi, " ")
-    .replace(/\b(caixa|caixas|pacote|pacotes|sacola|sacolas|unidade|unidades|lata|latas|garrafa|garrafas)\b/gi, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  // Usa lookahead/lookbehind estendido para não quebrar em palavras acentuadas
+  // (ex: evita que \b(da)\b bata dentro de "moída")
+  const borda = "(?<![a-zA-ZÀ-ÿ])";
+  const bordaFim = "(?![a-zA-ZÀ-ÿ])";
+  const preposicoes = ["de","da","do","das","dos","com","sem","para","pra"];
+  let resultado = termo;
+  for (const p of preposicoes) {
+    resultado = resultado.replace(new RegExp(`${borda}${p}${bordaFim}`, "gi"), " ");
+  }
+  // Embalagens NÃO são removidas — são especificadores de busca válidos
+  // (ex: "suco garrafa", "leite de caixinha", "azeite lata")
+  return resultado.replace(/\s+/g, " ").trim();
 }
 
 export function extrairItensListaComQuantidade(
@@ -161,7 +168,7 @@ export function extrairItensListaComQuantidade(
     itens.push({ termoOriginal, termoBusca, quantidade: qtd });
   }
 
-  return itens;
+  return deduplicarItens(itens);
 }
 
 export function extrairItensSimples(
@@ -209,7 +216,29 @@ export function extrairItensSimples(
     if (palavrasValidas.length === 0) continue;
     itens.push({ termoOriginal, termoBusca, quantidade: 1 });
   }
-  return itens;
+  return deduplicarItens(itens);
+}
+
+/**
+ * Remove itens duplicados ou genéricos quando existe versão mais específica.
+ * Ex: ["Suco", "Suco garrafa", "Suco caixinha"] → mantém só "Suco garrafa" e "Suco caixinha"
+ * Ex: ["Bebida", "Bebidas"] → mantém só "Bebida"
+ */
+function deduplicarItens<T extends { termoBusca: string }>(itens: T[]): T[] {
+  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  return itens.filter((item, idx) => {
+    const n = norm(item.termoBusca);
+    // Remove se já existe item idêntico antes (Bebida/Bebidas)
+    const duplicaAntes = itens.slice(0, idx).some((outro) => norm(outro.termoBusca) === n);
+    if (duplicaAntes) return false;
+    // Remove se é prefixo de outro item mais específico (Suco é prefixo de "Suco garrafa")
+    const temMaisEspecifico = itens.some((outro, j) => {
+      if (j === idx) return false;
+      const nOutro = norm(outro.termoBusca);
+      return nOutro !== n && nOutro.startsWith(n + " ");
+    });
+    return !temMaisEspecifico;
+  });
 }
 
 // ── Carrinho ────────────────────────────────────────────────────────────────
