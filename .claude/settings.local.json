@@ -51,7 +51,8 @@
       "Bash(where chrome *)",
       "Read(//c/Program Files/Google/Chrome/Application/**)",
       "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
-      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --print-to-pdf=\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/instrucoes-agente.pdf\" \"file:///c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/analise-documentacao-busca.html\")"
+      "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --print-to-pdf=\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/instrucoes-agente.pdf\" \"file:///c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/analise-documentacao-busca.html\")",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

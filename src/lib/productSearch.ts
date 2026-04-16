@@ -45,12 +45,16 @@ export const STOPWORDS_BUSCA = new Set([
 ]);
 
 export const ALIASES_BUSCA: Record<string, string[]> = {
-  // embalagens → tokens de tag equivalentes
-  caixinha: ["tetrapak"],
-  caixa:    ["tetrapak"],
+  // embalagens → tokens de tag equivalentes (tetrapak/caixinha/caixa são sinônimos)
+  caixinha: ["tetrapak", "caixa"],
+  caxinha:  ["tetrapak", "caixinha", "caixa"], // variante ortográfica comum
+  caixa:    ["tetrapak", "caixinha"],
+  tetrapak: ["caixinha", "caixa"],             // busca por "tetrapak" também funciona
   garrafa:  ["garrafa", "pet", "vidro"],
   lata:     ["lata", "aluminio"],
-  saquinho: ["saquinho", "sachet"],
+  saquinho: ["saquinho", "saco", "bag", "sachet"],
+  saco:     ["saquinho", "bag", "sachet"],
+  bag:      ["saquinho", "saco", "sachet"],
   pacote:   ["pacote", "pct"],
   pote:     ["pote", "bandeja"],
   vidro:    ["vidro", "vd"],
@@ -141,93 +145,107 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const palavrasBase = extrairPalavrasBaseBusca(texto);
   if (palavrasBase.length === 0) return [];
 
-  // Debug: verificar entrada
-  if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
-    console.log('[filtrarProdutos]', { texto, palavrasBase, totalProdutos: produtos.length });
-  }
+  const searchSet = new Set(palavrasBase);
 
-  const cobreTagPalavra = (tagTokens: string[], w: string): boolean => {
-    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
-    return (ALIASES_BUSCA[w] ?? []).some((alias) => {
-      const aN = normalizar(alias);
-      return tagTokens.some((t) => t === aN || t.startsWith(aN));
-    });
-  };
+  const comScore = produtos.map((p) => {
+    const tags = p.tags ?? [];
+    if (tags.length === 0) return { produto: p, score: 0 };
 
-  // Primeiro: busca por TAGS
-  const comTagScore = produtos.map((p) => {
-    const tagTokens = p.tags ? tokensTagsProduto(p.tags) : [];
-    if (tagTokens.length === 0) return { produto: p, score: 0, pela: 'nenhuma' };
+    // Pré-computa tags compostas cujas TODAS as partes estão na busca.
+    // Ex: busca "ao leite" → #AoLeite partes ["ao","leite"] → ambas presentes → full match.
+    const tagsComCoberturaTotalSet = new Set<string>();
+    for (const tag of tags) {
+      const tagTokens = expandirTag(tag);
+      const tokenCompleto = normalizar(tag.replace(/^#/, ""));
+      const partesSeparadas = tagTokens.filter((t) => t !== tokenCompleto);
+      if (partesSeparadas.length >= 2 && partesSeparadas.every((t) => searchSet.has(t))) {
+        tagsComCoberturaTotalSet.add(tag);
+      }
+    }
+
+    /**
+     * Para uma palavra de busca `w`, avalia TODAS as tags do produto e retorna:
+     * - coberto: true se existe tag dedicada para `w` (exata, composta completa ou alias direto)
+     *            false se `w` aparece só como sub-token de tag composta (ex: "leite" em #SaborLeite)
+     * - pts: pontuação máxima obtida
+     *
+     * Distinção central:
+     *   #Leite       + busca "leite" → coberto=true  (tag é exatamente "leite")
+     *   #SaborLeite  + busca "leite" → coberto=false (leite é sub-token, não tag dedicada)
+     *   #TetraPak    + busca "caixinha" → coberto=true (alias direto: caixinha↔tetrapak)
+     */
+    const avaliarPalavra = (w: string): { pts: number; coberto: boolean } => {
+      let maxPts = 0;
+      let coberto = false;
+
+      for (const tag of tags) {
+        const tagNorm = normalizar(tag.replace(/^#/, ""));
+        const tagTokens = expandirTag(tag);
+
+        // 1. Tag exata: #Leite para busca "leite"
+        if (tagNorm === w) {
+          return { pts: 50, coberto: true };
+        }
+
+        // 2. Tag composta com cobertura total: #AoLeite quando busca contém "ao" e "leite"
+        if (tagsComCoberturaTotalSet.has(tag) && tagTokens.includes(w)) {
+          maxPts = 50; coberto = true;
+          continue;
+        }
+
+        // 3. Alias direto: #TetraPak para busca "caixinha" (caixinha = tetrapak)
+        const temAlias = (ALIASES_BUSCA[w] ?? []).some((alias) => {
+          const aN = normalizar(alias);
+          return tagNorm === aN || tagTokens.some((t) => t === aN || t.startsWith(aN));
+        });
+        if (temAlias) {
+          if (maxPts < 15) maxPts = 15;
+          coberto = true; // alias direto conta como cobertura completa
+          continue;
+        }
+
+        // 4. Sub-token: "leite" dentro de #SaborLeite — NÃO conta como cobertura exata
+        if (tagTokens.includes(w)) {
+          if (maxPts < 15) maxPts = 15;
+          // coberto permanece false
+          continue;
+        }
+
+        // 5. Prefixo
+        if (w.length >= 4 && (tagNorm.startsWith(w) || tagTokens.some((t) => t.startsWith(w)))) {
+          if (maxPts < 10) maxPts = 10;
+        }
+      }
+
+      return { pts: maxPts, coberto };
+    };
 
     let score = 0;
-    for (const w of palavrasBase) {
-      if (tagTokens.includes(w))               score += 22;
-      else if (cobreTagPalavra(tagTokens, w))  score += 16;
-    }
-    const todosNasTags = palavrasBase.every((w) => cobreTagPalavra(tagTokens, w));
-    if (todosNasTags) score += 25;
-
-    return { produto: p, score, pela: 'tags' };
-  }).filter(({ score }) => score > 0);
-
-  if (comTagScore.length > 0) {
-    const resultado = comTagScore
-      .sort((a, b) => b.score - a.score)
-      .map(({ produto }) => produto)
-      .slice(0, 20);
-    if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
-      console.log('[filtrarProdutos] Encontrados por TAGS:', resultado.length);
-    }
-    return resultado;
-  }
-
-  // Se não encontrou por tags, busca por NOME/CATEGORIA/DESCRIÇÃO
-  const comTextScore = produtos.map((p) => {
-    const nomeN = normalizar(p.name);
-    const subcatN = normalizar(p.subcategory);
-    const catN = normalizar(p.category);
-    const descN = normalizar(p.description || "");
-    const alvo = `${nomeN} ${subcatN} ${catN} ${descN}`;
-    const fraseBase = palavrasBase.join(" ");
-    
-    let score = 0;
-
-    if (fraseBase.length >= 4) {
-      if (nomeN.includes(fraseBase)) score += 35;
-      else if (subcatN.includes(fraseBase)) score += 30;
-      else if (alvo.includes(fraseBase)) score += 15;
-    }
+    let palavrasCobertas = 0;
 
     for (const w of palavrasBase) {
-      if (nomeN.startsWith(w)) score += 10;
-      else if (nomeN.includes(w)) score += 6;
-      else if (subcatN.includes(w)) score += 5;
-      else if (catN.includes(w)) score += 4;
-      else if (descN.includes(w)) score += 2;
+      const { pts, coberto } = avaliarPalavra(w);
+      score += pts;
+      if (coberto) palavrasCobertas++;
     }
 
-    // Penalidade: ração/pet food quando não é pet
-    const termoPet = palavrasBase.some((w) =>
-      ["racao", "raca", "pet", "cachorro", "gato", "cao", "felino", "canino"].includes(w)
-    );
-    const ehProdutoPet =
-      catN.includes("racao") || catN.includes("pet") || catN.includes("animal") ||
-      subcatN.includes("racao") || subcatN.includes("pet") || subcatN.includes("animal");
-    if (ehProdutoPet && !termoPet) score -= 80;
+    // Bônus: todas as palavras têm cobertura exata
+    if (palavrasCobertas === palavrasBase.length) score += 25;
+
+    // Regra principal: produto só aparece se tiver tag dedicada para CADA palavra da busca.
+    // "leite" → precisa de #Leite (sub-token em #SaborLeite não conta).
+    // "leite caixinha" → precisa de #Leite E #TetraPak/#Caixinha.
+    if (palavrasCobertas < palavrasBase.length) {
+      return { produto: p, score: 0 };
+    }
 
     return { produto: p, score };
   }).filter(({ score }) => score > 0);
 
-  const resultado = comTextScore
+  return comScore
     .sort((a, b) => b.score - a.score)
     .map(({ produto }) => produto)
     .slice(0, 20);
-
-  if (typeof window !== 'undefined' && window.localStorage?.getItem('debug_filterProdutos')) {
-    console.log('[filtrarProdutos] Encontrados por TEXT:', resultado.length);
-  }
-  
-  return resultado;
 }
 
 export function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] {

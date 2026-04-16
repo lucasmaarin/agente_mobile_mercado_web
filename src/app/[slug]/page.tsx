@@ -29,6 +29,7 @@ import {
   traduzirAbreviacoes,
   sugerirCorrecaoOrtografica,
   produtoCobreTermos,
+  detectarMarcaDesconhecida,
 } from "@/lib/productSearch";
 import {
   limparMarkdownBasico,
@@ -1203,6 +1204,31 @@ const AgentePage: React.FC = () => {
             );
             return;
           }
+
+          // Nenhum candidato encontrado — tenta detectar marca desconhecida
+          if (candidatosItemUnico.length === 0) {
+            const marcaInfo = detectarMarcaDesconhecida(itemUnicoExtraido.termoBusca, produtos);
+            if (marcaInfo) {
+              // Tenta mostrar alternativas pelo tipo de produto (sem a marca)
+              const alternativas = buscarLocal(marcaInfo.termoProduto).slice(0, 6);
+              const termoCapitalizado = marcaInfo.termoProduto.charAt(0).toUpperCase() + marcaInfo.termoProduto.slice(1);
+              if (alternativas.length > 0) {
+                await salvarRespostaLocal(
+                  `Hmm, não encontrei **${itemUnicoExtraido.termoOriginal ?? itemUnicoExtraido.termoBusca}** no nosso catálogo. Mas temos estas opções de ${termoCapitalizado} ⬇️`,
+                  alternativas,
+                  ["Finalizar pedido 🛒", "Continuar comprando"],
+                  marcaInfo.termoProduto
+                );
+              } else {
+                await salvarRespostaLocal(
+                  `Hmm, não encontrei **${itemUnicoExtraido.termoOriginal ?? itemUnicoExtraido.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊`,
+                  undefined,
+                  ["Continuar comprando"]
+                );
+              }
+              return;
+            }
+          }
         }
 
         // SEMPRE reseta listaPedidoState para criar nova busca
@@ -1263,9 +1289,9 @@ const AgentePage: React.FC = () => {
                     break;
                   }
                 }
-                if (!achou) fallbacks.push({ texto: `Não encontrei "${it.termoBusca}" no catálogo.` });
+                if (!achou) fallbacks.push({ texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
               } else if (it.candidatos.length === 0) {
-                fallbacks.push({ texto: `Não encontrei "${it.termoBusca}" no catálogo.` });
+                fallbacks.push({ texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
               }
             }
 
@@ -1722,7 +1748,19 @@ const AgentePage: React.FC = () => {
       const termosBuscaUsuario = extrairPalavrasBaseBusca(texto);
 
       const produtosParaExibirBase = resultado.produtosParaMostrar;
-      const produtosParaExibir = produtosParaExibirBase;
+
+      // Pós-filtro: reordena e valida os produtos escolhidos pelo LLM pelo score real
+      // da busca. Evita que produtos irrelevantes (ex: Passatempo via #SaborLeite para
+      // busca "leite caixinha") apareçam mesmo que o LLM os cite do histórico.
+      let produtosParaExibir = produtosParaExibirBase;
+      if (wFlowState === FLOW_STATES.BROWSING && produtosParaExibirBase.length > 0) {
+        const reordenados = filtrarProdutos(texto, produtosParaExibirBase);
+        if (reordenados.length > 0) {
+          produtosParaExibir = reordenados;
+        }
+        // Se filtrarProdutos retornou vazio (mensagem sem busca, ex: "confirma"),
+        // mantém produtosParaExibirBase inalterado.
+      }
 
       if (produtosCardIds.length === 0 && produtosParaExibir.length > 0) {
         produtosCardIds = produtosParaExibir.map((p) => p.id);
