@@ -262,7 +262,7 @@ const AgentePage: React.FC = () => {
     infoEstabelecimento,
     formasPagamento,
     lojaConfig,
-  } = useEstabelecimento(dataCompanyId);
+  } = useEstabelecimento(companyId, dataCompanyId);
 
   // --- Domínio
   const [produtos, setProdutos]               = useState<Produto[]>([]);
@@ -1328,8 +1328,21 @@ const AgentePage: React.FC = () => {
           }
 
           if (estadoAtual.stage === "await_confirm") {
-            // Finalizar pedido → abre checkout
+            // Finalizar pedido → abre checkout (respeitando pedido mínimo)
             if (ehIntencaoCheckout(texto)) {
+              const minimo = lojaConfig?.pedidoMinimo ?? 0;
+              const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
+              if (minimo > 0 && totalAtual < minimo) {
+                setListaPedidoState(null);
+                const falta = (minimo - totalAtual).toFixed(2).replace('.', ',');
+                const minimoFmt = minimo.toFixed(2).replace('.', ',');
+                await salvarRespostaLocal(
+                  `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalAtual.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
+                  undefined,
+                  ["Continuar comprando"]
+                );
+                return;
+              }
               setListaPedidoState(null);
               setShowCheckout(true);
               return;
@@ -2353,7 +2366,22 @@ const AgentePage: React.FC = () => {
               </dl>
               <button
                 className={styles.agFinalizarBtn}
-                onClick={() => { setMostrarCarrinho(false); setShowCheckout(true); }}
+                onClick={() => {
+                  const minimo = lojaConfig?.pedidoMinimo ?? 0;
+                  if (minimo > 0 && totalCarrinho < minimo) {
+                    setMostrarCarrinho(false);
+                    const falta = (minimo - totalCarrinho).toFixed(2).replace('.', ',');
+                    const minimoFmt = minimo.toFixed(2).replace('.', ',');
+                    salvarRespostaLocal(
+                      `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalCarrinho.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
+                      undefined,
+                      ["Continuar comprando"]
+                    );
+                    return;
+                  }
+                  setMostrarCarrinho(false);
+                  setShowCheckout(true);
+                }}
               >
                 Finalizar pedido
               </button>
