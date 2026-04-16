@@ -8,6 +8,7 @@ import {
   type ConfigLoja,
   type InfoEstabelecimento,
 } from "@/services/firestore";
+import { LOGO_OVERRIDES, NOME_OVERRIDES } from "@/config/dominios";
 
 interface UseEstabelecimentoResult {
   logoEstabelecimento: string | null;
@@ -17,16 +18,6 @@ interface UseEstabelecimentoResult {
   formasPagamento: string[];
   lojaConfig: ConfigLoja | null;
 }
-
-// Overrides keyed pelo ID ORIGINAL do slug (não pelo ID de dados)
-const LOGO_OVERRIDES: Record<string, string> = {
-  jQQjHTCc2zW1tuZMQzGF: '/logos/zerograu_logo.png',
-  XAXMOP6aweRbBAb0gUvU: '/logos/vidal_logo.png',
-};
-
-const NOME_OVERRIDES: Record<string, string> = {
-  XAXMOP6aweRbBAb0gUvU: 'Vidal',
-};
 
 /**
  * companyId   — ID do slug atual (usado para nome/logo: overrides ou Firestore próprio)

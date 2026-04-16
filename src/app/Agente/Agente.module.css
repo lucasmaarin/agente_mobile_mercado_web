@@ -162,7 +162,7 @@
   flex: 1;
   overflow-y: auto;
   background: transparent;
-  padding: 16px 32px;
+  padding: 36px 32px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;

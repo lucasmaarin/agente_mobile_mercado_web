@@ -57,7 +57,11 @@
       "Bash(npx.cmd tsc *)",
       "Read(//usr/local/bin/**)",
       "Read(//c/Users/lucas/.nvm/versions/**)",
-      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command 'cd '\\\\''c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado'\\\\''; npx tsc --noEmit; exit $LASTEXITCODE')"
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command 'cd '\\\\''c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado'\\\\''; npx tsc --noEmit; exit $LASTEXITCODE')",
+      "Bash(dir \"c:\\\\\\\\Users\\\\\\\\lucas\\\\\\\\Desktop\\\\\\\\mobile_mercado\\\\\\\\agente_mobile_mercado\\\\\\\\public\\\\\\\\logos\\\\\\\\\")",
+      "Bash(powershell -Command \"Get-ChildItem 'c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\public\\\\logos'\")",
+      "Bash(cmd.exe /c \"dir c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\public\\\\logos\")",
+      "Bash(git.exe log *)"
     ]
   }
 }

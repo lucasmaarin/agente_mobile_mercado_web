@@ -264,6 +264,32 @@ const AgentePage: React.FC = () => {
     lojaConfig,
   } = useEstabelecimento(companyId, dataCompanyId);
 
+  // Atualiza favicon e título com a logo/nome do estabelecimento
+  useEffect(() => {
+    if (logoEstabelecimento) {
+      const defs: { rel: string; sizes?: string }[] = [
+        { rel: 'icon' },
+        { rel: 'shortcut icon' },
+        { rel: 'apple-touch-icon', sizes: '180x180' },
+        { rel: 'apple-touch-icon' },
+      ];
+      defs.forEach(({ rel, sizes }) => {
+        const selector = sizes ? `link[rel="${rel}"][sizes="${sizes}"]` : `link[rel="${rel}"]`;
+        let el = document.querySelector(selector) as HTMLLinkElement | null;
+        if (!el) {
+          el = document.createElement('link');
+          el.rel = rel;
+          if (sizes) el.setAttribute('sizes', sizes);
+          document.head.appendChild(el);
+        }
+        el.href = logoEstabelecimento;
+      });
+    }
+    if (nomeEstabelecimento) {
+      document.title = nomeEstabelecimento;
+    }
+  }, [logoEstabelecimento, nomeEstabelecimento]);
+
   // --- Domínio
   const [produtos, setProdutos]               = useState<Produto[]>([]);
   const [indiceCategoria, setIndiceCategoria] = useState<string>('');
@@ -2416,6 +2442,7 @@ const AgentePage: React.FC = () => {
                 <WelcomeCard
                   logoUrl={logoEstabelecimento}
                   nomeEstabelecimento={nomeEstabelecimento}
+                  companyId={companyId}
                 />
               ) : msg.authCheckboxCard ? (
                 <AuthCheckboxCard

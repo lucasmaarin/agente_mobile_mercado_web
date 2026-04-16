@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { ShoppingCart, Globe, ExternalLink, Search } from "lucide-react";
-import { DOMAIN_SLUGS } from "@/config/dominios";
+import { DOMAIN_SLUGS, LOGO_OVERRIDES, NOME_OVERRIDES } from "@/config/dominios";
 import { buscarNomeEstabelecimento, buscarLogoEstabelecimento } from "@/services/firestore";
 
 interface Estabelecimento {
@@ -49,9 +49,23 @@ export default function HomePage() {
 
   useEffect(() => {
     items.forEach(({ companyId }) => {
+      const logoOverride = LOGO_OVERRIDES[companyId] ?? null;
+      const nomeOverride = NOME_OVERRIDES[companyId] ?? null;
+
+      if (logoOverride && nomeOverride) {
+        setItems(prev =>
+          prev.map(e =>
+            e.companyId === companyId
+              ? { ...e, nome: nomeOverride, logo: logoOverride, loading: false }
+              : e
+          )
+        );
+        return;
+      }
+
       Promise.all([
-        buscarNomeEstabelecimento(companyId),
-        buscarLogoEstabelecimento(companyId),
+        nomeOverride ? Promise.resolve(nomeOverride) : buscarNomeEstabelecimento(companyId),
+        logoOverride ? Promise.resolve(logoOverride) : buscarLogoEstabelecimento(companyId),
       ]).then(([nome, logo]) => {
         setItems(prev =>
           prev.map(e =>
@@ -269,7 +283,7 @@ function EstabelecimentoCard({ item }: { item: Estabelecimento }) {
             <img
               src={logo}
               alt={displayNome ?? ""}
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }}
               onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           ) : (
