@@ -7,6 +7,7 @@ export const DOMAIN_SLUGS: Record<string, string> = {
   'https://www.uaumart.com.br': 'q0IPIusmpEq3pHbMyfWY', // UAU Mart
   'vidal': 'XAXMOP6aweRbBAb0gUvU',
   'zero grau': 'jQQjHTCc2zW1tuZMQzGF',
+  'g&s': 'GkFYWdOBKD1vbzYoem9K',
 };
 
 // Mapa de slug em minúsculo → ID real do Firestore (com casing correto)
