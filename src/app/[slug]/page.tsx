@@ -2372,11 +2372,14 @@ const AgentePage: React.FC = () => {
                     setMostrarCarrinho(false);
                     const falta = (minimo - totalCarrinho).toFixed(2).replace('.', ',');
                     const minimoFmt = minimo.toFixed(2).replace('.', ',');
-                    salvarRespostaLocal(
-                      `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalCarrinho.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
-                      undefined,
-                      ["Continuar comprando"]
-                    );
+                    const msgId = `sys-${Date.now()}`;
+                    setMensagens(prev => [...prev, {
+                      id: msgId,
+                      role: 'assistant' as const,
+                      content: `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalCarrinho.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
+                      timestamp: new Date(),
+                      suggestions: ['Continuar comprando'],
+                    }]);
                     return;
                   }
                   setMostrarCarrinho(false);
