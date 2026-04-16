@@ -52,7 +52,12 @@
       "Read(//c/Program Files/Google/Chrome/Application/**)",
       "Read(//c/Program Files \\(x86\\)/Microsoft/Edge/Application/**)",
       "Bash(\"/c/Program Files/Google/Chrome/Application/chrome.exe\" --headless --disable-gpu --print-to-pdf=\"c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/instrucoes-agente.pdf\" \"file:///c:/Users/lucas/Desktop/mobile_mercado/agente_mobile_mercado/analise-documentacao-busca.html\")",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(npx.cmd tsc *)",
+      "Read(//usr/local/bin/**)",
+      "Read(//c/Users/lucas/.nvm/versions/**)",
+      "Bash(/mnt/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe -Command 'cd '\\\\''c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado'\\\\''; npx tsc --noEmit; exit $LASTEXITCODE')"
     ]
   }
 }

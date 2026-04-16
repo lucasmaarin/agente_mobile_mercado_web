@@ -1083,7 +1083,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${itemUnicoQtdState.produtoSugerido.name} ao carrinho.`,
                 [itemUnicoQtdState.produtoSugerido],
-                ["Finalizar pedido 🛒", "Continuar comprando"]
+                ["Finalizar pedido", "Continuar comprando"]
               );
               return;
             }
@@ -1103,7 +1103,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
                 novoEstado.candidatos,
-                ["Finalizar pedido 🛒", "Continuar comprando"],
+                ["Finalizar pedido", "Continuar comprando"],
                 itemUnicoQtdState.termoBusca
               );
               return;
@@ -1112,7 +1112,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Esta é a opção de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               [itemUnicoQtdState.produtoSugerido],
-              ["Finalizar pedido 🛒", "Continuar comprando"],
+              ["Finalizar pedido", "Continuar comprando"],
               itemUnicoQtdState.termoBusca
             );
             return;
@@ -1135,7 +1135,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${escolhido.name} ao carrinho.`,
               [escolhido],
-              ["Finalizar pedido 🛒", "Continuar comprando"]
+              ["Finalizar pedido", "Continuar comprando"]
             );
             return;
           }
@@ -1153,7 +1153,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               itemUnicoQtdState.candidatos.slice(0, 6),
-              ["Finalizar pedido 🛒", "Continuar comprando"],
+              ["Finalizar pedido", "Continuar comprando"],
               itemUnicoQtdState.termoBusca
             );
             return;
@@ -1178,7 +1178,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Estas são as opções de ${novoEstadoUnico.termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               candidatosItemUnico,
-              ["Finalizar pedido 🛒", "Continuar comprando"],
+              ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
             );
             return;
@@ -1199,7 +1199,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Esta é a opção de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               [sugerido],
-              ["Finalizar pedido 🛒", "Continuar comprando"],
+              ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
             );
             return;
@@ -1216,7 +1216,7 @@ const AgentePage: React.FC = () => {
                 await salvarRespostaLocal(
                   `Hmm, não encontrei **${itemUnicoExtraido.termoOriginal ?? itemUnicoExtraido.termoBusca}** no nosso catálogo. Mas temos estas opções de ${termoCapitalizado} ⬇️`,
                   alternativas,
-                  ["Finalizar pedido 🛒", "Continuar comprando"],
+                  ["Finalizar pedido", "Continuar comprando"],
                   marcaInfo.termoProduto
                 );
               } else {
@@ -1306,7 +1306,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 sections[i].titulo,
                 sections[i].produtos,
-                isLast ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
+                isLast ? ["Finalizar pedido", "Continuar comprando"] : undefined,
                 sections[i].termoBusca
               );
             }
@@ -1316,7 +1316,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 fallbacks[r].texto,
                 fallbacks[r].produtos,
-                isUltimo ? ["Finalizar pedido 🛒", "Continuar comprando"] : undefined,
+                isUltimo ? ["Finalizar pedido", "Continuar comprando"] : undefined,
                 fallbacks[r].termoBusca
               );
             }
@@ -1380,7 +1380,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Pronto! Preenchi automaticamente com as opcoes mais populares:\n${resumoAdd}\n\nDeseja finalizar a compra, alterar algum item ou continuar comprando?`,
                 escolhidos.slice(0, 6),
-                ["Finalizar pedido 🛒", "Continuar comprando"]
+                ["Finalizar pedido", "Continuar comprando"]
               );
               return;
             }
@@ -1474,7 +1474,7 @@ const AgentePage: React.FC = () => {
               await salvarRespostaLocal(
                 `Lista encerrada.\n\nResumo final do carrinho:\n${formatarResumoCarrinho(wCart)}`,
                 undefined,
-                ["Finalizar pedido 🛒", "Continuar comprando"]
+                ["Finalizar pedido", "Continuar comprando"]
               );
               return;
             }
@@ -1490,7 +1490,7 @@ const AgentePage: React.FC = () => {
                 await salvarRespostaLocal(
                   `Todos os itens da lista foram processados.\n\nResumo final do carrinho:\n${formatarResumoCarrinho(wCart)}`,
                   cardsFinal,
-                  ["Finalizar pedido 🛒", "Continuar comprando"]
+                  ["Finalizar pedido", "Continuar comprando"]
                 );
                 return;
               }
@@ -1564,7 +1564,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               `Estas são as opções de ${termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
               todosResultadosDiretos,
-              ["Finalizar pedido 🛒", "Continuar comprando"],
+              ["Finalizar pedido", "Continuar comprando"],
               termoBuscaLimpo
             );
             return;
@@ -1582,7 +1582,7 @@ const AgentePage: React.FC = () => {
                 await salvarRespostaLocal(
                   `Não encontrei **${termoOriginalFormatado}**, mas temos opções de ${subTermoFormatado} ⬇️`,
                   resultadosParciais,
-                  ["Finalizar pedido 🛒", "Continuar comprando"],
+                  ["Finalizar pedido", "Continuar comprando"],
                   subTermo
                 );
                 return;
@@ -1830,7 +1830,7 @@ const AgentePage: React.FC = () => {
                   suggestions:       resultado.suggestions.length > 0
                     ? resultado.suggestions
                     : (temCards && wFlowState === FLOW_STATES.BROWSING
-                        ? ["Finalizar pedido 🛒", "Continuar comprando"]
+                        ? ["Finalizar pedido", "Continuar comprando"]
                         : undefined),
                 }
               : m
@@ -2005,7 +2005,7 @@ const AgentePage: React.FC = () => {
   const getQuickReplies = (fs: FlowState, carrinhoLen: number): string[] => {
     switch (fs) {
       case FLOW_STATES.BROWSING:
-        return carrinhoLen > 0 ? ['Finalizar pedido 🛒', 'Continuar comprando'] : [];
+        return carrinhoLen > 0 ? ['Finalizar pedido', 'Continuar comprando'] : [];
       case FLOW_STATES.CHECKING_SAVED_ADDRESS:
         return ['Usar endereço salvo', 'Informar novo endereço'];
       case FLOW_STATES.ASKING_SAVE_ADDRESS:
@@ -2125,7 +2125,7 @@ const AgentePage: React.FC = () => {
         await salvarRespostaAgente(
           `Todos os itens adicionados!\n\n${formatarResumoCarrinho(novoCart)}`,
           cardsFinal,
-          ["Finalizar pedido 🛒"]
+          ["Finalizar pedido"]
         );
       } else {
         estado.currentIndex = prox;
@@ -2355,7 +2355,7 @@ const AgentePage: React.FC = () => {
                 className={styles.agFinalizarBtn}
                 onClick={() => { setMostrarCarrinho(false); setShowCheckout(true); }}
               >
-                Finalizar pedido 🛒
+                Finalizar pedido
               </button>
             </div>
           )}

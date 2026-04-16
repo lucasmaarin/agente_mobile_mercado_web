@@ -9,20 +9,13 @@ export function normalizar(s: string): string {
  * Expande uma tag "#TioDito" em tokens normalizados ["tio", "dito"].
  * Remove o # inicial e divide por camelCase, números e hífens.
  */
+/**
+ * Normaliza uma tag simples: remove o # e converte para minúsculas sem acento.
+ * Tags são palavras únicas (#gelo, #saborizado, #750ml, #garrafa).
+ * Retorna array com o único token normalizado.
+ */
 export function expandirTag(tag: string): string[] {
-  const semHash = tag.replace(/^#/, "");
-  // Token completo normalizado (ex: "1Kg" → "1kg", "CarneMoida" → "carnemoida")
-  const tokenCompleto = normalizar(semHash);
-  // Divide camelCase e dígito-letra: "TioDito" → ["tio","dito"], "1Kg" → ["1","kg"]
-  const partes = semHash
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/([A-Za-z])(\d)/g,  "$1 $2")
-    .replace(/(\d)([A-Za-z])/g,  "$1 $2")
-    .split(/[\s\-_]+/)
-    .map(normalizar)
-    .filter((t) => t.length >= 1);
-  // Retorna partes + token completo (para match de "1kg" contra #1Kg)
-  return Array.from(new Set([...partes, tokenCompleto]));
+  return [normalizar(tag.replace(/^#/, ""))];
 }
 
 /** Retorna todos os tokens normalizados das tags de um produto. */
@@ -145,79 +138,46 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const palavrasBase = extrairPalavrasBaseBusca(texto);
   if (palavrasBase.length === 0) return [];
 
-  const searchSet = new Set(palavrasBase);
-
   const comScore = produtos.map((p) => {
     const tags = p.tags ?? [];
     if (tags.length === 0) return { produto: p, score: 0 };
 
-    // Pré-computa tags compostas cujas TODAS as partes estão na busca.
-    // Ex: busca "ao leite" → #AoLeite partes ["ao","leite"] → ambas presentes → full match.
-    const tagsComCoberturaTotalSet = new Set<string>();
-    for (const tag of tags) {
-      const tagTokens = expandirTag(tag);
-      const tokenCompleto = normalizar(tag.replace(/^#/, ""));
-      const partesSeparadas = tagTokens.filter((t) => t !== tokenCompleto);
-      if (partesSeparadas.length >= 2 && partesSeparadas.every((t) => searchSet.has(t))) {
-        tagsComCoberturaTotalSet.add(tag);
-      }
-    }
+    // Normaliza todas as tags do produto uma única vez
+    const tagNorms = tags.map((t) => normalizar(t.replace(/^#/, "")));
 
     /**
-     * Para uma palavra de busca `w`, avalia TODAS as tags do produto e retorna:
-     * - coberto: true se existe tag dedicada para `w` (exata, composta completa ou alias direto)
-     *            false se `w` aparece só como sub-token de tag composta (ex: "leite" em #SaborLeite)
-     * - pts: pontuação máxima obtida
+     * Avalia uma palavra de busca contra as tags do produto.
+     * Tags são palavras únicas (#gelo, #saborizado, #750ml).
      *
-     * Distinção central:
-     *   #Leite       + busca "leite" → coberto=true  (tag é exatamente "leite")
-     *   #SaborLeite  + busca "leite" → coberto=false (leite é sub-token, não tag dedicada)
-     *   #TetraPak    + busca "caixinha" → coberto=true (alias direto: caixinha↔tetrapak)
+     * - coberto=true + 50pts : tag exata  (ex: "gelo" vs #gelo)
+     * - coberto=true + 15pts : alias direto (ex: "caixinha" vs #tetrapak)
+     * - coberto=true + 10pts : prefixo (ex: "saboriz" vs #saborizado)
+     * - coberto=false        : sem match
      */
     const avaliarPalavra = (w: string): { pts: number; coberto: boolean } => {
-      let maxPts = 0;
-      let coberto = false;
+      for (const tagNorm of tagNorms) {
+        // Exato
+        if (tagNorm === w) return { pts: 50, coberto: true };
+      }
 
-      for (const tag of tags) {
-        const tagNorm = normalizar(tag.replace(/^#/, ""));
-        const tagTokens = expandirTag(tag);
-
-        // 1. Tag exata: #Leite para busca "leite"
-        if (tagNorm === w) {
-          return { pts: 50, coberto: true };
-        }
-
-        // 2. Tag composta com cobertura total: #AoLeite quando busca contém "ao" e "leite"
-        if (tagsComCoberturaTotalSet.has(tag) && tagTokens.includes(w)) {
-          maxPts = 50; coberto = true;
-          continue;
-        }
-
-        // 3. Alias direto: #TetraPak para busca "caixinha" (caixinha = tetrapak)
-        const temAlias = (ALIASES_BUSCA[w] ?? []).some((alias) => {
-          const aN = normalizar(alias);
-          return tagNorm === aN || tagTokens.some((t) => t === aN || t.startsWith(aN));
-        });
-        if (temAlias) {
-          if (maxPts < 15) maxPts = 15;
-          coberto = true; // alias direto conta como cobertura completa
-          continue;
-        }
-
-        // 4. Sub-token: "leite" dentro de #SaborLeite — NÃO conta como cobertura exata
-        if (tagTokens.includes(w)) {
-          if (maxPts < 15) maxPts = 15;
-          // coberto permanece false
-          continue;
-        }
-
-        // 5. Prefixo
-        if (w.length >= 4 && (tagNorm.startsWith(w) || tagTokens.some((t) => t.startsWith(w)))) {
-          if (maxPts < 10) maxPts = 10;
+      // Alias direto (ex: "caixinha" → busca por "tetrapak","caixa" nas tags)
+      const aliases = ALIASES_BUSCA[w] ?? [];
+      if (aliases.length > 0) {
+        for (const tagNorm of tagNorms) {
+          if (aliases.some((alias) => normalizar(alias) === tagNorm)) {
+            return { pts: 15, coberto: true };
+          }
         }
       }
 
-      return { pts: maxPts, coberto };
+      // Prefixo (ex: "saboriz" encontra #saborizado)
+      if (w.length >= 4) {
+        for (const tagNorm of tagNorms) {
+          if (tagNorm.startsWith(w)) return { pts: 10, coberto: true };
+        }
+      }
+
+      return { pts: 0, coberto: false };
     };
 
     let score = 0;
