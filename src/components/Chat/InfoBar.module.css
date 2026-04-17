@@ -3,8 +3,9 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 4px 14px 8px;
+  padding: 1px 6px 3px;
   flex-wrap: wrap;
+  background-color: #FDFDFD;
 }
 
 .item {

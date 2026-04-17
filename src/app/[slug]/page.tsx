@@ -526,7 +526,7 @@ const AgentePage: React.FC = () => {
         const welcomeContent = isNewUser
           ? `Como você gostaria de ser chamado?`
           : `Como posso ajudar você hoje?`;
-        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"];
+        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"];
         // Preserva mensagens de auth anteriores e appenda a boas-vindas
         setMensagens(prev => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
@@ -543,7 +543,7 @@ const AgentePage: React.FC = () => {
           return [...authMsgs, {
             id: 'welcome', role: 'assistant' as const,
             content: 'Como posso ajudar você hoje?', isWelcomeCard: true, timestamp: new Date(),
-            suggestions: ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"],
+            suggestions: ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"],
           }];
         });
       } finally {
@@ -579,7 +579,7 @@ const AgentePage: React.FC = () => {
       content:       "Como posso ajudar você hoje?",
       isWelcomeCard: true,
       timestamp:     new Date(),
-      suggestions:   ["🛒 Montar meu pedido", "🧺 Buscar produtos", "Ver pedidos"],
+      suggestions:   ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"],
     }]);
   };
 
@@ -957,7 +957,7 @@ const AgentePage: React.FC = () => {
 
         // ── Ações do menu inicial ──────────────────────────────────────────────
 
-        if (texto.includes("Montar meu pedido")) {
+        if (texto.includes("Digitar a minha lista de compras")) {
           await salvarRespostaLocal(
             "Ótimo! Cole ou escreva sua lista — pode ser com quebra de linha:\n\n" +
             "2 leite integral\n1 arroz 5kg\n3 refrigerante\n\n" +
@@ -994,7 +994,7 @@ const AgentePage: React.FC = () => {
             await salvarRespostaLocal(
               "Você ainda não fez nenhum pedido por aqui. Que tal fazer o primeiro agora? 🛒",
               undefined,
-              ["🛒 Montar meu pedido", "🧺 Buscar produtos"]
+              ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos"]
             );
           } else {
             const resumo = slice.map((p, i) => {

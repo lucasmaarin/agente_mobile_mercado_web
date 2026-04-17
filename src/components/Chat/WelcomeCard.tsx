@@ -1,20 +1,17 @@
 import React from "react";
 import styles from "./WelcomeCard.module.css";
 
-const LARGE_LOGO_IDS = new Set(['XAXMOP6aweRbBAb0gUvU', 'jQQjHTCc2zW1tuZMQzGF']);
-
 interface WelcomeCardProps {
   logoUrl: string | null;
   nomeEstabelecimento: string;
   companyId?: string;
 }
 
-const WelcomeCard: React.FC<WelcomeCardProps> = ({ logoUrl, nomeEstabelecimento, companyId }) => {
-  const largeLogo = companyId ? LARGE_LOGO_IDS.has(companyId) : false;
+const WelcomeCard: React.FC<WelcomeCardProps> = ({ logoUrl, nomeEstabelecimento }) => {
   return (
     <div className={styles.card}>
       <div className={styles.top}>
-        <div className={largeLogo ? styles.logoWrapperLarge : styles.logoWrapper}>
+        <div className={styles.logoWrapper}>
           <img
             src={logoUrl ?? "/logo.png"}
             alt={nomeEstabelecimento}
