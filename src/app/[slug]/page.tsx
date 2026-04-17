@@ -960,9 +960,9 @@ const AgentePage: React.FC = () => {
         if (texto.includes("Digitar a minha lista de compras")) {
           await salvarRespostaLocal(
             "Ótimo! Cole ou escreva sua lista — pode ser com quebra de linha:\n\n" +
-            "2 leite integral\n1 arroz 5kg\n3 refrigerante\n\n" +
+            "leite integral\narroz 5kg\nrefrigerante\n\n" +
             "Ou separado por vírgula:\n" +
-            "2 leite integral, 1 arroz 5kg, 3 refrigerante\n\n" +
+            "leite integral, arroz 5kg, refrigerante\n\n" +
             "Vou buscar cada item e mostrar as opções disponíveis. Pode enviar! 👇"
           );
           return;

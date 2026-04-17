@@ -21,7 +21,7 @@ const WelcomeCard: React.FC<WelcomeCardProps> = ({ logoUrl, nomeEstabelecimento 
         </div>
         <span className={styles.subtitle}>
           Agente<br />
-          inteligente{nomeEstabelecimento ? <><br />do {nomeEstabelecimento}</> : ""}
+          inteligente{nomeEstabelecimento ? <> do<br />{nomeEstabelecimento}</> : ""}
         </span>
       </div>
       <div>
