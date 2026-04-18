@@ -1055,7 +1055,6 @@ const AgentePage: React.FC = () => {
 
         // Sempre reseta o estado de lista — cada mensagem é tratada do zero
         setListaPedidoState(null);
-        const estadoListaAtivo = podeIniciarLista ? null : null;
 
         // Reseta estado de seleção a cada nova mensagem em BROWSING
         if (itemUnicoQtdState) {
@@ -1141,19 +1140,17 @@ const AgentePage: React.FC = () => {
           setListaPedidoState(null);
         }
 
-        if (estadoListaAtivo || podeIniciarLista) {
-          const estadoAtual: ListaPedidoState = !estadoListaAtivo
-            ? {
-                stage: "await_confirm",
-                currentIndex: 0,
-                itens: itensExtraidos.map((it) => ({
-                  ...it,
-                  candidatos: (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6),
-                })),
-              }
-            : { ...estadoListaAtivo, itens: estadoListaAtivo.itens.map((it) => ({ ...it })) };
+        if (podeIniciarLista) {
+          const estadoAtual: ListaPedidoState = {
+            stage: "await_confirm",
+            currentIndex: 0,
+            itens: itensExtraidos.map((it) => ({
+              ...it,
+              candidatos: (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6),
+            })),
+          };
 
-          if (!estadoListaAtivo) {
+          if (true) {
             const buscarL2 = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
 
             // Verifica cada item: se os candidatos não cobrem todas as palavras,
