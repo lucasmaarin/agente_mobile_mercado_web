@@ -1369,7 +1369,7 @@ const AgentePage: React.FC = () => {
             setCarrinho(wCart);
             sincronizarDiffCarrinhoLocal(cartAntes, wCart);
 
-            itemAtual.selecionadoId = escolhido.id;
+            itemAtual.selecionadoId = escolhido!.id;
             estadoAtual.stage = "await_next_item";
             setListaPedidoState(estadoAtual);
             await salvarRespostaLocal(
