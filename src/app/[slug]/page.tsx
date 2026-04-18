@@ -1053,138 +1053,14 @@ const AgentePage: React.FC = () => {
         const itemUnicoExtraido = itensComQtd.length === 1 ? itensComQtd[0] : (itensExtraidos.length === 1 ? itensExtraidos[0] : null);
         const podeIniciarLista = itensExtraidos.length >= 2;
 
-        // Variável local que reflete se há lista ativa APÓS o reset.
-        // setListaPedidoState é assíncrono — não podemos confiar no valor do estado
-        // logo abaixo do set. Usamos esta variável para decisões síncronas.
-        const estadoListaAtivo = podeIniciarLista ? null : listaPedidoState;
+        // Sempre reseta o estado de lista — cada mensagem é tratada do zero
+        setListaPedidoState(null);
+        const estadoListaAtivo = podeIniciarLista ? null : null;
 
-        if (podeIniciarLista) {
-          setListaPedidoState(null);
-        }
-
+        // Reseta estado de seleção a cada nova mensagem em BROWSING
         if (itemUnicoQtdState) {
-          // Se o usuário pediu um produto diferente do estado atual, reseta e processa normalmente
-          const termoDiferenteExplicito = itemUnicoExtraido &&
-            normalizar(itemUnicoExtraido.termoBusca) !== normalizar(itemUnicoQtdState.termoBusca);
-          // Também detecta busca por produto diferente sem quantificador explícito
-          const novasBuscasDiferentes = !itemUnicoExtraido && (() => {
-            const resultados = wordKeysEnabled ? filtrarProdutosWordKeys(texto, produtos) : filtrarProdutos(texto, produtos);
-            if (resultados.length === 0) return false;
-            const idsAtuais = new Set(itemUnicoQtdState.candidatos.map(p => p.id));
-            return resultados.every(p => !idsAtuais.has(p.id));
-          })();
-          const termoDiferente = termoDiferenteExplicito || novasBuscasDiferentes;
-          if (termoDiferente) {
-            setItemUnicoQtdState(null);
-            // Cai no fluxo normal abaixo (não retorna)
-          } else {
-          if (ehCancelamento(texto) || textoNormalizado.includes("cancelar")) {
-            setItemUnicoQtdState(null);
-            await salvarRespostaLocal("Tudo bem, selecao cancelada.");
-            return;
-          }
-
-          if (ehAcaoContinuarComprando(texto)) {
-            setItemUnicoQtdState(null);
-            await salvarRespostaLocal("Com prazer! 😊 Me conta o que mais está precisando e eu encontro rapidinho!");
-            return;
-          }
-
-          if (itemUnicoQtdState.stage === "confirm_single" && itemUnicoQtdState.produtoSugerido) {
-            const confirmarMesmo =
-              ehConfirmacaoPositiva(texto) ||
-              textoNormalizado.includes("esse") ||
-              textoNormalizado.includes("mesmo");
-            const escolherOutro =
-              textoNormalizado.includes("outro") ||
-              textoNormalizado.includes("marca") ||
-              textoNormalizado.includes("tipo");
-
-            if (confirmarMesmo) {
-              const cartAntes = [...wCart];
-              wCart = adicionarItemAoCarrinhoLocal(wCart, itemUnicoQtdState.produtoSugerido, itemUnicoQtdState.quantidade);
-              setCarrinho(wCart);
-              sincronizarDiffCarrinhoLocal(cartAntes, wCart);
-              setItemUnicoQtdState(null);
-              await salvarRespostaLocal(
-                `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${itemUnicoQtdState.produtoSugerido.name} ao carrinho.`,
-                [itemUnicoQtdState.produtoSugerido],
-                ["Finalizar pedido", "Continuar comprando"]
-              );
-              return;
-            }
-
-            if (escolherOutro) {
-              const alternativas = buscarAlternativasPorTermo(
-                itemUnicoQtdState.termoBusca,
-                produtos,
-                itemUnicoQtdState.produtoSugerido.id
-              );
-              const novoEstado: ItemUnicoQuantidadeState = {
-                ...itemUnicoQtdState,
-                stage: "choose_other",
-                candidatos: alternativas.length > 0 ? alternativas : itemUnicoQtdState.candidatos,
-              };
-              setItemUnicoQtdState(novoEstado);
-              await salvarRespostaLocal(
-                `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
-                novoEstado.candidatos,
-                ["Finalizar pedido", "Continuar comprando"],
-                itemUnicoQtdState.termoBusca
-              );
-              return;
-            }
-
-            await salvarRespostaLocal(
-              `Esta é a opção de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
-              [itemUnicoQtdState.produtoSugerido],
-              ["Finalizar pedido", "Continuar comprando"],
-              itemUnicoQtdState.termoBusca
-            );
-            return;
-          }
-
-          const indiceEscolhido = encontrarIndiceEscolhido(texto, itemUnicoQtdState.candidatos.length);
-          const escolhido = indiceEscolhido !== null
-            ? itemUnicoQtdState.candidatos[indiceEscolhido]
-            : itemUnicoQtdState.candidatos.find((c) => {
-                const nome = normalizar(c.name);
-                return textoNormalizado.includes(nome) || nome.includes(textoNormalizado);
-              });
-
-          if (escolhido) {
-            const cartAntes = [...wCart];
-            wCart = adicionarItemAoCarrinhoLocal(wCart, escolhido, itemUnicoQtdState.quantidade);
-            setCarrinho(wCart);
-            sincronizarDiffCarrinhoLocal(cartAntes, wCart);
-            setItemUnicoQtdState(null);
-            await salvarRespostaLocal(
-              `Perfeito! Adicionei ${itemUnicoQtdState.quantidade}x ${escolhido.name} ao carrinho.`,
-              [escolhido],
-              ["Finalizar pedido", "Continuar comprando"]
-            );
-            return;
-          }
-
-          // Verifica se o usuário está buscando um produto diferente (sem resultado no catálogo)
-          const naoMencionaTermoAtual = !textoNormalizado.includes(normalizar(itemUnicoQtdState.termoBusca));
-          const pareceBuscaNovaProduto = naoMencionaTermoAtual &&
-            !ehConfirmacaoPositiva(texto) &&
-            !ehCancelamento(texto) &&
-            textoNormalizado.split(/\s+/).filter(w => w.length >= 3).length >= 2;
-          if (pareceBuscaNovaProduto) {
-            setItemUnicoQtdState(null);
-            // Cai no fluxo normal (LLM responde sobre o novo produto/termo)
-          } else {
-            await salvarRespostaLocal(
-              `Estas são as opções de ${itemUnicoQtdState.termoDisplay ?? itemUnicoQtdState.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
-              itemUnicoQtdState.candidatos.slice(0, 6),
-              ["Finalizar pedido", "Continuar comprando"],
-              itemUnicoQtdState.termoBusca
-            );
-            return;
-          }
-          } // fecha else (termo diferente)
+          setItemUnicoQtdState(null);
+          // Cai no fluxo normal abaixo
         }
 
         if (!listaPedidoState && itemUnicoExtraido) {
