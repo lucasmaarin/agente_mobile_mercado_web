@@ -1351,7 +1351,7 @@ const AgentePage: React.FC = () => {
 
             const indiceEscolhido = encontrarIndiceEscolhido(texto, itemAtual.candidatos.length);
             const escolhido = indiceEscolhido !== null
-              ? itemAtual.candidatos[indiceEscolhido]
+              ? itemAtual.candidatos[indiceEscolhido as number]
               : itemAtual.candidatos.find((c) => normalizar(c.name).includes(textoNormalizado) || textoNormalizado.includes(normalizar(c.name)));
 
             if (!escolhido) {
