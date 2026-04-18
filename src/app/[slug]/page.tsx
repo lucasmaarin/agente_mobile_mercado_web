@@ -1365,7 +1365,7 @@ const AgentePage: React.FC = () => {
             }
 
             const cartAntes = [...wCart];
-            wCart = adicionarItemAoCarrinhoLocal(wCart, escolhido, itemAtual.quantidade);
+            wCart = adicionarItemAoCarrinhoLocal(wCart, escolhido!, itemAtual.quantidade);
             setCarrinho(wCart);
             sincronizarDiffCarrinhoLocal(cartAntes, wCart);
 
