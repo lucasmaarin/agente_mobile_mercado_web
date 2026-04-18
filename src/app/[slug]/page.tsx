@@ -1373,8 +1373,8 @@ const AgentePage: React.FC = () => {
             estadoAtual.stage = "await_next_item";
             setListaPedidoState(estadoAtual);
             await salvarRespostaLocal(
-              `Adicionei ${itemAtual.quantidade}x ${escolhido.name} ao carrinho.\n\nDeseja ir para o proximo item da lista ou cancelar?`,
-              [escolhido],
+              `Adicionei ${itemAtual.quantidade}x ${escolhido!.name} ao carrinho.\n\nDeseja ir para o proximo item da lista ou cancelar?`,
+              [escolhido!],
               ["Proximo item", "Cancelar lista"]
             );
             return;
