@@ -228,10 +228,8 @@ function deduplicarItens<T extends { termoBusca: string }>(itens: T[]): T[] {
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   return itens.filter((item, idx) => {
     const n = norm(item.termoBusca);
-    // Remove se já existe item idêntico antes (Bebida/Bebidas)
-    const duplicaAntes = itens.slice(0, idx).some((outro) => norm(outro.termoBusca) === n);
-    if (duplicaAntes) return false;
-    // Remove se é prefixo de outro item mais específico (Suco é prefixo de "Suco garrafa")
+    // Remove apenas se é prefixo de outro item mais específico (Suco → "Suco garrafa")
+    // Duplicatas exatas são mantidas para que o cliente possa pedir o mesmo item várias vezes
     const temMaisEspecifico = itens.some((outro, j) => {
       if (j === idx) return false;
       const nOutro = norm(outro.termoBusca);

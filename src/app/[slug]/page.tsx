@@ -250,6 +250,7 @@ const AgentePage: React.FC = () => {
 
   // Ref para últimos produtos mostrados — usado como fallback quando user diz "Sim"/"pode"
   const ultimosProdutosMostradosRef = React.useRef<Produto[]>([]);
+  const semResultadoRef = React.useRef<{ termo: string; tentativas: number }>({ termo: '', tentativas: 0 });
 
   // --- Conversa (sessão no Firestore)
   const [conversaId, setConversaId] = useState<string | null>(null);
@@ -1571,6 +1572,41 @@ const AgentePage: React.FC = () => {
             }
           }
         }
+      }
+
+      // ── Fluxo progressivo para produto não encontrado ──────────────────────
+      if (wFlowState === FLOW_STATES.BROWSING && produtosFoco.length === 0 && !ehSaudacaoCurta(texto) && !ehIntencaoSemProduto(texto)) {
+        const termoNorm = normalizar(texto).trim();
+        const sr = semResultadoRef.current;
+        if (sr.termo === termoNorm) {
+          sr.tentativas += 1;
+        } else {
+          sr.termo = termoNorm;
+          sr.tentativas = 1;
+        }
+
+        if (sr.tentativas === 2) {
+          await salvarRespostaLocal(
+            "Este item pode estar em falta no estoque. Gostaria de ser avisado quando tivermos disponível?",
+            undefined,
+            ["Sim, me avise quando tiver", "Continuar comprando"]
+          );
+          return;
+        }
+
+        if (sr.tentativas >= 3) {
+          sr.termo = '';
+          sr.tentativas = 0;
+          await salvarRespostaLocal(
+            "Dei uma olhadinha aqui, acho que não temos este produto no momento. Clique no botão para sugerir o produto ao estabelecimento:",
+            undefined,
+            ["Sugerir produto", "Continuar comprando"]
+          );
+          return;
+        }
+        // tentativa 1: deixa o LLM responder normalmente com a mensagem humilde
+      } else if (produtosFoco.length > 0) {
+        semResultadoRef.current = { termo: '', tentativas: 0 };
       }
 
       // Few-shot
