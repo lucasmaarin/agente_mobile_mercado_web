@@ -30,6 +30,12 @@ import {
   sugerirCorrecaoOrtografica,
   produtoCobreTermos,
   detectarMarcaDesconhecida,
+  detectarBuscaPorMarca,
+  ehBuscaPuraporMarca,
+  buscarProdutosPorMarca,
+  detectarBuscaPorCategoria,
+  buscarProdutosPorCategoria,
+  embaralharArray,
 } from "@/lib/productSearch";
 import {
   limparMarkdownBasico,
@@ -122,6 +128,12 @@ interface ItemUnicoQuantidadeState {
   produtoSugerido?: Produto;
 }
 
+interface CategoriaPaginadaState {
+  categoria: string;
+  produtosTodos: Produto[];  // todos os produtos da categoria (embaralhados)
+  paginaAtual: number;       // qual página estamos (0, 1, 2, ...)
+  ITENS_POR_PAGINA: number;  // sempre 6
+}
 
 // ============================================================
 // TIPOS
@@ -132,7 +144,8 @@ interface Mensagem {
   content: string;
   timestamp: Date;
   produtosCard?: Produto[]; // cards de produto exibidos junto à mensagem
-  termoBusca?: string;      // termo usado para buscar esses produtos (para "ver todos")
+  termoBusca?: string;      // termo usado para buscar esses produtos (para paginação)
+  maxProdutos?: number;     // quantos produtos estão visíveis (começa em 6, cresce +6 por clique)
   suggestions?: string[];   // chips clicáveis gerados pelo [SUGGEST:...] do agente
   authCheckboxCard?: boolean; // card especial com checkboxes de login
   isWelcomeCard?: boolean;    // card de apresentação inicial estilizado
@@ -304,6 +317,7 @@ const AgentePage: React.FC = () => {
   const [enviando, setEnviando]   = useState(false);
   const [listaPedidoState, setListaPedidoState] = useState<ListaPedidoState | null>(null);
   const [itemUnicoQtdState, setItemUnicoQtdState] = useState<ItemUnicoQuantidadeState | null>(null);
+  const [categoriaPaginadaState, setCategoriaPaginadaState] = useState<CategoriaPaginadaState | null>(null);
 
   // --- UI
   const [mostrarCarrinho, setMostrarCarrinho]   = useState(false);
@@ -1065,6 +1079,91 @@ const AgentePage: React.FC = () => {
 
         if (!listaPedidoState && itemUnicoExtraido) {
           const buscarLocal = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+          
+          // ============================================================
+          // DETECÇÃO AUTÔNOMA DE BUSCA POR MARCA
+          // ============================================================
+          const ehBuscaPorMarcaPura = ehBuscaPuraporMarca(itemUnicoExtraido.termoBusca, produtos);
+          
+          if (ehBuscaPorMarcaPura) {
+            // Cliente está buscando especificamente por marca
+            const marcaExtraida = detectarBuscaPorMarca(itemUnicoExtraido.termoBusca);
+            
+            if (marcaExtraida) {
+              const produtosMarca = buscarProdutosPorMarca(marcaExtraida, produtos).slice(0, 6);
+              
+              if (produtosMarca.length > 0) {
+                const marcaCapitalizada = marcaExtraida.charAt(0).toUpperCase() + marcaExtraida.slice(1);
+                setItemUnicoQtdState({
+                  termoBusca: marcaExtraida,
+                  termoDisplay: `Produtos ${marcaCapitalizada}`,
+                  quantidade: itemUnicoExtraido.quantidade,
+                  stage: produtosMarca.length > 1 ? "choose_other" : "confirm_single",
+                  candidatos: produtosMarca,
+                  produtoSugerido: produtosMarca.length === 1 ? produtosMarca[0] : undefined,
+                });
+                
+                const mensagem = produtosMarca.length > 1
+                  ? `Ótimo! Encontrei ${produtosMarca.length} produtos ${marcaCapitalizada}. Qual você prefere? ⬇️`
+                  : `Perfeito! Temos este produto ${marcaCapitalizada}. Quer adicionar? ⬇️`;
+                
+                await salvarRespostaLocal(
+                  mensagem,
+                  produtosMarca,
+                  ["Finalizar pedido", "Continuar comprando"],
+                  marcaExtraida
+                );
+                return;
+              } else {
+                // Marca não encontrada no catálogo
+                const marcaCapitalizada = marcaExtraida.charAt(0).toUpperCase() + marcaExtraida.slice(1);
+                await salvarRespostaLocal(
+                  `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** no momento. 😔 Quer tentar outra marca?`,
+                  undefined,
+                  ["Continuar comprando"]
+                );
+                return;
+              }
+            }
+          }
+          
+          // ============================================================
+          // DETECÇÃO AUTÔNOMA DE BUSCA POR CATEGORIA
+          // ============================================================
+          const categoriaPura = detectarBuscaPorCategoria(itemUnicoExtraido.termoBusca, produtos);
+          
+          if (categoriaPura) {
+            // Cliente está buscando especificamente por categoria
+            const produtosDaCategoria = buscarProdutosPorCategoria(categoriaPura, produtos);
+            
+            if (produtosDaCategoria.length > 0) {
+              // Inicializa estado paginado com todos os produtos embaralhados
+              setCategoriaPaginadaState({
+                categoria: categoriaPura,
+                produtosTodos: produtosDaCategoria,
+                paginaAtual: 0,
+                ITENS_POR_PAGINA: 6,
+              });
+              
+              // Mostra os primeiros 6 produtos
+              const primeiros6 = produtosDaCategoria.slice(0, 6);
+              const temMais = produtosDaCategoria.length > 6;
+              const sugestoes = temMais 
+                ? ["📄 Ver mais produtos", "Finalizar pedido", "Continuar comprando"]
+                : ["Finalizar pedido", "Continuar comprando"];
+              
+              const categoriaCapitalizada = categoriaPura.charAt(0).toUpperCase() + categoriaPura.slice(1);
+              await salvarRespostaLocal(
+                `Ótimo! Encontrei ${produtosDaCategoria.length} produtos em ${categoriaCapitalizada}. Aqui estão os 6 primeiros! ⬇️`,
+                primeiros6,
+                sugestoes,
+                categoriaPura
+              );
+              return;
+            }
+          }
+          
+          // Busca normal se não for uma busca pura por marca ou categoria
           const candidatosItemUnico = buscarLocal(itemUnicoExtraido.termoBusca).slice(0, 6);
           if (candidatosItemUnico.length > 1) {
             const novoEstadoUnico: ItemUnicoQuantidadeState = {
@@ -1109,6 +1208,21 @@ const AgentePage: React.FC = () => {
 
           // Nenhum candidato encontrado — tenta detectar marca desconhecida
           if (candidatosItemUnico.length === 0) {
+            // ✨ Se é busca por marca pura mas não achou nada
+            const ehBuscaMarcaPura = ehBuscaPuraporMarca(itemUnicoExtraido.termoBusca, produtos);
+            const marcaExtraida = detectarBuscaPorMarca(itemUnicoExtraido.termoBusca);
+            
+            if (ehBuscaMarcaPura && marcaExtraida) {
+              const marcaCapitalizada = marcaExtraida.charAt(0).toUpperCase() + marcaExtraida.slice(1);
+              await salvarRespostaLocal(
+                `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** no momento. 😔 Quer tentar outra marca?`,
+                undefined,
+                ["Continuar comprando"]
+              );
+              return;
+            }
+            
+            // Fallback para buscas que NÃO são marca pura
             const marcaInfo = detectarMarcaDesconhecida(itemUnicoExtraido.termoBusca, produtos);
             if (marcaInfo) {
               // Tenta mostrar alternativas pelo tipo de produto (sem a marca)
@@ -1134,21 +1248,35 @@ const AgentePage: React.FC = () => {
         }
 
         // SEMPRE reseta listaPedidoState para criar nova busca
-        // (mesmo que peça a mesma lista novamente)
-        if (podeIniciarLista) {
-          // SEMPRE reseta listaPedidoState para criar nova busca
-          // (mesmo que peça a mesma lista novamente)
-          setListaPedidoState(null);
-        }
-
         if (podeIniciarLista) {
           const estadoAtual: ListaPedidoState = {
             stage: "await_confirm",
             currentIndex: 0,
-            itens: itensExtraidos.map((it) => ({
-              ...it,
-              candidatos: (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6),
-            })),
+            itens: itensExtraidos.map((it) => {
+              // ✨ Detecção autônoma: busca por marca pura (com mais inteligência)
+              const ehBuscaMarcaPura = ehBuscaPuraporMarca(it.termoBusca, produtos);
+              
+              if (ehBuscaMarcaPura) {
+                const marcaExtraida = detectarBuscaPorMarca(it.termoBusca);
+                if (marcaExtraida) {
+                  const candidatos = buscarProdutosPorMarca(marcaExtraida, produtos).slice(0, 6);
+                  return { ...it, candidatos };
+                }
+              }
+              
+              // Busca normal se não for busca pura por marca
+              let candidatos = (wordKeysEnabled ? filtrarProdutosWordKeys(it.termoBusca, produtos) : filtrarProdutos(it.termoBusca, produtos)).slice(0, 6);
+              
+              // Se não encontrou e detectou marca, tenta buscar por marca
+              if (candidatos.length === 0) {
+                const marcaDetectada = detectarBuscaPorMarca(it.termoBusca);
+                if (marcaDetectada) {
+                  candidatos = buscarProdutosPorMarca(marcaDetectada, produtos).slice(0, 6);
+                }
+              }
+              
+              return { ...it, candidatos };
+            }),
           };
 
           if (true) {
@@ -1163,17 +1291,32 @@ const AgentePage: React.FC = () => {
 
             for (const it of estadoAtual.itens) {
               const palavrasIt = extrairPalavrasBaseBusca(it.termoBusca);
+              
+              // ✨ Verifica com autonomia se é uma busca por marca pura
+              const ehBuscaMarcaPura = ehBuscaPuraporMarca(it.termoBusca, produtos);
+              const marcaExtraidaDoTermo = detectarBuscaPorMarca(it.termoBusca);
+              
               const temCobertura = it.candidatos.length > 0 &&
-                (palavrasIt.length < 2 || it.candidatos.some((p) => produtoCobreTermos(p, palavrasIt)));
+                (ehBuscaMarcaPura || marcaExtraidaDoTermo || palavrasIt.length < 2 || it.candidatos.some((p) => produtoCobreTermos(p, palavrasIt)));
 
               if (temCobertura) {
+                const titulo = ehBuscaMarcaPura && marcaExtraidaDoTermo
+                  ? `Produtos ${marcaExtraidaDoTermo.charAt(0).toUpperCase() + marcaExtraidaDoTermo.slice(1)} ⬇️`
+                  : `Opções de ${(it.termoOriginal ?? it.termoBusca).charAt(0).toUpperCase() + (it.termoOriginal ?? it.termoBusca).slice(1)} ⬇️`;
                 sections.push({
-                  titulo: `Opções de ${(it.termoOriginal ?? it.termoBusca).charAt(0).toUpperCase() + (it.termoOriginal ?? it.termoBusca).slice(1)} ⬇️`,
+                  titulo,
                   produtos: it.candidatos,
                   termoBusca: it.termoBusca,
                 });
-              } else if (palavrasIt.length >= 2) {
-                // Fallback progressivo
+              } else if (ehBuscaMarcaPura && marcaExtraidaDoTermo && it.candidatos.length === 0) {
+                // ✨ Se é busca por marca pura mas não achou nada, não faz fallback
+                // Apenas informa que a marca não está disponível
+                const marcaCapitalizada = marcaExtraidaDoTermo.charAt(0).toUpperCase() + marcaExtraidaDoTermo.slice(1);
+                fallbacks.push({
+                  texto: `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** no momento. 😔`,
+                });
+              } else if (palavrasIt.length >= 2 && !ehBuscaMarcaPura) {
+                // Fallback progressivo (APENAS para buscas que NÃO são por marca pura)
                 let achou = false;
                 for (let i = palavrasIt.length - 1; i >= 1; i--) {
                   const subTermo = palavrasIt.slice(0, i).join(" ");
@@ -1448,12 +1591,113 @@ const AgentePage: React.FC = () => {
           ];
           const resposta = frases[Math.floor(Math.random() * frases.length)];
           await salvarRespostaLocal(resposta);
+          // Reseta estados de busca/categoria
+          setListaPedidoState(null);
+          setItemUnicoQtdState(null);
+          setCategoriaPaginadaState(null);
           return;
+        }
+
+        // ============================================================
+        // HANDLER PARA "VER MAIS PRODUTOS" (CATEGORIA PAGINADA)
+        // ============================================================
+        if ((texto.includes("Ver mais") || texto.includes("📄")) && categoriaPaginadaState) {
+          const proximaPagina = categoriaPaginadaState.paginaAtual + 1;
+          const inicio = proximaPagina * categoriaPaginadaState.ITENS_POR_PAGINA;
+          const fim = inicio + categoriaPaginadaState.ITENS_POR_PAGINA;
+          const proximosProdutos = categoriaPaginadaState.produtosTodos.slice(inicio, fim);
+          
+          if (proximosProdutos.length > 0) {
+            // Atualiza o estado com a próxima página
+            setCategoriaPaginadaState({
+              ...categoriaPaginadaState,
+              paginaAtual: proximaPagina,
+            });
+            
+            // Verifica se há mais produtos após estes
+            const temMaisAindaDepois = (proximaPagina + 1) * categoriaPaginadaState.ITENS_POR_PAGINA < categoriaPaginadaState.produtosTodos.length;
+            const sugestoes = temMaisAindaDepois
+              ? ["📄 Ver mais produtos", "Finalizar pedido", "Continuar comprando"]
+              : ["Finalizar pedido", "Continuar comprando"];
+            
+            const produtosRestantes = categoriaPaginadaState.produtosTodos.length - fim;
+            const mensagem = temMaisAindaDepois
+              ? `Aqui estão mais 6 produtos de ${categoriaPaginadaState.categoria}! Ainda temos ${produtosRestantes} mais. ⬇️`
+              : `Aqui estão os últimos ${proximosProdutos.length} produtos de ${categoriaPaginadaState.categoria}! ⬇️`;
+            
+            await salvarRespostaLocal(
+              mensagem,
+              proximosProdutos,
+              sugestoes,
+              categoriaPaginadaState.categoria
+            );
+            return;
+          } else {
+            // Não há mais produtos
+            await salvarRespostaLocal(
+              `Esses eram todos os ${categoriaPaginadaState.produtosTodos.length} produtos de ${categoriaPaginadaState.categoria}! 📚 Quer procurar outra coisa?`,
+              undefined,
+              ["Continuar comprando"]
+            );
+            setCategoriaPaginadaState(null);
+            return;
+          }
+        }
+
+
+        // ============================================================
+        // DETECÇÃO ESPECIAL: MENSAGENS SOBRE MARCA
+        // ============================================================
+        if (!listaPedidoState) {
+          const temPadraoMarca = /(?:marca|marcas|produtos\s+da|de\s+marca)/.test(normalizar(texto));
+          
+          if (temPadraoMarca) {
+            // É uma pergunta sobre marca — trata localmente
+            const marcaExtraida = detectarBuscaPorMarca(texto);
+            
+            if (marcaExtraida) {
+              const produtosMarca = buscarProdutosPorMarca(marcaExtraida, produtos).slice(0, 6);
+              
+              if (produtosMarca.length > 0) {
+                const marcaCapitalizada = marcaExtraida.charAt(0).toUpperCase() + marcaExtraida.slice(1);
+                setItemUnicoQtdState({
+                  termoBusca: marcaExtraida,
+                  termoDisplay: `Produtos ${marcaCapitalizada}`,
+                  quantidade: 1,
+                  stage: produtosMarca.length > 1 ? "choose_other" : "confirm_single",
+                  candidatos: produtosMarca,
+                  produtoSugerido: produtosMarca.length === 1 ? produtosMarca[0] : undefined,
+                });
+                
+                const mensagem = produtosMarca.length > 1
+                  ? `Ótimo! Encontrei ${produtosMarca.length} produtos ${marcaCapitalizada}. Qual você prefere? ⬇️`
+                  : `Perfeito! Temos este produto ${marcaCapitalizada}. Quer adicionar? ⬇️`;
+                
+                await salvarRespostaLocal(
+                  mensagem,
+                  produtosMarca,
+                  ["Finalizar pedido", "Continuar comprando"],
+                  marcaExtraida
+                );
+                return;
+              } else {
+                // Marca não encontrada
+                const marcaCapitalizada = marcaExtraida.charAt(0).toUpperCase() + marcaExtraida.slice(1);
+                await salvarRespostaLocal(
+                  `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** em estoque no momento. 😔 Quer procurar outra marca ou categoria?`,
+                  undefined,
+                  ["Continuar comprando"]
+                );
+                return;
+              }
+            }
+          }
         }
 
         // ── Busca local direta (sem quantidade, sem lista) ──────────────────
         // Quando o usuário digita um produto sem quantidade (ex: "frango"),
         // tenta buscar localmente e mostrar o carrossel sem chamar o LLM.
+        // AGORA TAMBÉM inclui perguntas que NÃO sejam sobre marca/categoria
         if (!listaPedidoState && !texto.trim().endsWith("?") && !ehSaudacaoCurta(texto)) {
           const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
           const palavrasBusca = extrairPalavrasBaseBusca(texto);
@@ -1541,34 +1785,43 @@ const AgentePage: React.FC = () => {
           // Se contexto detectado mas sem produtos: produtosFoco fica vazio
           // → a IA pergunta o que o cliente precisa para aquela data
         } else {
-          // Busca normal por texto
-          const filtrado = buscar(texto, produtos);
-          produtosMatchDireto = filtrado;
-          
-          // Lógica SIMPLES e DETERMINÍSTICA:
-          // Se encontrou produtos, mostra eles. Ponto.
-          // Sem mistura de categorias, sem amostra aleatória.
-          if (filtrado.length > 0) {
-            produtosFoco = filtrado.slice(0, 20);
-          } else {
-            // Se não encontrou, tenta apenas pelo primeiro termo
-            const palavrasBase = extrairPalavrasBaseBusca(texto);
-            if (palavrasBase.length > 0) {
-              const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
-              if (filtroTermoPrincipal.length > 0) {
-                produtosFoco = filtroTermoPrincipal.slice(0, 20);
-              } else {
-                // Último recurso: usa cache APENAS se confirmação óbvia
-                const confirmacaoObvia = ehSaudacaoCurta(texto) || 
-                                         ["sim", "ok", "pode", "vamo", "cla", "1", "2", "3", "4", "5", "tudo", "todos"].some(
-                                           (t) => normalizar(texto).trim().startsWith(t)
-                                         );
-                produtosFoco = (confirmacaoObvia && ultimosProdutosMostradosRef.current.length > 0) 
-                  ? ultimosProdutosMostradosRef.current 
-                  : [];
-              }
+          // Tenta detecção de marca antes da busca normal
+          const marcaDetectadaFoco = detectarBuscaPorMarca(texto);
+          if (marcaDetectadaFoco) {
+            const produtosMarcaFoco = buscarProdutosPorMarca(marcaDetectadaFoco, produtos);
+            if (produtosMarcaFoco.length > 0) {
+              produtosFoco = produtosMarcaFoco.slice(0, 20);
+              produtosMatchDireto = produtosFoco;
+            }
+          }
+
+          if (produtosFoco.length === 0) {
+            // Busca normal por texto
+            const filtrado = buscar(texto, produtos);
+            produtosMatchDireto = filtrado;
+
+            if (filtrado.length > 0) {
+              produtosFoco = filtrado.slice(0, 20);
             } else {
-              produtosFoco = [];
+              // Se não encontrou, tenta apenas pelo primeiro termo
+              const palavrasBase = extrairPalavrasBaseBusca(texto);
+              if (palavrasBase.length > 0) {
+                const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
+                if (filtroTermoPrincipal.length > 0) {
+                  produtosFoco = filtroTermoPrincipal.slice(0, 20);
+                } else {
+                  // Último recurso: usa cache APENAS se confirmação óbvia
+                  const confirmacaoObvia = ehSaudacaoCurta(texto) ||
+                                           ["sim", "ok", "pode", "vamo", "cla", "1", "2", "3", "4", "5", "tudo", "todos"].some(
+                                             (t) => normalizar(texto).trim().startsWith(t)
+                                           );
+                  produtosFoco = (confirmacaoObvia && ultimosProdutosMostradosRef.current.length > 0)
+                    ? ultimosProdutosMostradosRef.current
+                    : [];
+                }
+              } else {
+                produtosFoco = [];
+              }
             }
           }
         }
@@ -2401,7 +2654,7 @@ const AgentePage: React.FC = () => {
                 };
                 return (
                   <div className={isCarousel ? styles.produtosCarousel : styles.produtosCardWrapper} ref={isCarousel ? attachDrag : undefined}>
-                    {(msg.termoBusca ? msg.produtosCard!.slice(0, 6) : msg.produtosCard!).map((produto) => {
+                    {msg.produtosCard!.slice(0, msg.maxProdutos ?? 6).map((produto) => {
                       const emCarrinho = carrinho.find(i => i.id === produto.id);
                       const nomeExibido = traduzirAbreviacoes(produto.name);
                       const abrirModal = () => setImagemAmpliada({ src: produto.image ?? '/prodSemImg.svg', name: nomeExibido, price: produto.price });
@@ -2423,7 +2676,7 @@ const AgentePage: React.FC = () => {
                                     <span className={styles.produtoCardQtyNum}>{emCarrinho.quantity}</span>
                                   </>
                                 ) : null}
-                                <button className={styles.produtoCardAddBtn} onClick={() => { const emSelecao = (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) || (listaPedidoState && listaPedidoState.stage === "selecting_variant"); if (emSelecao && !emCarrinho) { selecionarVarianteCard(produto); } else { adicionarSilencioso(produto); } }} title={emCarrinho ? `Mais 1 ${nomeExibido}` : `Adicionar ${nomeExibido}`}>
+                                <button className={styles.produtoCardAddBtn} onClick={() => { const emSelecao = (itemUnicoQtdState && (itemUnicoQtdState.stage === "choose_other" || itemUnicoQtdState.stage === "confirm_single")) || (listaPedidoState && listaPedidoState.stage === "selecting_variant"); if (emSelecao && !emCarrinho) { setCategoriaPaginadaState(null); selecionarVarianteCard(produto); } else { adicionarSilencioso(produto); } }} title={emCarrinho ? `Mais 1 ${nomeExibido}` : `Adicionar ${nomeExibido}`}>
                                   <Plus size={emCarrinho ? 16 : 22} color="#193281" />
                                 </button>
                               </div>
@@ -2433,19 +2686,19 @@ const AgentePage: React.FC = () => {
                       );
                     })}
 
-                    {/* Card "Ver todos" — aparece quando há mais de 6 produtos salvos */}
-                    {isCarousel && msg.termoBusca && (msg.produtosCard?.length ?? 0) > 6 && (
+                    {/* Card "Mostra mais" — paginação de +6 produtos por clique */}
+                    {isCarousel && (msg.produtosCard?.length ?? 0) > (msg.maxProdutos ?? 6) && (
                       <div className={styles.produtoCarouselItem}>
                         <button
                           className={styles.verTodosCard}
                           onClick={() => {
                             setMensagens(prev => prev.map(m =>
-                              m.id === msg.id ? { ...m, termoBusca: undefined } : m
+                              m.id === msg.id ? { ...m, maxProdutos: (m.maxProdutos ?? 6) + 6 } : m
                             ));
                           }}
                         >
                           <span className={styles.verTodosIcon}>+</span>
-                          <span className={styles.verTodosLabel}>Ver todos</span>
+                          <span className={styles.verTodosLabel}>Mostra mais</span>
                         </button>
                       </div>
                     )}

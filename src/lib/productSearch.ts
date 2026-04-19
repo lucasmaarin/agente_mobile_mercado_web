@@ -6,16 +6,70 @@ export function normalizar(s: string): string {
 }
 
 /**
- * Expande uma tag "#TioDito" em tokens normalizados ["tio", "dito"].
- * Remove o # inicial e divide por camelCase, números e hífens.
+ * Retorna formas alternativas singulares de uma palavra em português.
+ * Ex: "derivados" → ["derivado"], "feijoes" → ["feijao"], "animais" → ["animal"]
+ * Retorna array vazio se a palavra já parece singular ou não tem regra aplicável.
  */
+export function singularizar(w: string): string[] {
+  if (w.length <= 3) return [];
+  // ões / oes → ão / ao
+  if (w.endsWith("oes")) return [w.slice(0, -3) + "ao"];
+  // ães / aes → ão / ao
+  if (w.endsWith("aes")) return [w.slice(0, -3) + "ao"];
+  // ais → al (animais → animal)
+  if (w.endsWith("ais")) return [w.slice(0, -2) + "l"];
+  // eis → el (papeis → papel)
+  if (w.endsWith("eis")) return [w.slice(0, -2) + "l"];
+  // ois → ol (anzois → anzol)
+  if (w.endsWith("ois")) return [w.slice(0, -2) + "l"];
+  // uis → ul
+  if (w.endsWith("uis")) return [w.slice(0, -2) + "l"];
+  // ns → m (bens → bem, etc.)
+  if (w.endsWith("ns") && w.length > 4) return [w.slice(0, -2) + "m"];
+  // es final (plural de palavras terminadas em r, z, s, x) — remove "es"
+  if (w.endsWith("es") && w.length > 4) return [w.slice(0, -2)];
+  // s simples → remove s (derivados → derivado, leites → leite)
+  if (w.endsWith("s")) return [w.slice(0, -1)];
+  return [];
+}
+
+// Stopwords removidas ao processar tags
+const TAG_STOPWORDS = new Set(["de", "do", "da", "dos", "das", "e", "o", "a"]);
+
+// Stopwords que podem aparecer embutidas em tags concatenadas (#derivadodoleite → derivado+leite)
+const STOP_EMBUTIDAS = ["dos", "das", "do", "da", "de"];
+
 /**
- * Normaliza uma tag simples: remove o # e converte para minúsculas sem acento.
- * Tags são palavras únicas (#gelo, #saborizado, #750ml, #garrafa).
- * Retorna array com o único token normalizado.
+ * Expande uma tag em tokens normalizados, tratando:
+ * - underscores como espaço (#leite_integral → ["leite", "integral"])
+ * - stopwords ("de", "do", "da"…) removidas (#leite_de_caixinha → ["leite", "caixinha"])
+ * - tags com espaços (#derivado do leite → ["derivado", "leite"])
+ * - stopwords embutidas sem separador (#derivadodoleite → ["derivado", "leite"])
  */
 export function expandirTag(tag: string): string[] {
-  return [normalizar(tag.replace(/^#/, ""))];
+  // 1. Remove # e substitui _ por espaço
+  const limpa = tag.replace(/^#/, "").replace(/_/g, " ").trim();
+  const norm = normalizar(limpa);
+
+  // 2. Se tem espaços, split e filtra stopwords
+  if (norm.includes(" ")) {
+    return norm.split(/\s+/).filter(t => t.length >= 2 && !TAG_STOPWORDS.has(t));
+  }
+
+  // 3. Tag sem espaços: tenta separar stopwords embutidas (ex: derivadodoleite → derivado+leite)
+  for (const stop of STOP_EMBUTIDAS) {
+    const idx = norm.indexOf(stop);
+    if (idx > 1 && idx + stop.length < norm.length - 1) {
+      const antes = norm.slice(0, idx);
+      const depois = norm.slice(idx + stop.length);
+      if (antes.length >= 2 && depois.length >= 2) {
+        return [antes, depois].filter(t => !TAG_STOPWORDS.has(t));
+      }
+    }
+  }
+
+  // 4. Token simples
+  return norm.length >= 1 ? [norm] : [];
 }
 
 /** Retorna todos os tokens normalizados das tags de um produto. */
@@ -34,6 +88,7 @@ export const STOPWORDS_BUSCA = new Set([
   "novo", "nova", "lista", "pedido", "compra", "compras", "item", "itens",
   "ha", "ai", "ah", "so", "ate", "ou", "que", "se", "ja", "la", "ca",
   "tudo", "nada", "ainda", "agora", "aqui", "ali", "isso", "esse", "essa", "esses", "essas",
+  "produtos", "produto", "marca", "marcas", // ← palavras relacionadas a busca por marca
   // embalagens removidas das stopwords — são especificadores válidos (ex: "leite de caixinha")
 ]);
 
@@ -94,6 +149,136 @@ export function detectarNomeContexto(texto: string): string | null {
   return null;
 }
 
+/**
+ * Detecta se o cliente está buscando por marca especificamente.
+ * Extrai APENAS o nome da marca dos padrões:
+ * - "marca X" → X
+ * - "produtos da marca X" → X
+ * - "produtos X" → X (quando tem 1-2 palavras)
+ * - "de marca X" → X
+ * - "marca X e Y" → X (pega a primeira marca)
+ * 
+ * Retorna o nome da marca em minúsculas, ou null se não detectar padrão de marca.
+ */
+export function detectarBuscaPorMarca(texto: string): string | null {
+  const t = normalizar(texto);
+  
+  // Padrões ordenados do mais específico ao mais genérico
+  const padroes = [
+    // "produtos da marca X" ou "produtos de marca X"
+    /produtos\s+(?:da|de)\s+(?:marca|marcas)\s+(\w+)/,
+    // "da marca X" ou "de marca X"
+    /(?:da|de)\s+(?:marca|marcas)\s+(\w+)/,
+    // "marca X" ou "marcas X"
+    /(?:marca|marcas)\s+(\w+)/,
+    // "produtos X" (se tiver exatamente 1-2 palavras após "produtos")
+    /^produtos\s+(\w+)(?:\s+\w+)?$/,
+    // "vocês/você tem (produtos) X" ou "tem produtos X"
+    /voce?s?\s+tem\s+(?:produtos?\s+)?(\w+)/,
+    /tem\s+produtos?\s+(\w+)/,
+    // "gostaria de ver/encontrar X" no final da frase
+    /(?:ver|encontrar|comprar|pedir)\s+(?:produtos?\s+)?(\w+)\s*\??$/,
+  ];
+  
+  for (const padrao of padroes) {
+    const match = t.match(padrao);
+    if (match && match[1] && match[1].length >= 2) {
+      // Retorna a marca normalizada
+      return match[1];
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Detecta se o texto é PRINCIPALMENTE uma busca por marca.
+ * (com pouca ou nenhuma especificação de tipo de produto)
+ * 
+ * Exemplos que retornam TRUE:
+ * - "produtos da marca nescau"
+ * - "marca nescau"
+ * - "nescau" (se "nescau" for marca desconhecida)
+ * 
+ * Exemplos que retornam FALSE:
+ * - "leite da marca nescau" (é busca por tipo + marca)
+ * - "chocolate nescau" (é busca por produto específico)
+ */
+export function ehBuscaPuraporMarca(texto: string, catalogo: Produto[]): boolean {
+  const t = normalizar(texto);
+  
+  // Se tem padrão explícito de marca, é busca por marca
+  const temPadraoMarca = /(?:marca|marcas|produtos\s+da|de\s+marca)/.test(t);
+  if (temPadraoMarca) return true;
+  
+  // Se é uma palavra única e é marca desconhecida, é busca por marca
+  const palavras = extrairPalavrasBaseBusca(texto);
+  if (palavras.length === 1) {
+    const palavra = palavras[0];
+    // Verifica se a palavra NÃO aparece como tipo de produto em lugar nenhum
+    const temNoNome = catalogo.some(p => normalizar(p.name).includes(palavra));
+    const temNaDescricao = catalogo.some(p => normalizar(p.description || "").includes(palavra));
+    const temNaTag = catalogo.some(p => (p.tags ?? []).some(tag => expandirTag(tag).includes(palavra)));
+    
+    // Se a palavra não aparece em lugar nenhum, é uma marca desconhecida
+    return !temNoNome && !temNaDescricao && !temNaTag;
+  }
+  
+  return false;
+}
+
+/**
+ * Busca produtos por marca com matching mais flexível.
+ * Procura a marca como palavras-chave separadas também.
+ * 
+ * Exemplos:
+ * - marca="nescau" encontra "Achocolatado Nescau", "Nescau Chocolate"
+ * - marca="nestle" encontra produtos Nestlé com variações ortográficas
+ */
+export function buscarProdutosPorMarca(marca: string, catalogo: Produto[]): Produto[] {
+  const marcaNorm = normalizar(marca);
+  const palavrasMarca = extrairPalavrasBaseBusca(marca);
+  
+  const produtosComMarca = catalogo.filter((p) => {
+    const nome = normalizar(p.name);
+    const desc = normalizar(p.description || "");
+    const tags = (p.tags ?? []).map(normalizar).join(" ");
+    const searchIdx = (p.searchIndex ?? []).map(normalizar).join(" ");
+    const todosOsCampos = `${nome} ${desc} ${tags} ${searchIdx}`;
+    
+    // Match exato da marca normalizada
+    if (todosOsCampos.includes(marcaNorm)) return true;
+    
+    // Match parcial: procura cada palavra da marca
+    if (palavrasMarca.length > 0) {
+      return palavrasMarca.some(palavra => {
+        const palavraNorm = normalizar(palavra);
+        // Procura como palavra separada (com espaço antes/depois ou inicio/fim)
+        return todosOsCampos.includes(palavraNorm) || 
+               todosOsCampos.includes(` ${palavraNorm} `) ||
+               nome.startsWith(palavraNorm) ||
+               nome.endsWith(palavraNorm);
+      });
+    }
+    
+    return false;
+  });
+  
+  // Ordena por relevância (marca no nome é mais relevante que na descrição)
+  return produtosComMarca.sort((a, b) => {
+    const aNome = normalizar(a.name).indexOf(marcaNorm);
+    const bNome = normalizar(b.name).indexOf(marcaNorm);
+    
+    // Se ambos têm no nome, ordena por posição
+    if (aNome >= 0 && bNome >= 0) return aNome - bNome;
+    // Se só um tem no nome, esse vem primeiro
+    if (aNome >= 0) return -1;
+    if (bNome >= 0) return 1;
+    
+    return 0;
+  });
+}
+
 export function variantesToken(token: string): string[] {
   const t = normalizar(token);
   const vars = new Set<string>([t]);
@@ -142,8 +327,8 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
     const tags = p.tags ?? [];
     if (tags.length === 0) return { produto: p, score: 0 };
 
-    // Normaliza todas as tags do produto uma única vez
-    const tagNorms = tags.map((t) => normalizar(t.replace(/^#/, "")));
+    // Expande todas as tags do produto em tokens normalizados
+    const tagNorms = tags.flatMap((t) => expandirTag(t));
 
     /**
      * Avalia uma palavra de busca contra as tags do produto.
@@ -155,25 +340,33 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
      * - coberto=false        : sem match
      */
     const avaliarPalavra = (w: string): { pts: number; coberto: boolean } => {
-      for (const tagNorm of tagNorms) {
-        // Exato
-        if (tagNorm === w) return { pts: 50, coberto: true };
+      // Formas a testar: original + formas singulares
+      const formas = [w, ...singularizar(w)];
+
+      for (const forma of formas) {
+        for (const tagNorm of tagNorms) {
+          if (tagNorm === forma) return { pts: forma === w ? 50 : 45, coberto: true };
+        }
       }
 
       // Alias direto (ex: "caixinha" → busca por "tetrapak","caixa" nas tags)
-      const aliases = ALIASES_BUSCA[w] ?? [];
-      if (aliases.length > 0) {
-        for (const tagNorm of tagNorms) {
-          if (aliases.some((alias) => normalizar(alias) === tagNorm)) {
-            return { pts: 15, coberto: true };
+      for (const forma of formas) {
+        const aliases = ALIASES_BUSCA[forma] ?? [];
+        if (aliases.length > 0) {
+          for (const tagNorm of tagNorms) {
+            if (aliases.some((alias) => normalizar(alias) === tagNorm)) {
+              return { pts: 15, coberto: true };
+            }
           }
         }
       }
 
       // Prefixo (ex: "saboriz" encontra #saborizado)
-      if (w.length >= 4) {
-        for (const tagNorm of tagNorms) {
-          if (tagNorm.startsWith(w)) return { pts: 10, coberto: true };
+      for (const forma of formas) {
+        if (forma.length >= 4) {
+          for (const tagNorm of tagNorms) {
+            if (tagNorm.startsWith(forma)) return { pts: 10, coberto: true };
+          }
         }
       }
 
@@ -484,4 +677,64 @@ export function buscarAlternativasPorTermo(termo: string, catalogo: Produto[], e
       return termos.some((t) => t.length >= 2 && alvo.includes(t));
     })
     .slice(0, 6);
+}
+
+// ── Busca por Categoria ─────────────────────────────────────────────────────
+
+/**
+ * Embaralha um array de forma aleatória (Fisher-Yates shuffle).
+ * Usado para randomizar a exibição de produtos de uma categoria.
+ */
+export function embaralharArray<T>(arr: T[]): T[] {
+  const resultado = [...arr];
+  for (let i = resultado.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [resultado[i], resultado[j]] = [resultado[j], resultado[i]];
+  }
+  return resultado;
+}
+
+/**
+ * Detecta se o cliente está buscando por uma categoria.
+ * Retorna o nome da categoria normalizado, ou null.
+ * 
+ * Exemplos:
+ * - "mercearia" → "mercearia"
+ * - "produtos de mercearia" → "mercearia"
+ * - "me mostra mercearia" → "mercearia"
+ * - "bebidas" → "bebidas"
+ */
+export function detectarBuscaPorCategoria(texto: string, catalogo: Produto[]): string | null {
+  const t = normalizar(texto);
+  
+  // Extrai todas as categorias únicas do catálogo
+  const categorias = new Set(catalogo.map(p => normalizar(p.category)));
+  
+  // Para cada categoria, verifica se aparece no texto
+  for (const cat of categorias) {
+    if (cat.length >= 3 && t.includes(cat)) {
+      // Retorna a categoria original (não normalizada) para exibição
+      const categoriaOriginal = catalogo.find(p => normalizar(p.category) === cat)?.category;
+      if (categoriaOriginal) return categoriaOriginal;
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Busca produtos de uma categoria específica, em ordem aleatória.
+ * Retorna TODOS os produtos da categoria embaralhados.
+ * 
+ * Usado com paginação: show 6, then 6 more, etc.
+ */
+export function buscarProdutosPorCategoria(categoria: string, catalogo: Produto[]): Produto[] {
+  const categoriaNorm = normalizar(categoria);
+  
+  const produtosDaCategoria = catalogo.filter(p => 
+    normalizar(p.category) === categoriaNorm
+  );
+  
+  // Embaralha para mostrar em ordem aleatória
+  return embaralharArray(produtosDaCategoria);
 }
