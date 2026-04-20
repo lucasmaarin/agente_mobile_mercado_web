@@ -160,6 +160,7 @@
 
 .messagesContainer {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   background: transparent;
   padding: 6px 32px 16px;

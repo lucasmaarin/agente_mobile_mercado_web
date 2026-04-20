@@ -1057,7 +1057,9 @@ const AgentePage: React.FC = () => {
         // ── Fim das ações do menu inicial ─────────────────────────────────────
 
         const textoNormalizado = normalizar(texto);
-        const itensComQtd   = extrairItensListaComQuantidade(texto);
+        // Listas com quebra de linha não usam extrairItensListaComQuantidade pois essa função
+        // captura números no meio das frases (ex: "Arroz tipo 1 ou integral" → "1 ou integral")
+        const itensComQtd   = texto.includes("\n") ? [] : extrairItensListaComQuantidade(texto);
         const itensSimples  = itensComQtd.length < 2 ? extrairItensSimples(texto) : [];
         let itensExtraidos  = itensComQtd.length >= 2 ? itensComQtd : itensSimples;
 
@@ -1282,20 +1284,19 @@ const AgentePage: React.FC = () => {
           if (true) {
             const buscarL2 = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
 
-            // Verifica cada item: se os candidatos não cobrem todas as palavras,
-            // tenta fallback progressivo (ex: "Arroz Artur" → avisa e mostra "Arroz")
-            type SectionItem = { titulo: string; produtos: Produto[]; termoBusca: string };
-            type FallbackItem = { texto: string; produtos?: Produto[]; termoBusca?: string };
-            const sections: SectionItem[] = [];
-            const fallbacks: FallbackItem[] = [];
+            // Array unificado que preserva a ordem original da lista
+            type EntradaResposta =
+              | { tipo: 'section'; titulo: string; produtos: Produto[]; termoBusca: string }
+              | { tipo: 'fallback'; texto: string; produtos?: Produto[]; termoBusca?: string };
+            const respostas: EntradaResposta[] = [];
 
             for (const it of estadoAtual.itens) {
               const palavrasIt = extrairPalavrasBaseBusca(it.termoBusca);
-              
+
               // ✨ Verifica com autonomia se é uma busca por marca pura
               const ehBuscaMarcaPura = ehBuscaPuraporMarca(it.termoBusca, produtos);
               const marcaExtraidaDoTermo = detectarBuscaPorMarca(it.termoBusca);
-              
+
               const temCobertura = it.candidatos.length > 0 &&
                 (ehBuscaMarcaPura || marcaExtraidaDoTermo || palavrasIt.length < 2 || it.candidatos.some((p) => produtoCobreTermos(p, palavrasIt)));
 
@@ -1303,18 +1304,10 @@ const AgentePage: React.FC = () => {
                 const titulo = ehBuscaMarcaPura && marcaExtraidaDoTermo
                   ? `Produtos ${marcaExtraidaDoTermo.charAt(0).toUpperCase() + marcaExtraidaDoTermo.slice(1)} ⬇️`
                   : `Opções de ${(it.termoOriginal ?? it.termoBusca).charAt(0).toUpperCase() + (it.termoOriginal ?? it.termoBusca).slice(1)} ⬇️`;
-                sections.push({
-                  titulo,
-                  produtos: it.candidatos,
-                  termoBusca: it.termoBusca,
-                });
+                respostas.push({ tipo: 'section', titulo, produtos: it.candidatos, termoBusca: it.termoBusca });
               } else if (ehBuscaMarcaPura && marcaExtraidaDoTermo && it.candidatos.length === 0) {
-                // ✨ Se é busca por marca pura mas não achou nada, não faz fallback
-                // Apenas informa que a marca não está disponível
                 const marcaCapitalizada = marcaExtraidaDoTermo.charAt(0).toUpperCase() + marcaExtraidaDoTermo.slice(1);
-                fallbacks.push({
-                  texto: `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** no momento. 😔`,
-                });
+                respostas.push({ tipo: 'fallback', texto: `Desculpa! Não temos produtos da marca **${marcaCapitalizada}** no momento. 😔` });
               } else if (palavrasIt.length >= 2 && !ehBuscaMarcaPura) {
                 // Fallback progressivo (APENAS para buscas que NÃO são por marca pura)
                 let achou = false;
@@ -1323,48 +1316,31 @@ const AgentePage: React.FC = () => {
                   const parciais = buscarL2(subTermo);
                   if (parciais.length > 0) {
                     const sub = subTermo.charAt(0).toUpperCase() + subTermo.slice(1);
-                    fallbacks.push({
-                      texto: `Não encontrei **${it.termoBusca}**, mas temos opções de ${sub} ⬇️`,
-                      produtos: parciais,
-                      termoBusca: subTermo,
-                    });
+                    respostas.push({ tipo: 'fallback', texto: `Não encontrei **${it.termoBusca}**, mas temos opções de ${sub} ⬇️`, produtos: parciais, termoBusca: subTermo });
                     achou = true;
                     break;
                   }
                 }
-                if (!achou) fallbacks.push({ texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
+                if (!achou) respostas.push({ tipo: 'fallback', texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
               } else if (it.candidatos.length === 0) {
-                fallbacks.push({ texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
+                respostas.push({ tipo: 'fallback', texto: `Hmm, não encontrei **${it.termoOriginal ?? it.termoBusca}** no nosso catálogo. Pode tentar com outra marca ou descrever o tipo do produto? 😊` });
               }
             }
 
-            const itensSemCandidatos: typeof estadoAtual.itens = []; // já tratados acima
-
             setListaPedidoState(estadoAtual);
 
-            const totalMensagens = sections.length + fallbacks.length;
-
-            for (let i = 0; i < sections.length; i++) {
-              const isLast = i === sections.length - 1 && fallbacks.length === 0;
-              await salvarRespostaLocal(
-                sections[i].titulo,
-                sections[i].produtos,
-                isLast ? ["Finalizar pedido", "Continuar comprando"] : undefined,
-                sections[i].termoBusca
-              );
+            for (let i = 0; i < respostas.length; i++) {
+              const entrada = respostas[i];
+              const isLast = i === respostas.length - 1;
+              const sugestoes = isLast ? ["Finalizar pedido", "Continuar comprando"] : undefined;
+              if (entrada.tipo === 'section') {
+                await salvarRespostaLocal(entrada.titulo, entrada.produtos, sugestoes, entrada.termoBusca);
+              } else {
+                await salvarRespostaLocal(entrada.texto, entrada.produtos, sugestoes, entrada.termoBusca);
+              }
             }
 
-            for (let r = 0; r < fallbacks.length; r++) {
-              const isUltimo = r === fallbacks.length - 1;
-              await salvarRespostaLocal(
-                fallbacks[r].texto,
-                fallbacks[r].produtos,
-                isUltimo ? ["Finalizar pedido", "Continuar comprando"] : undefined,
-                fallbacks[r].termoBusca
-              );
-            }
-
-            if (totalMensagens === 0) {
+            if (respostas.length === 0) {
               await salvarRespostaLocal("Não encontrei nenhum dos itens da lista no catálogo.", undefined, ["Continuar comprando"]);
             }
             return;

@@ -135,12 +135,15 @@ export function numeroDaString(valor: string): number | null {
 }
 
 export function limparTermoItemLista(termo: string): string {
+  // Remove conteúdo entre parênteses — são comentários sobre o pedido, não termos de busca
+  // Ex: "Arroz (tipo 1 ou integral)" → "Arroz"
+  let resultado = termo.replace(/\([^)]*\)/g, " ");
+
   // Usa lookahead/lookbehind estendido para não quebrar em palavras acentuadas
   // (ex: evita que \b(da)\b bata dentro de "moída")
   const borda = "(?<![a-zA-ZÀ-ÿ])";
   const bordaFim = "(?![a-zA-ZÀ-ÿ])";
   const preposicoes = ["de","da","do","das","dos","com","sem","para","pra"];
-  let resultado = termo;
   for (const p of preposicoes) {
     resultado = resultado.replace(new RegExp(`${borda}${p}${bordaFim}`, "gi"), " ");
   }
@@ -183,7 +186,10 @@ export function extrairItensSimples(
     if (candidatos.length >= 2) {
       const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
       for (const c of candidatos) {
-        const termoOriginal = c;
+        // Remove alternativas após "ou" — "Arroz tipo 1 ou integral" → "Arroz tipo 1"
+        // O conteúdo após "ou" é preferência do usuário, não requisito de busca
+        const semAlternativa = c.replace(/\s+ou\b.*/i, "").trim();
+        const termoOriginal = semAlternativa || c;
         const termoBusca = limparTermoItemLista(termoOriginal);
         const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
         if (palavrasValidas.length === 0) continue;
