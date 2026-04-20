@@ -2,8 +2,11 @@
  * Geocodificação e cálculo de distância para entregas.
  *
  * Controle via env:
- *   NEXT_PUBLIC_DELIVERY_LIMIT_ENABLED=false  → valida endereço mas não bloqueia pedidos
- *   NEXT_PUBLIC_DELIVERY_LIMIT_KM=10          → limite em km (padrão: 10)
+ *   NEXT_PUBLIC_DELIVERY_LIMIT_ENABLED=true   → ativa o bloqueio por distância (padrão: false)
+ *   NEXT_PUBLIC_DELIVERY_LIMIT_KM=10          → limite em km usado como fallback (padrão: 10)
+ *
+ * Quando NEXT_PUBLIC_DELIVERY_LIMIT_ENABLED=false, limiteBloqueante é sempre false —
+ * a distância é calculada mas o pedido nunca é bloqueado, independente do valor do Firestore.
  */
 
 export type Coordenadas = { lat: number; lng: number };
@@ -51,21 +54,29 @@ export async function geocodificarEndereco(
 
 export async function verificarDistanciaEntrega(
   enderecoCliente: string,
-  coordsEstabelecimento: Coordenadas
+  coordsEstabelecimento: Coordenadas,
+  limiteKmFirestore?: number
 ): Promise<ResultadoDistancia | null> {
   const coordsCliente = await geocodificarEndereco(enderecoCliente);
   if (!coordsCliente) return null;
 
-  const limiteBloqueadoEnv = process.env.NEXT_PUBLIC_DELIVERY_LIMIT_ENABLED === 'true';
-  const limiteKm = parseFloat(process.env.NEXT_PUBLIC_DELIVERY_LIMIT_KM ?? '10');
+  // Env var é o interruptor mestre — false desativa o bloqueio por completo
+  const filtroAtivado = process.env.NEXT_PUBLIC_DELIVERY_LIMIT_ENABLED === 'true';
+
+  // Prioridade: valor do Firestore > env var > padrão 10 km
+  const limiteKm = limiteKmFirestore
+    ?? parseFloat(process.env.NEXT_PUBLIC_DELIVERY_LIMIT_KM ?? '10');
 
   const distanciaKm = haversine(coordsEstabelecimento, coordsCliente);
   const dentroDoRaio = distanciaKm <= limiteKm;
 
+  // Só bloqueia se o filtro estiver ativo E o endereço estiver fora do raio
+  const limiteBloqueante = filtroAtivado && !dentroDoRaio;
+
   return {
     distanciaKm: Math.round(distanciaKm * 10) / 10,
     dentroDoRaio,
-    limiteBloqueante: limiteBloqueadoEnv && !dentroDoRaio,
+    limiteBloqueante,
     etaMinutos: calcularEta(distanciaKm),
   };
 }

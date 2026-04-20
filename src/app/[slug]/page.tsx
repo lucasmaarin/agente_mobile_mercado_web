@@ -59,6 +59,7 @@ import {
   NUMERO_POR_TEXTO,
 } from "@/lib/chatUtils";
 
+import { verificarDistanciaEntrega } from "@/lib/distancia";
 import {
   FLOW_STATES,
   FlowState,
@@ -821,6 +822,36 @@ const AgentePage: React.FC = () => {
       setFlowState(wFlowState);
     }
 
+    // Helper: valida distância de entrega; retorna false e envia msg se fora do raio
+    const validarDistanciaEntrega = async (endData: CustomerData): Promise<boolean> => {
+      const coords = lojaConfig?.coordsEstabelecimento;
+      const limiteKm = lojaConfig?.distanciaMaxima;
+      if (!coords || !limiteKm) return true; // sem configuração → permite
+      const endStr = [endData.street, endData.number, endData.neighborhood, endData.city, endData.state, endData.zipCode]
+        .filter(Boolean).join(', ');
+      if (!endStr) return true;
+      try {
+        const resultado = await verificarDistanciaEntrega(endStr, coords, limiteKm);
+        if (resultado && resultado.limiteBloqueante) {
+          wFlowState = FLOW_STATES.BROWSING;
+          wCustomerData = {};
+          setFlowState(wFlowState);
+          setCustomerData({});
+          setMensagens(prev => [...prev, {
+            id: `dist-block-${Date.now()}`,
+            role: 'assistant' as const,
+            content: `Que pena! 😔 Seu endereço está a ${resultado.distanciaKm} km — nossa área de entrega cobre até ${limiteKm} km. Obrigado pelo interesse! 💙`,
+            timestamp: new Date(),
+            suggestions: ['Continuar comprando'],
+          }]);
+          return false;
+        }
+      } catch {
+        // Falha na geocodificação não bloqueia o pedido
+      }
+      return true;
+    };
+
     // Pré-captura para CHECKING_SAVED_ADDRESS (usar endereço salvo ou informar novo)
     if (flowState === FLOW_STATES.CHECKING_SAVED_ADDRESS) {
       const val = texto.toLowerCase().trim();
@@ -830,7 +861,7 @@ const AgentePage: React.FC = () => {
         wFlowState = FLOW_STATES.COLLECTING_STREET;
         setFlowState(wFlowState);
       } else if (usarSalvoWords.some(w => val === w || val.startsWith(w + ' ')) && enderecoSalvo) {
-        wCustomerData = {
+        const endDados = {
           ...wCustomerData,
           street:       enderecoSalvo.street,
           number:       enderecoSalvo.number,
@@ -838,9 +869,13 @@ const AgentePage: React.FC = () => {
           city:         enderecoSalvo.city,
           zipCode:      enderecoSalvo.zipCode,
         };
-        wFlowState = FLOW_STATES.COLLECTING_PAYMENT;
-        setCustomerData(wCustomerData);
-        setFlowState(wFlowState);
+        const dentroDoRaio = await validarDistanciaEntrega(endDados);
+        if (dentroDoRaio) {
+          wCustomerData = endDados;
+          wFlowState = FLOW_STATES.COLLECTING_PAYMENT;
+          setCustomerData(wCustomerData);
+          setFlowState(wFlowState);
+        }
       }
     }
 
@@ -848,9 +883,12 @@ const AgentePage: React.FC = () => {
     if (flowState === FLOW_STATES.ASKING_SAVE_ADDRESS) {
       const val = texto.toLowerCase().trim();
       const simWords = ['sim', 'yes', 's', 'claro', 'pode', 'quero', 'salva'];
-      pendingSaveAddressRef.current = simWords.some(w => val.includes(w));
-      wFlowState = FLOW_STATES.COLLECTING_PAYMENT;
-      setFlowState(wFlowState);
+      const dentroDoRaio = await validarDistanciaEntrega(wCustomerData);
+      if (dentroDoRaio) {
+        pendingSaveAddressRef.current = simWords.some(w => val.includes(w));
+        wFlowState = FLOW_STATES.COLLECTING_PAYMENT;
+        setFlowState(wFlowState);
+      }
     }
 
     // Pré-captura para CONFIRMING_ORDER: "1"/"sim" confirma, "2"/"não" cancela
@@ -1050,6 +1088,41 @@ const AgentePage: React.FC = () => {
         if (texto.includes("Fazer um novo pedido")) {
           await salvarRespostaLocal(
             "Claro! Pode me dizer o que você precisa hoje — pode digitar os produtos ou colar sua lista de compras que eu organizo tudo para você. 🛒"
+          );
+          return;
+        }
+
+        // ============================================================
+        // FINALIZAR PEDIDO VIA CHAT (durante navegação)
+        // ============================================================
+        if (ehIntencaoCheckout(texto) && wCart.length > 0) {
+          // Cliente quer finalizar o pedido durante navegação
+          const minimo = lojaConfig?.pedidoMinimo ?? 0;
+          const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
+          
+          if (minimo > 0 && totalAtual < minimo) {
+            // Pedido abaixo do mínimo
+            const falta = (minimo - totalAtual).toFixed(2).replace('.', ',');
+            const minimoFmt = minimo.toFixed(2).replace('.', ',');
+            await salvarRespostaLocal(
+              `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalAtual.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
+              undefined,
+              ["Continuar comprando"]
+            );
+            return;
+          }
+          
+          // Pedido atinge o mínimo — abre checkout
+          setShowCheckout(true);
+          return;
+        }
+
+        // Se tentar finalizar mas carrinho vazio
+        if (ehIntencaoCheckout(texto) && wCart.length === 0) {
+          await salvarRespostaLocal(
+            "Seu carrinho está vazio! 🛒 Que tal adicionar alguns produtos?",
+            undefined,
+            ["Continuar comprando"]
           );
           return;
         }
@@ -1575,6 +1648,31 @@ const AgentePage: React.FC = () => {
         }
 
         // ============================================================
+        // FINALIZAR PEDIDO (quando há itemUnicoQtdState ativo)
+        // ============================================================
+        if (itemUnicoQtdState && ehIntencaoCheckout(texto) && wCart.length > 0) {
+          const minimo = lojaConfig?.pedidoMinimo ?? 0;
+          const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
+          
+          if (minimo > 0 && totalAtual < minimo) {
+            // Pedido abaixo do mínimo
+            const falta = (minimo - totalAtual).toFixed(2).replace('.', ',');
+            const minimoFmt = minimo.toFixed(2).replace('.', ',');
+            await salvarRespostaLocal(
+              `Ops! 😊 O pedido mínimo aqui é de R$ ${minimoFmt}. Seu carrinho está em R$ ${totalAtual.toFixed(2).replace('.', ',')} — faltam apenas R$ ${falta} para finalizar. Adicione mais algum produto e é só chamar!`,
+              undefined,
+              ["Continuar comprando"]
+            );
+            return;
+          }
+          
+          // Reseta estado de seleção e abre checkout
+          setItemUnicoQtdState(null);
+          setShowCheckout(true);
+          return;
+        }
+
+        // ============================================================
         // HANDLER PARA "VER MAIS PRODUTOS" (CATEGORIA PAGINADA)
         // ============================================================
         if ((texto.includes("Ver mais") || texto.includes("📄")) && categoriaPaginadaState) {
@@ -1815,17 +1913,8 @@ const AgentePage: React.FC = () => {
         }
 
         if (sr.tentativas === 2) {
-          await salvarRespostaLocal(
-            "Este item pode estar em falta no estoque. Gostaria de ser avisado quando tivermos disponível?",
-            undefined,
-            ["Sim, me avise quando tiver", "Continuar comprando"]
-          );
-          return;
-        }
-
-        if (sr.tentativas >= 3) {
-          sr.termo = '';
-          sr.tentativas = 0;
+          sr.tentativas = 3;
+          semResultadoRef.current = sr;
           await salvarRespostaLocal(
             "Dei uma olhadinha aqui, acho que não temos este produto no momento. Clique no botão para sugerir o produto ao estabelecimento:",
             undefined,

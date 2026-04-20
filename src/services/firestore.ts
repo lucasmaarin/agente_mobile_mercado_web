@@ -110,6 +110,7 @@ export interface ConfigLoja {
   pedidoMinimo: number;
   taxaEntrega: number;
   distanciaMaxima: number;
+  coordsEstabelecimento?: { lat: number; lng: number };
   horarios: { dia: string; aberto: boolean; abertura: string; fechamento: string }[];
 }
 
@@ -142,9 +143,21 @@ export async function buscarConfigLoja(companyId: string): Promise<ConfigLoja> {
     const data = snap.data() as Record<string, unknown>;
     const delivery = (data.deliveryInfo ?? {}) as Record<string, unknown>;
 
-    const pedidoMinimo  = typeof delivery.fixedValue      === 'number' ? delivery.fixedValue      : 60;
+    // Busca minimumPriceCart no estabelecimento (principal fonte)
+    // Se não encontrar, tenta fixedValue (compatibilidade com versões antigas)
+    const pedidoMinimo  = typeof data.minimumPriceCart === 'number' 
+      ? data.minimumPriceCart 
+      : typeof delivery.fixedValue === 'number' 
+        ? delivery.fixedValue 
+        : 60;
     const taxaEntrega   = typeof delivery.deliveryFee     === 'number' ? delivery.deliveryFee     : DELIVERY_PRICE;
     const distanciaMaxima = typeof delivery.maximunDistance === 'number' ? delivery.maximunDistance : 40;
+
+    // Coordenadas do estabelecimento — suporta campos diretos ou objeto aninhado
+    let coordsEstabelecimento: { lat: number; lng: number } | undefined;
+    const lat = typeof delivery.latitude  === 'number' ? delivery.latitude  : typeof (delivery.location as Record<string,unknown>)?.latitude  === 'number' ? (delivery.location as Record<string,unknown>).latitude  as number : null;
+    const lng = typeof delivery.longitude === 'number' ? delivery.longitude : typeof (delivery.location as Record<string,unknown>)?.longitude === 'number' ? (delivery.location as Record<string,unknown>).longitude as number : null;
+    if (lat !== null && lng !== null) coordsEstabelecimento = { lat, lng };
 
     const rawHorarios = Array.isArray(data.openingHours) ? data.openingHours as Record<string, unknown>[] : [];
     const horarios = DIAS_SEMANA.map((dia, idx) => {
@@ -158,7 +171,7 @@ export async function buscarConfigLoja(companyId: string): Promise<ConfigLoja> {
       };
     });
 
-    return { pedidoMinimo, taxaEntrega, distanciaMaxima, horarios };
+    return { pedidoMinimo, taxaEntrega, distanciaMaxima, coordsEstabelecimento, horarios };
   } catch {
     return defaultConfig;
   }
