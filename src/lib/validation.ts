@@ -20,12 +20,16 @@ export function sanitizeString(input: string): string {
 export function validatePhone(phone: string): string | null {
   const digits = phone.replace(/\D/g, "");
   // Remover o 55 se já existir no início
-  const cleaned = digits.startsWith("55") ? digits.slice(2) : digits;
+  let cleaned = digits.startsWith("55") ? digits.slice(2) : digits;
   // DDD (2 dígitos) + número (8 ou 9 dígitos)
   if (cleaned.length < 10 || cleaned.length > 11) return null;
   // DDD válido (11-99)
   const ddd = parseInt(cleaned.slice(0, 2));
   if (ddd < 11 || ddd > 99) return null;
+  // Número com 8 dígitos (sem o 9): adiciona o 9 para celular brasileiro
+  if (cleaned.length === 10) {
+    cleaned = cleaned.slice(0, 2) + '9' + cleaned.slice(2);
+  }
   return `+55${cleaned}`;
 }
 

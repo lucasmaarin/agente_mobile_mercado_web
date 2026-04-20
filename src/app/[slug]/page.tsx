@@ -677,10 +677,25 @@ const AgentePage: React.FC = () => {
   };
 
   const setupRecaptchaAuth = (): RecaptchaVerifier => {
-    if (window.recaptchaVerifier) return window.recaptchaVerifier;
+    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch {}
+      window.recaptchaVerifier = undefined;
+    }
+    if (recaptchaAuthRef.current) {
+      try { recaptchaAuthRef.current.clear(); } catch {}
+      recaptchaAuthRef.current = undefined;
+    }
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
       callback: () => {},
+      'expired-callback': () => {
+        // Limpa ao expirar para forçar recriação na próxima tentativa
+        if (window.recaptchaVerifier) {
+          try { window.recaptchaVerifier.clear(); } catch {}
+          window.recaptchaVerifier = undefined;
+        }
+      },
     });
     window.recaptchaVerifier = verifier;
     recaptchaAuthRef.current = verifier;
@@ -762,9 +777,14 @@ const AgentePage: React.FC = () => {
     setAuthCode('');
     setAuthStep('phone');
     setAuthConfirmation(null);
-    recaptchaAuthRef.current?.clear();
-    recaptchaAuthRef.current = undefined;
-    // Volta para o estado de digitar telefone, removendo os cards de código
+    if (recaptchaAuthRef.current) {
+      try { recaptchaAuthRef.current.clear(); } catch {}
+      recaptchaAuthRef.current = undefined;
+    }
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch {}
+      window.recaptchaVerifier = undefined;
+    }
     setMensagens(prev => prev.filter(m => !['auth-code-sent', 'auth-code-card', 'auth-code-error', 'auth-validating'].includes(m.id)));
   };
 
@@ -2494,7 +2514,7 @@ const AgentePage: React.FC = () => {
   // ============================================================
   return (
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-container" style={{ position: 'fixed', bottom: 0, left: 0, zIndex: 9999 }}></div>
       <Header
         nomeEstabelecimento={nomeEstabelecimento}
         cartTotal={totalCarrinho}
