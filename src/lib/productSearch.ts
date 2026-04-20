@@ -47,8 +47,14 @@ const STOP_EMBUTIDAS = ["dos", "das", "do", "da", "de"];
  * - stopwords embutidas sem separador (#derivadodoleite → ["derivado", "leite"])
  */
 export function expandirTag(tag: string): string[] {
-  // 1. Remove # e substitui _ por espaço
-  const limpa = tag.replace(/^#/, "").replace(/_/g, " ").trim();
+  // 1. Normaliza formatação inconsistente de tags vindas do catálogo:
+  // aceita espaços, múltiplos # e "_" como separador.
+  const limpa = tag
+    .trim()
+    .replace(/^#+/, "")
+    .replace(/#/g, "")
+    .replace(/_/g, " ")
+    .trim();
   const norm = normalizar(limpa);
 
   // 2. Se tem espaços, split e filtra stopwords
@@ -324,11 +330,11 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   if (palavrasBase.length === 0) return [];
 
   const comScore = produtos.map((p) => {
-    const tags = p.tags ?? [];
-    if (tags.length === 0) return { produto: p, score: 0 };
+    const fontesIndexacao = [...(p.tags ?? []), ...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
+    if (fontesIndexacao.length === 0) return { produto: p, score: 0 };
 
-    // Expande todas as tags do produto em tokens normalizados
-    const tagNorms = tags.flatMap((t) => expandirTag(t));
+    // Expande tokens normalizados a partir de tags + índices auxiliares.
+    const tagNorms = fontesIndexacao.flatMap((t) => expandirTag(t));
 
     /**
      * Avalia uma palavra de busca contra as tags do produto.
@@ -402,7 +408,7 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
 }
 
 export function filtrarProdutosWordKeys(texto: string, produtos: Produto[]): Produto[] {
-  // Usa a mesma lógica de filtrarProdutos (somente tags)
+  // Usa a mesma lógica de filtrarProdutos (tags + wordKeys + searchIndex)
   return filtrarProdutos(texto, produtos);
 }
 
@@ -567,13 +573,17 @@ export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): 
  * Retorna true se o produto cobre TODAS as palavras da busca via tags ou aliases.
  */
 export function produtoCobreTermos(produto: Produto, palavras: string[]): boolean {
-  const tagTokens = produto.tags ? tokensTagsProduto(produto.tags) : [];
+  const tokens = tokensTagsProduto([
+    ...(produto.tags ?? []),
+    ...(produto.wordKeys ?? []),
+    ...(produto.searchIndex ?? []),
+  ]);
 
   const cobre = (w: string): boolean => {
-    if (tagTokens.some((t) => t === w || t.startsWith(w))) return true;
+    if (tokens.some((t) => t === w || t.startsWith(w))) return true;
     return (ALIASES_BUSCA[w] ?? []).some((alias) => {
       const aN = normalizar(alias);
-      return tagTokens.some((t) => t === aN || t.startsWith(aN));
+      return tokens.some((t) => t === aN || t.startsWith(aN));
     });
   };
 

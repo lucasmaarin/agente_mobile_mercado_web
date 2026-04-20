@@ -1774,8 +1774,30 @@ const AgentePage: React.FC = () => {
         // AGORA TAMBÉM inclui perguntas que NÃO sejam sobre marca/categoria
         if (!listaPedidoState && !texto.trim().endsWith("?") && !ehSaudacaoCurta(texto)) {
           const buscarL = (t: string) => wordKeysEnabled ? filtrarProdutosWordKeys(t, produtos) : filtrarProdutos(t, produtos);
+          const buscarFallbackCampos = (t: string) => {
+            const palavras = extrairPalavrasBaseBusca(t);
+            if (palavras.length === 0) return [] as Produto[];
+            return produtos
+              .filter((p) => {
+                const corpus = normalizar([
+                  p.name,
+                  p.description,
+                  p.category,
+                  p.subcategory,
+                  ...(p.tags ?? []),
+                  ...(p.searchIndex ?? []),
+                  ...(p.wordKeys ?? []),
+                ].join(" "));
+                return palavras.every((w) => corpus.includes(w));
+              })
+              .slice(0, 20);
+          };
           const palavrasBusca = extrairPalavrasBaseBusca(texto);
-          const todosResultadosDiretos = buscarL(texto);
+          const todosResultadosDiretos = (() => {
+            const diretos = buscarL(texto);
+            if (diretos.length > 0) return diretos;
+            return buscarFallbackCampos(texto);
+          })();
 
           // Verifica se algum resultado cobre TODAS as palavras da busca
           const temCorrespondenciaCompleta = palavrasBusca.length < 2 ||
@@ -1869,19 +1891,43 @@ const AgentePage: React.FC = () => {
             }
           }
 
-          if (produtosFoco.length === 0) {
-            // Busca normal por texto
-            const filtrado = buscar(texto, produtos);
-            produtosMatchDireto = filtrado;
+            if (produtosFoco.length === 0) {
+              const buscarFallbackCampos = (t: string, cat: Produto[]) => {
+                const palavras = extrairPalavrasBaseBusca(t);
+                if (palavras.length === 0) return [] as Produto[];
+                return cat.filter((p) => {
+                  const corpus = normalizar([
+                    p.name,
+                    p.description,
+                    p.category,
+                    p.subcategory,
+                    ...(p.tags ?? []),
+                    ...(p.searchIndex ?? []),
+                    ...(p.wordKeys ?? []),
+                  ].join(" "));
+                  return palavras.every((w) => corpus.includes(w));
+                });
+              };
 
-            if (filtrado.length > 0) {
-              produtosFoco = filtrado.slice(0, 20);
-            } else {
-              // Se não encontrou, tenta apenas pelo primeiro termo
-              const palavrasBase = extrairPalavrasBaseBusca(texto);
-              if (palavrasBase.length > 0) {
-                const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
-                if (filtroTermoPrincipal.length > 0) {
+              // Busca normal por texto
+              const filtrado = buscar(texto, produtos);
+              produtosMatchDireto = filtrado;
+
+              if (filtrado.length > 0) {
+                produtosFoco = filtrado.slice(0, 20);
+              } else {
+                const filtradoFallback = buscarFallbackCampos(texto, produtos);
+                if (filtradoFallback.length > 0) {
+                  produtosFoco = filtradoFallback.slice(0, 20);
+                  produtosMatchDireto = produtosFoco;
+                  // Evita cair no fluxo de "produto não encontrado" quando existe match textual.
+                  semResultadoRef.current = { termo: '', tentativas: 0 };
+                } else {
+                // Se não encontrou, tenta apenas pelo primeiro termo
+                const palavrasBase = extrairPalavrasBaseBusca(texto);
+                if (palavrasBase.length > 0) {
+                  const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
+                  if (filtroTermoPrincipal.length > 0) {
                   produtosFoco = filtroTermoPrincipal.slice(0, 20);
                 } else {
                   // Último recurso: usa cache APENAS se confirmação óbvia
@@ -1894,12 +1940,13 @@ const AgentePage: React.FC = () => {
                     : [];
                 }
               } else {
-                produtosFoco = [];
+                  produtosFoco = [];
+                }
+                }
               }
             }
           }
         }
-      }
 
       // ── Fluxo progressivo para produto não encontrado ──────────────────────
       if (wFlowState === FLOW_STATES.BROWSING && produtosFoco.length === 0 && !ehSaudacaoCurta(texto) && !ehIntencaoSemProduto(texto)) {

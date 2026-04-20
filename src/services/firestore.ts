@@ -233,6 +233,51 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
   );
   const snap = await getDocs(q);
   const isTestEstab = companyId === 'estabelecimento-teste';
+  const toStringArray = (value: unknown): string[] => {
+    const fromUnknown = (item: unknown): string[] => {
+      if (item == null) return [];
+      if (typeof item === 'string') return [item];
+      if (typeof item === 'number' || typeof item === 'boolean') return [String(item)];
+      if (Array.isArray(item)) {
+        return item.flatMap(fromUnknown);
+      }
+      if (typeof item === 'object') {
+        const obj = item as Record<string, unknown>;
+        const candidatos = [
+          obj.tag,
+          obj.tags,
+          obj.name,
+          obj.label,
+          obj.value,
+          obj.title,
+          obj.text,
+        ];
+        return candidatos.flatMap(fromUnknown);
+      }
+      return [];
+    };
+
+    if (Array.isArray(value)) {
+      return value
+        .flatMap(fromUnknown)
+        .flatMap((v) => v.split(/[,\n;|]/))
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    if (typeof value === 'string') {
+      return value
+        .split(/[,\n;|]/)
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    if (typeof value === 'object' && value !== null) {
+      return fromUnknown(value)
+        .flatMap((v) => v.split(/[,\n;|]/))
+        .map((v) => v.trim())
+        .filter(Boolean);
+    }
+    return [];
+  };
 
   return snap.docs
     .map((d) => {
@@ -250,9 +295,9 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
         image:         data.images?.[0]?.fileUrl ?? null,
         unityType:     data.unityType    ?? 'unidade',
         barCode:       data.barCode      ?? '',
-        searchIndex:   Array.isArray(data.searchIndex) ? data.searchIndex : [],
-        wordKeys:      Array.isArray(data.wordKeys)    ? data.wordKeys    : [],
-        tags:          Array.isArray(data.tags)        ? data.tags        : [],
+        searchIndex:   toStringArray(data.searchIndex),
+        wordKeys:      toStringArray(data.wordKeys),
+        tags:          toStringArray(data.tags),
         stock,
       };
     })

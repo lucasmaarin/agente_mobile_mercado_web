@@ -13,7 +13,7 @@ export const DOMAIN_SLUGS: Record<string, string> = {
 // Mapa de slug em minúsculo → ID real do Firestore (com casing correto)
 // Usado para resolver URLs que chegam em lowercase
 export const SLUG_PARA_COMPANY_ID: Record<string, string> = Object.fromEntries(
-  Object.values(DOMAIN_SLUGS).map(id => [id.toLowerCase(), id])
+  Object.entries(DOMAIN_SLUGS).map(([slug, id]) => [slug.toLowerCase(), id])
 );
 
 // Redirecionamento temporário de dados: companyId → ID real usado nas queries
