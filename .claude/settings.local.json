@@ -61,7 +61,8 @@
       "Bash(dir \"c:\\\\\\\\Users\\\\\\\\lucas\\\\\\\\Desktop\\\\\\\\mobile_mercado\\\\\\\\agente_mobile_mercado\\\\\\\\public\\\\\\\\logos\\\\\\\\\")",
       "Bash(powershell -Command \"Get-ChildItem 'c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\public\\\\logos'\")",
       "Bash(cmd.exe /c \"dir c:\\\\Users\\\\lucas\\\\Desktop\\\\mobile_mercado\\\\agente_mobile_mercado\\\\public\\\\logos\")",
-      "Bash(git.exe log *)"
+      "Bash(git.exe log *)",
+      "Bash(npm list *)"
     ]
   }
 }

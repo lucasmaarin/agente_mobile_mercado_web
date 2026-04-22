@@ -95,6 +95,8 @@ export interface ConfigLojaPrompt {
   horarios: { dia: string; aberto: boolean; abertura: string; fechamento: string }[];
 }
 
+export type NivelConfianca = 'alto' | 'medio' | 'baixo';
+
 export function buildSystemPrompt(
   produtosFoco: Produto[],
   indiceCategoria: string,
@@ -108,7 +110,8 @@ export function buildSystemPrompt(
   nomeEstabelecimento: string = '',
   formasPagamento: string[] = [],
   lojaConfig?: ConfigLojaPrompt,
-  contextoDetectado?: string
+  contextoDetectado?: string,
+  nivelConfianca?: NivelConfianca
 ): string {
   const nomeSupermercado = nomeEstabelecimento || 'Mobile Mercado';
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -201,6 +204,9 @@ Responda SOMENTE ao que o cliente pediu. Não faça recomendações proativas.
 ❌ NUNCA invente produtos fora da lista.
 ❌ NUNCA liste nomes de produtos com numeração (1. 2. 3.), hifens (- produto) ou qualquer formato de texto — use SEMPRE [SHOW:ID].
 ❌ NUNCA use [SHOW:ID] sem o cliente ter pedido um produto específico — não recomende espontaneamente.
+
+━━ CONFIANÇA DO RESULTADO ━━
+${nivelConfianca === 'alto' ? '✅ RESULTADO PRECISO: as tags dos produtos coincidem exatamente com o pedido. Exiba os cards diretamente com UMA frase curta e neutra (ex: "Aqui está! ⬇️"). NÃO diga que pode ou talvez.' : nivelConfianca === 'medio' ? '⚠️ RESULTADO APROXIMADO: o sistema encontrou produtos relacionados, mas sem cobertura total das tags. Prefixe com "Encontrei estas opções que podem te atender:" antes de exibir os cards.' : '❓ RESULTADO PERIFÉRICO: correspondência fraca. Diga "Pesquisei por \'[termo]\' e não tenho certeza se é isso — estes produtos têm relação. Pode descrever melhor?"'}
 
 ━━ SITUAÇÕES COMUNS ━━
 • Cliente pede produto → UMA frase curta + [SHOW:id1][SHOW:id2] para cada produto encontrado. PROIBIDO escrever nome, preço ou descrição no texto.

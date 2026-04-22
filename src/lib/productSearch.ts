@@ -221,13 +221,10 @@ export function ehBuscaPuraporMarca(texto: string, catalogo: Produto[]): boolean
   const palavras = extrairPalavrasBaseBusca(texto);
   if (palavras.length === 1) {
     const palavra = palavras[0];
-    // Verifica se a palavra NÃO aparece como tipo de produto em lugar nenhum
-    const temNoNome = catalogo.some(p => normalizar(p.name).includes(palavra));
-    const temNaDescricao = catalogo.some(p => normalizar(p.description || "").includes(palavra));
-    const temNaTag = catalogo.some(p => (p.tags ?? []).some(tag => expandirTag(tag).includes(palavra)));
-    
-    // Se a palavra não aparece em lugar nenhum, é uma marca desconhecida
-    return !temNoNome && !temNaDescricao && !temNaTag;
+    const temNaTag = catalogo.some((p) =>
+      [...(p.tags ?? []), ...(p.wordKeys ?? []), ...(p.searchIndex ?? [])].flatMap(expandirTag).includes(palavra)
+    );
+    return !temNaTag;
   }
   
   return false;
@@ -244,45 +241,45 @@ export function ehBuscaPuraporMarca(texto: string, catalogo: Produto[]): boolean
 export function buscarProdutosPorMarca(marca: string, catalogo: Produto[]): Produto[] {
   const marcaNorm = normalizar(marca);
   const palavrasMarca = extrairPalavrasBaseBusca(marca);
-  
-  const produtosComMarca = catalogo.filter((p) => {
-    const nome = normalizar(p.name);
-    const desc = normalizar(p.description || "");
-    const tags = (p.tags ?? []).map(normalizar).join(" ");
-    const searchIdx = (p.searchIndex ?? []).map(normalizar).join(" ");
-    const todosOsCampos = `${nome} ${desc} ${tags} ${searchIdx}`;
-    
-    // Match exato da marca normalizada
-    if (todosOsCampos.includes(marcaNorm)) return true;
-    
-    // Match parcial: procura cada palavra da marca
-    if (palavrasMarca.length > 0) {
-      return palavrasMarca.some(palavra => {
-        const palavraNorm = normalizar(palavra);
-        // Procura como palavra separada (com espaço antes/depois ou inicio/fim)
-        return todosOsCampos.includes(palavraNorm) || 
-               todosOsCampos.includes(` ${palavraNorm} `) ||
-               nome.startsWith(palavraNorm) ||
-               nome.endsWith(palavraNorm);
+
+  return catalogo
+    .filter((p) => {
+      const tokens = [
+        ...(p.tags ?? []),
+        ...(p.wordKeys ?? []),
+        ...(p.searchIndex ?? []),
+      ].flatMap(expandirTag);
+
+      if (tokens.some((t) => t === marcaNorm)) return true;
+
+      return palavrasMarca.some((palavra) => {
+        const pn = normalizar(palavra);
+        return tokens.some((t) => t === pn || t.startsWith(pn));
       });
+    })
+    .sort((a, b) => calcularScorePorTags(b, marca) - calcularScorePorTags(a, marca));
+}
+
+/**
+ * Calcula o score de um produto para um texto de busca, usando apenas tags.
+ * Útil para ordenar listas de produtos por relevância de tags.
+ */
+export function calcularScorePorTags(produto: Produto, texto: string): number {
+  const palavras = extrairPalavrasBaseBusca(texto);
+  if (palavras.length === 0) return 0;
+  const tokens = [
+    ...(produto.tags ?? []),
+    ...(produto.wordKeys ?? []),
+    ...(produto.searchIndex ?? []),
+  ].flatMap(expandirTag);
+  let score = 0;
+  for (const w of palavras) {
+    for (const forma of [w, ...singularizar(w)]) {
+      if (tokens.some((t) => t === forma)) { score += 50; break; }
+      if (tokens.some((t) => t.startsWith(forma) && forma.length >= 4)) { score += 10; break; }
     }
-    
-    return false;
-  });
-  
-  // Ordena por relevância (marca no nome é mais relevante que na descrição)
-  return produtosComMarca.sort((a, b) => {
-    const aNome = normalizar(a.name).indexOf(marcaNorm);
-    const bNome = normalizar(b.name).indexOf(marcaNorm);
-    
-    // Se ambos têm no nome, ordena por posição
-    if (aNome >= 0 && bNome >= 0) return aNome - bNome;
-    // Se só um tem no nome, esse vem primeiro
-    if (aNome >= 0) return -1;
-    if (bNome >= 0) return 1;
-    
-    return 0;
-  });
+  }
+  return score;
 }
 
 export function variantesToken(token: string): string[] {
@@ -325,53 +322,73 @@ export function buildIndiceCategoria(produtos: Produto[]): string {
     .join(" | ");
 }
 
+// Pontuação por posição do termo no nome do produto (índice 0-based).
+// Posição 0 (1ª palavra) = 50pts, 1 = 40, 2 = 30, 3+ = 20.
+const PTS_NOME_POR_POSICAO = [50, 40, 30, 20] as const;
+
 export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const palavrasBase = extrairPalavrasBaseBusca(texto);
   if (palavrasBase.length === 0) return [];
 
   const comScore = produtos.map((p) => {
-    const fontesIndexacao = [...(p.tags ?? []), ...(p.wordKeys ?? []), ...(p.searchIndex ?? [])];
-    if (fontesIndexacao.length === 0) return { produto: p, score: 0 };
+    // Palavras do nome normalizadas (usadas para score por posição)
+    const palavrasNome = normalizar(p.name).split(/\s+/).filter(w => w.length >= 1);
 
-    // Expande tokens normalizados a partir de tags + índices auxiliares.
-    const tagNorms = fontesIndexacao.flatMap((t) => expandirTag(t));
+    // Tokens de tags expandidos (usados para eligibilidade por características)
+    const tagNorms = [
+      ...(p.tags ?? []),
+      ...(p.wordKeys ?? []),
+      ...(p.searchIndex ?? []),
+    ].flatMap((t) => expandirTag(t));
 
     /**
-     * Avalia uma palavra de busca contra as tags do produto.
-     * Tags são palavras únicas (#gelo, #saborizado, #750ml).
+     * Avalia uma palavra de busca contra nome (posição) e tags (características).
      *
-     * - coberto=true + 50pts : tag exata  (ex: "gelo" vs #gelo)
-     * - coberto=true + 15pts : alias direto (ex: "caixinha" vs #tetrapak)
-     * - coberto=true + 10pts : prefixo (ex: "saboriz" vs #saborizado)
-     * - coberto=false        : sem match
+     * Nome — prioridade por posição:
+     *   posição 0 → 50pts | posição 1 → 40pts | posição 2 → 30pts | posição 3+ → 20pts
+     *
+     * Tags — fallback quando o termo não está no nome:
+     *   match exato → 10pts | alias → 6pts | prefixo → 4pts
+     *
+     * Sem match em nenhum dos dois → coberto=false (produto eliminado)
      */
     const avaliarPalavra = (w: string): { pts: number; coberto: boolean } => {
-      // Formas a testar: original + formas singulares
       const formas = [w, ...singularizar(w)];
 
+      // 1. Verifica posição no nome (mais relevante)
       for (const forma of formas) {
-        for (const tagNorm of tagNorms) {
-          if (tagNorm === forma) return { pts: forma === w ? 50 : 45, coberto: true };
+        for (let i = 0; i < palavrasNome.length; i++) {
+          if (palavrasNome[i] === forma || palavrasNome[i].startsWith(forma)) {
+            const pts = PTS_NOME_POR_POSICAO[Math.min(i, PTS_NOME_POR_POSICAO.length - 1)];
+            return { pts, coberto: true };
+          }
         }
       }
 
-      // Alias direto (ex: "caixinha" → busca por "tetrapak","caixa" nas tags)
+      // 2. Verifica tags (marca, embalagem, características)
+      for (const forma of formas) {
+        for (const tagNorm of tagNorms) {
+          if (tagNorm === forma) return { pts: 10, coberto: true };
+        }
+      }
+
+      // Alias (ex: "caixinha" → #tetrapak)
       for (const forma of formas) {
         const aliases = ALIASES_BUSCA[forma] ?? [];
         if (aliases.length > 0) {
           for (const tagNorm of tagNorms) {
             if (aliases.some((alias) => normalizar(alias) === tagNorm)) {
-              return { pts: 15, coberto: true };
+              return { pts: 6, coberto: true };
             }
           }
         }
       }
 
-      // Prefixo (ex: "saboriz" encontra #saborizado)
+      // Prefixo em tag (ex: "saboriz" → #saborizado)
       for (const forma of formas) {
         if (forma.length >= 4) {
           for (const tagNorm of tagNorms) {
-            if (tagNorm.startsWith(forma)) return { pts: 10, coberto: true };
+            if (tagNorm.startsWith(forma)) return { pts: 4, coberto: true };
           }
         }
       }
@@ -388,12 +405,10 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
       if (coberto) palavrasCobertas++;
     }
 
-    // Bônus: todas as palavras têm cobertura exata
+    // Bônus: todas as palavras cobertas (nome ou tags)
     if (palavrasCobertas === palavrasBase.length) score += 25;
 
-    // Regra principal: produto só aparece se tiver tag dedicada para CADA palavra da busca.
-    // "leite" → precisa de #Leite (sub-token em #SaborLeite não conta).
-    // "leite caixinha" → precisa de #Leite E #TetraPak/#Caixinha.
+    // Produto só aparece se CADA palavra da busca for coberta (nome ou tag)
     if (palavrasCobertas < palavrasBase.length) {
       return { produto: p, score: 0 };
     }
@@ -402,7 +417,11 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   }).filter(({ score }) => score > 0);
 
   return comScore
-    .sort((a, b) => b.score - a.score)
+    .sort((a, b) => {
+      const diff = b.score - a.score;
+      if (diff !== 0) return diff;
+      return (b.produto.stock ?? 0) - (a.produto.stock ?? 0);
+    })
     .map(({ produto }) => produto)
     .slice(0, 20);
 }
@@ -418,11 +437,8 @@ export function selecionarCardsPorTermos(termos: string[], candidatos: Produto[]
   const termosUnicos = Array.from(new Set(termos));
 
   const combinaTermo = (p: Produto, termo: string) => {
-    const nome = normalizar(p.name);
-    const sub  = normalizar(p.subcategory);
-    const cat  = normalizar(p.category);
-    const desc = normalizar(p.description || "");
-    return nome.includes(termo) || sub.includes(termo) || cat.includes(termo) || desc.includes(termo);
+    const tokens = [...(p.tags ?? []), ...(p.wordKeys ?? []), ...(p.searchIndex ?? [])].flatMap(expandirTag);
+    return tokens.some((t) => t === termo || t.startsWith(termo));
   };
 
   for (const termo of termosUnicos) {
@@ -531,31 +547,33 @@ function levenshtein(a: string, b: string): number {
 }
 
 /**
- * Tenta corrigir um termo sem resultados comparando com palavras do catálogo.
- * Retorna a palavra mais próxima se a distância de edição for aceitável,
- * ou null se não encontrar boa correspondência.
+ * Tenta corrigir uma palavra isolada comparando com tokens de tags do catálogo.
+ * Retorna o token mais próximo ou null se não encontrar correspondência aceitável.
  */
 export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): string | null {
   const termoN = normalizar(termo);
   if (termoN.length < 4) return null;
 
-  // Coleta palavras únicas do catálogo (nome, categoria, subcategoria)
-  const palavras = new Set<string>();
+  // Vocabulário = palavras de nomes + tokens de tags (ambas são fontes de eligibilidade)
+  const vocab = new Set<string>();
   for (const p of catalogo) {
-    for (const fonte of [p.name, p.category, p.subcategory]) {
-      normalizar(fonte || "").split(/\s+/).forEach((w) => {
-        if (w.length >= 3) palavras.add(w);
-      });
+    // Palavras do nome
+    normalizar(p.name).split(/\s+/).forEach(w => { if (w.length >= 3) vocab.add(w); });
+    // Tokens de tags
+    for (const token of [
+      ...(p.tags ?? []),
+      ...(p.wordKeys ?? []),
+      ...(p.searchIndex ?? []),
+    ].flatMap(expandirTag)) {
+      if (token.length >= 3) vocab.add(token);
     }
   }
 
-  // Distância máxima permitida depende do tamanho do termo
   const maxDist = termoN.length <= 5 ? 1 : termoN.length <= 8 ? 2 : 3;
-
   let melhor: string | null = null;
   let menorDist = Infinity;
 
-  for (const palavra of palavras) {
+  for (const palavra of vocab) {
     if (Math.abs(palavra.length - termoN.length) > maxDist) continue;
     const dist = levenshtein(termoN, palavra);
     if (dist > 0 && dist < menorDist && dist <= maxDist) {
@@ -565,6 +583,51 @@ export function sugerirCorrecaoOrtografica(termo: string, catalogo: Produto[]): 
   }
 
   return melhor;
+}
+
+/**
+ * Corrige o texto de busca palavra por palavra antes da busca.
+ * Palavras que já têm match exato em alguma tag são mantidas.
+ * Palavras sem match passam pela correção ortográfica.
+ * Retorna o texto corrigido (ou o original se nada mudou).
+ */
+export function corrigirTextoBusca(texto: string, catalogo: Produto[]): string {
+  const palavras = extrairPalavrasBaseBusca(texto);
+  if (palavras.length === 0) return texto;
+
+  // Vocabulário = palavras de nomes + tokens de tags (ambas são fontes de eligibilidade)
+  const vocab = new Set<string>();
+  for (const p of catalogo) {
+    normalizar(p.name).split(/\s+/).forEach(w => { if (w.length >= 3) vocab.add(w); });
+    for (const token of [
+      ...(p.tags ?? []),
+      ...(p.wordKeys ?? []),
+      ...(p.searchIndex ?? []),
+    ].flatMap(expandirTag)) {
+      if (token.length >= 3) vocab.add(token);
+    }
+  }
+
+  const corrigidas = palavras.map((w) => {
+    // Já tem match direto ou via singular → mantém
+    if (vocab.has(w) || singularizar(w).some((s) => vocab.has(s))) return w;
+    // Tenta correção por distância de edição
+    const maxDist = w.length <= 5 ? 1 : w.length <= 8 ? 2 : 3;
+    let melhor: string | null = null;
+    let menorDist = Infinity;
+    for (const token of vocab) {
+      if (Math.abs(token.length - w.length) > maxDist) continue;
+      const dist = levenshtein(w, token);
+      if (dist > 0 && dist < menorDist && dist <= maxDist) {
+        menorDist = dist;
+        melhor = token;
+      }
+    }
+    return melhor ?? w;
+  });
+
+  const textoCorigido = corrigidas.join(" ");
+  return textoCorigido !== palavras.join(" ") ? textoCorigido : texto;
 }
 
 // ── Verificação de cobertura completa ───────────────────────────────────────
@@ -683,8 +746,8 @@ export function buscarAlternativasPorTermo(termo: string, catalogo: Produto[], e
   return catalogo
     .filter((p) => {
       if (excluirId && p.id === excluirId) return false;
-      const alvo = normalizar(`${p.name} ${p.subcategory} ${p.category} ${p.description || ""}`);
-      return termos.some((t) => t.length >= 2 && alvo.includes(t));
+      const tokens = [...(p.tags ?? []), ...(p.wordKeys ?? []), ...(p.searchIndex ?? [])].flatMap(expandirTag);
+      return termos.some((t) => t.length >= 2 && tokens.some((tk) => tk === t || tk.startsWith(t)));
     })
     .slice(0, 6);
 }

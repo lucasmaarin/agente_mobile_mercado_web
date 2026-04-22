@@ -28,6 +28,7 @@ import {
   extrairPalavrasBaseBusca,
   traduzirAbreviacoes,
   sugerirCorrecaoOrtografica,
+  corrigirTextoBusca,
   produtoCobreTermos,
   detectarMarcaDesconhecida,
   detectarBuscaPorMarca,
@@ -36,6 +37,7 @@ import {
   detectarBuscaPorCategoria,
   buscarProdutosPorCategoria,
   embaralharArray,
+  calcularScorePorTags,
 } from "@/lib/productSearch";
 import {
   limparMarkdownBasico,
@@ -69,6 +71,7 @@ import {
   EnderecoSalvo,
   FewShotExemplo,
   buildSystemPrompt,
+  NivelConfianca,
 } from "@/lib/buildSystemPrompt";
 import { SLUG_PARA_COMPANY_ID, COMPANY_DATA_SOURCE } from "@/config/dominios";
 import { parseAgentResponse, COLLECTING_FIELD, NEXT_STATE, nextStateAfterPayment } from "@/lib/parseAgentResponse";
@@ -1877,6 +1880,7 @@ const AgentePage: React.FC = () => {
       let produtosFoco: Produto[] = [];
       let produtosMatchDireto: Produto[] = [];
       let contextoDetectado: string | undefined;
+      let nivelConfianca: NivelConfianca | undefined;
       if (wFlowState === FLOW_STATES.BROWSING) {
         const buscar = (t: string, cat: Produto[]) =>
           wordKeysEnabled ? filtrarProdutosWordKeys(t, cat) : filtrarProdutos(t, cat);
@@ -1897,6 +1901,7 @@ const AgentePage: React.FC = () => {
           if (porContexto.length > 0) {
             produtosFoco = porContexto.slice(0, 20);
             produtosMatchDireto = produtosFoco;
+            nivelConfianca = 'alto';
           }
           // Se contexto detectado mas sem produtos: produtosFoco fica vazio
           // → a IA pergunta o que o cliente precisa para aquela data
@@ -1908,6 +1913,7 @@ const AgentePage: React.FC = () => {
             if (produtosMarcaFoco.length > 0) {
               produtosFoco = produtosMarcaFoco.slice(0, 20);
               produtosMatchDireto = produtosFoco;
+              nivelConfianca = 'alto';
             }
           }
 
@@ -1929,17 +1935,21 @@ const AgentePage: React.FC = () => {
                 });
               };
 
-              // Busca normal por texto
-              const filtrado = buscar(texto, produtos);
+              // Semântica preditiva: corrige erros ortográficos antes da busca
+              const textoFinal = corrigirTextoBusca(texto, produtos);
+              const filtrado = buscar(textoFinal, produtos);
               produtosMatchDireto = filtrado;
 
               if (filtrado.length > 0) {
                 produtosFoco = filtrado.slice(0, 20);
+                nivelConfianca = 'alto';
               } else {
-                const filtradoFallback = buscarFallbackCampos(texto, produtos);
+                const filtradoFallback = buscarFallbackCampos(textoFinal, produtos)
+                  .sort((a, b) => calcularScorePorTags(b, texto) - calcularScorePorTags(a, texto));
                 if (filtradoFallback.length > 0) {
                   produtosFoco = filtradoFallback.slice(0, 20);
                   produtosMatchDireto = produtosFoco;
+                  nivelConfianca = 'medio';
                   // Evita cair no fluxo de "produto não encontrado" quando existe match textual.
                   semResultadoRef.current = { termo: '', tentativas: 0 };
                 } else {
@@ -1949,6 +1959,7 @@ const AgentePage: React.FC = () => {
                   const filtroTermoPrincipal = buscar(palavrasBase[0], produtos);
                   if (filtroTermoPrincipal.length > 0) {
                   produtosFoco = filtroTermoPrincipal.slice(0, 20);
+                  nivelConfianca = 'baixo';
                 } else {
                   // Último recurso: usa cache APENAS se confirmação óbvia
                   const confirmacaoObvia = ehSaudacaoCurta(texto) ||
@@ -2013,7 +2024,8 @@ const AgentePage: React.FC = () => {
         nomeEstabelecimento,
         formasPagamento,
         lojaConfig ?? undefined,
-        contextoDetectado
+        contextoDetectado,
+        nivelConfianca
       );
 
       // ---- Streaming ----
