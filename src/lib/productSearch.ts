@@ -295,8 +295,36 @@ export function variantesToken(token: string): string[] {
 }
 
 export function extrairPalavrasBaseBusca(texto: string): string[] {
-  return normalizar(texto)
+  const textoNorm = normalizar(texto)
     .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // Intenção especial:
+  // "derivados do leite", "derivados de milho", "derivada da soja sem lactose"...
+  // Prioriza o termo-base e mantém qualificadores úteis da frase.
+  const matchDerivados = textoNorm.match(
+    /\bderivad(?:o|a|os|as)\b\s+(?:de|do|da|dos|das)\s+([a-z0-9]{2,})(?:\s+([a-z0-9\s]+))?/
+  );
+  if (matchDerivados?.[1]) {
+    const base = matchDerivados[1];
+    const resto = (matchDerivados[2] ?? "")
+      .split(/\s+/)
+      .map((w) => w.trim())
+      .filter(Boolean)
+      .filter((w) => w.length >= 2)
+      .filter((w) => !/^\d+$/.test(w))
+      .filter((w) => !STOPWORDS_BUSCA.has(w))
+      .filter((w) => !/^derivad(?:o|a|os|as)$/.test(w));
+
+    const termos = [base, ...resto]
+      .filter((w) => !STOPWORDS_BUSCA.has(w) && !/^\d+$/.test(w));
+
+    const unicos = Array.from(new Set(termos));
+    if (unicos.length > 0) return unicos;
+  }
+
+  return textoNorm
     .split(/\s+/)
     .filter((w) => w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS_BUSCA.has(w));
 }
