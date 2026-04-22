@@ -159,7 +159,7 @@ export function extrairItensListaComQuantidade(
   const textoNorm = texto.replace(/\n+/g, ", ");
   const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
   const pattern =
-    /\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b\s+([^,]+?)(?=(?:,|\be\b\s*(?:\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b|$))/gi;
+    /(?:^|,|\be\b)\s*(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b\s+([^,]+?)(?=(?:,|\be\b\s*(?:\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b|$))/gi;
 
   for (const match of textoNorm.matchAll(pattern)) {
     const qtd = numeroDaString(match[1] || "");
@@ -168,6 +168,8 @@ export function extrairItensListaComQuantidade(
     if (!termoOriginal) continue;
     const termoBusca = limparTermoItemLista(termoOriginal);
     if (!termoBusca) continue;
+    const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
+    if (palavrasValidas.length === 0) continue;
     itens.push({ termoOriginal, termoBusca, quantidade: qtd });
   }
 

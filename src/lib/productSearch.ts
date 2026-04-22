@@ -5,6 +5,52 @@ export function normalizar(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+type MedidaBase = "ml" | "g";
+type MedidaNormalizada = { valor: number; base: MedidaBase };
+
+const UNIDADES_MEDIDA = new Set([
+  "ml", "l", "lt", "litro", "litros",
+  "kg", "kgs", "quilo", "quilos",
+  "g", "gr", "grama", "gramas", "mg",
+]);
+
+const MEDIDA_TOKEN_RE = /^\d+(?:[.,]\d+)?(?:ml|l|lt|litro|litros|kg|kgs|quilo|quilos|g|gr|grama|gramas|mg)$/;
+const MEDIDA_NO_TEXTO_RE = /(\d+(?:[.,]\d+)?)\s*(ml|l|lt|litro|litros|kg|kgs|quilo|quilos|g|gr|grama|gramas|mg)\b/gi;
+
+function normalizarMedida(valor: number, unidadeRaw: string): MedidaNormalizada | null {
+  const unidade = normalizar(unidadeRaw);
+  if (unidade === "ml") return { valor, base: "ml" };
+  if (["l", "lt", "litro", "litros"].includes(unidade)) return { valor: valor * 1000, base: "ml" };
+  if (unidade === "mg") return { valor: valor / 1000, base: "g" };
+  if (["g", "gr", "grama", "gramas"].includes(unidade)) return { valor, base: "g" };
+  if (["kg", "kgs", "quilo", "quilos"].includes(unidade)) return { valor: valor * 1000, base: "g" };
+  return null;
+}
+
+function extrairMedidasDeTexto(texto: string): MedidaNormalizada[] {
+  const out: MedidaNormalizada[] = [];
+  const t = normalizar(texto || "");
+  for (const m of t.matchAll(MEDIDA_NO_TEXTO_RE)) {
+    const n = Number(String(m[1]).replace(",", "."));
+    if (!Number.isFinite(n)) continue;
+    const medida = normalizarMedida(n, m[2] || "");
+    if (medida) out.push(medida);
+  }
+  return out;
+}
+
+function extrairPreferenciaMedidaBusca(texto: string): MedidaNormalizada | null {
+  const medidas = extrairMedidasDeTexto(texto);
+  return medidas.length > 0 ? medidas[0] : null;
+}
+
+function ehTokenDeMedida(token: string): boolean {
+  const t = normalizar(token.trim());
+  if (!t) return false;
+  if (UNIDADES_MEDIDA.has(t)) return true;
+  return MEDIDA_TOKEN_RE.test(t);
+}
+
 /**
  * Retorna formas alternativas singulares de uma palavra em português.
  * Ex: "derivados" → ["derivado"], "feijoes" → ["feijao"], "animais" → ["animal"]
@@ -404,10 +450,12 @@ export function extrairPalavrasBaseBusca(texto: string): string[] {
       .filter(Boolean)
       .filter((w) => w.length >= 2)
       .filter((w) => !/^\d+$/.test(w))
+      .filter((w) => !ehTokenDeMedida(w))
       .filter((w) => !STOPWORDS_BUSCA.has(w))
       .filter((w) => !/^derivad(?:o|a|os|as)$/.test(w));
 
     const termos = [base, ...resto]
+      .filter((w) => !ehTokenDeMedida(w))
       .filter((w) => !STOPWORDS_BUSCA.has(w) && !/^\d+$/.test(w));
 
     const unicos = Array.from(new Set(termos));
@@ -416,7 +464,7 @@ export function extrairPalavrasBaseBusca(texto: string): string[] {
 
   return textoNorm
     .split(/\s+/)
-    .filter((w) => w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS_BUSCA.has(w));
+    .filter((w) => w.length >= 2 && !/^\d+$/.test(w) && !STOPWORDS_BUSCA.has(w) && !ehTokenDeMedida(w));
 }
 
 export function expandirPalavrasBusca(palavrasBase: string[]): string[] {
@@ -450,7 +498,8 @@ const PTS_NOME_POR_POSICAO = [50, 40, 30, 20] as const;
 
 export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
   const palavrasBase = extrairPalavrasBaseBusca(texto);
-  if (palavrasBase.length === 0) return [];
+  const medidaPreferida = extrairPreferenciaMedidaBusca(texto);
+  if (palavrasBase.length === 0 && !medidaPreferida) return [];
 
   const comScore = produtos.map((p) => {
     // Palavras do nome normalizadas (usadas para score por posição)
@@ -521,27 +570,70 @@ export function filtrarProdutos(texto: string, produtos: Produto[]): Produto[] {
     let score = 0;
     let palavrasCobertas = 0;
 
-    for (const w of palavrasBase) {
-      const { pts, coberto } = avaliarPalavra(w);
-      score += pts;
-      if (coberto) palavrasCobertas++;
+    if (palavrasBase.length > 0) {
+      for (const w of palavrasBase) {
+        const { pts, coberto } = avaliarPalavra(w);
+        score += pts;
+        if (coberto) palavrasCobertas++;
+      }
+
+      // Bônus: todas as palavras cobertas (nome ou tags)
+      if (palavrasCobertas === palavrasBase.length) score += 25;
+
+      // Produto só aparece se CADA palavra da busca for coberta (nome ou tag)
+      if (palavrasCobertas < palavrasBase.length) {
+        return { produto: p, score: 0, deltaMedida: Number.POSITIVE_INFINITY };
+      }
     }
 
-    // Bônus: todas as palavras cobertas (nome ou tags)
-    if (palavrasCobertas === palavrasBase.length) score += 25;
+    let deltaMedida = Number.POSITIVE_INFINITY;
+    if (medidaPreferida) {
+      const medidasProduto = [
+        p.name,
+        ...(p.tags ?? []),
+        ...(p.wordKeys ?? []),
+        ...(p.searchIndex ?? []),
+      ].flatMap(extrairMedidasDeTexto);
 
-    // Produto só aparece se CADA palavra da busca for coberta (nome ou tag)
-    if (palavrasCobertas < palavrasBase.length) {
-      return { produto: p, score: 0 };
+      for (const medida of medidasProduto) {
+        if (medida.base !== medidaPreferida.base) continue;
+        const d = Math.abs(medida.valor - medidaPreferida.valor);
+        if (d < deltaMedida) deltaMedida = d;
+      }
+
+      // Busca só de medida ("1 litro", "250 gramas"): exige medida compatível.
+      if (palavrasBase.length === 0 && !Number.isFinite(deltaMedida)) {
+        return { produto: p, score: 0, deltaMedida: Number.POSITIVE_INFINITY };
+      }
+
+      // Dá preferência a medidas iguais/próximas no carrossel.
+      if (Number.isFinite(deltaMedida)) {
+        if (deltaMedida === 0) score += 30;
+        else if (deltaMedida <= 50) score += 24;
+        else if (deltaMedida <= 100) score += 18;
+        else if (deltaMedida <= 250) score += 12;
+        else score += 6;
+      }
     }
 
-    return { produto: p, score };
+    return { produto: p, score, deltaMedida };
   }).filter(({ score }) => score > 0);
 
   return comScore
     .sort((a, b) => {
       const diff = b.score - a.score;
       if (diff !== 0) return diff;
+
+      if (medidaPreferida) {
+        const aTemMedida = Number.isFinite(a.deltaMedida);
+        const bTemMedida = Number.isFinite(b.deltaMedida);
+        if (aTemMedida !== bTemMedida) return aTemMedida ? -1 : 1;
+        if (aTemMedida && bTemMedida) {
+          const diffMedida = a.deltaMedida - b.deltaMedida;
+          if (diffMedida !== 0) return diffMedida;
+        }
+      }
+
       return (b.produto.stock ?? 0) - (a.produto.stock ?? 0);
     })
     .map(({ produto }) => produto)

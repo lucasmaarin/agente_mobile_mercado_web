@@ -1019,11 +1019,10 @@ const AgentePage: React.FC = () => {
         return -1;
       };
 
-      const montarMensagemSelecaoItem = (estado: ListaPedidoState, item: ListaPedidoItem, index: number) => {
+      const montarMensagemSelecaoItem = (_estado: ListaPedidoState, item: ListaPedidoItem, _index: number) => {
         const opcoes = item.candidatos.slice(0, 5);
-        const sufixoLista = estado.itens.length > 1 ? ` (item ${index + 1} de ${estado.itens.length})` : "";
         return {
-          texto: `Estas são as opções de ${item.termoOriginal ?? item.termoBusca} que temos hoje${sufixoLista}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+          texto: `Essas são as opções de '${item.termoOriginal ?? item.termoBusca}' que temos hoje ⬇️`,
           produtosCard: opcoes,
           suggestions: ["Cancelar item"],
         };
@@ -1275,7 +1274,7 @@ const AgentePage: React.FC = () => {
             };
             setItemUnicoQtdState(novoEstadoUnico);
             await salvarRespostaLocal(
-              `Estas são as opções de ${novoEstadoUnico.termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Essas são as opções de '${novoEstadoUnico.termoDisplay}' que temos hoje ⬇️`,
               candidatosItemUnico,
               ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
@@ -1296,7 +1295,7 @@ const AgentePage: React.FC = () => {
               produtoSugerido: sugerido,
             });
             await salvarRespostaLocal(
-              `Esta é a opção de ${itemUnicoExtraido.termoBusca} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Essas são as opções de '${itemUnicoExtraido.termoBusca}' que temos hoje ⬇️`,
               [sugerido],
               ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
@@ -1844,7 +1843,7 @@ const AgentePage: React.FC = () => {
                 candidatos: agregados.slice(0, 6),
               });
               await salvarRespostaLocal(
-                `Aqui estão os ${nomeContextoLocal} que encontrei no momento. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+                `Essas são as opções de '${nomeContextoLocal}' que temos hoje ⬇️`,
                 agregados,
                 ["Finalizar pedido", "Continuar comprando"],
                 nomeContextoLocal
@@ -1876,7 +1875,7 @@ const AgentePage: React.FC = () => {
               candidatos: todosResultadosDiretos.slice(0, 6),
             });
             await salvarRespostaLocal(
-              `Estas são as opções de ${termoDisplay} que temos hoje. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+              `Essas são as opções de '${termoDisplay}' que temos hoje ⬇️`,
               todosResultadosDiretos,
               ["Finalizar pedido", "Continuar comprando"],
               termoBuscaLimpo
@@ -2525,9 +2524,8 @@ const AgentePage: React.FC = () => {
           );
         } else {
           const opcoes = itemProx.candidatos.slice(0, 5);
-          const sufixo = estado.itens.length > 1 ? ` (item ${prox + 1} de ${estado.itens.length})` : "";
           await salvarRespostaAgente(
-            `Estas são as opções de ${itemProx.termoOriginal ?? itemProx.termoBusca} que temos hoje${sufixo}. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+            `Essas são as opções de '${itemProx.termoOriginal ?? itemProx.termoBusca}' que temos hoje ⬇️`,
             opcoes,
             ["Cancelar item"],
             itemProx.termoBusca
