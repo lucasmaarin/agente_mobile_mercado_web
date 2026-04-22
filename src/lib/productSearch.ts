@@ -106,6 +106,10 @@ export const ALIASES_BUSCA: Record<string, string[]> = {
   tetrapak: ["caixinha", "caixa"],             // busca por "tetrapak" também funciona
   garrafa:  ["garrafa", "pet", "vidro"],
   lata:     ["lata", "aluminio"],
+  enlatado: ["enlatado", "enlatada", "lata"],
+  enlatada: ["enlatada", "enlatado", "lata"],
+  emlatado: ["emlatado", "emlatada", "lata", "enlatado"],
+  emlatada: ["emlatada", "emlatado", "lata", "enlatada"],
   saquinho: ["saquinho", "saco", "bag", "sachet"],
   saco:     ["saquinho", "bag", "sachet"],
   bag:      ["saquinho", "saco", "sachet"],
