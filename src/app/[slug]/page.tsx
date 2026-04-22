@@ -1815,6 +1815,44 @@ const AgentePage: React.FC = () => {
               })
               .slice(0, 20);
           };
+
+          // Casos especiais: "derivados do leite"/"derivados do milho" devem
+          // retornar um único carrossel com itens relacionados no mesmo bloco.
+          const nomeContextoLocal = detectarNomeContexto(texto);
+          if (nomeContextoLocal && /^derivados\s+d(?:e|o|a|os|as)\b/.test(normalizar(nomeContextoLocal))) {
+            const termosContextoLocal = detectarContexto(texto);
+            const agregados: Produto[] = [];
+            const ids = new Set<string>();
+
+            for (const termo of termosContextoLocal) {
+              const encontrados = buscarL(termo);
+              for (const p of encontrados) {
+                if (ids.has(p.id)) continue;
+                ids.add(p.id);
+                agregados.push(p);
+                if (agregados.length >= 20) break;
+              }
+              if (agregados.length >= 20) break;
+            }
+
+            if (agregados.length > 0) {
+              setItemUnicoQtdState({
+                termoBusca: nomeContextoLocal,
+                termoDisplay: nomeContextoLocal.charAt(0).toUpperCase() + nomeContextoLocal.slice(1),
+                quantidade: 1,
+                stage: "choose_other",
+                candidatos: agregados.slice(0, 6),
+              });
+              await salvarRespostaLocal(
+                `Aqui estão os ${nomeContextoLocal} que encontrei no momento. Para adicionar no pedido é só clicar no "+" ao lado do produto. ⬇️`,
+                agregados,
+                ["Finalizar pedido", "Continuar comprando"],
+                nomeContextoLocal
+              );
+              return;
+            }
+          }
+
           const palavrasBusca = extrairPalavrasBaseBusca(texto);
           const todosResultadosDiretos = (() => {
             const diretos = buscarL(texto);
