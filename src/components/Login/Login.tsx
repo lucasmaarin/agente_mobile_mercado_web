@@ -388,7 +388,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
         <p className={styles.footerText}>
           Ao continuar, você aceita nossos{" "}
           <a href="#" className={styles.link}>Termos de Uso</a> e{" "}
-          <a href="#" className={styles.link}>Política de Privacidade</a>
+          <a href="https://www.mobilemercado.com.br/declaracao-de-privacidade" className={styles.link} target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
         </p>
       </div>
     </div>

@@ -49,7 +49,7 @@ const AuthCheckboxCard: React.FC<AuthCheckboxCardProps> = ({
           Li e aceito os{" "}
           <a href="#" style={{ color: "#193281" }}>Termos de Uso</a>
           {" "}e a{" "}
-          <a href="#" style={{ color: "#193281" }}>Política de Privacidade</a>
+          <a href="https://www.mobilemercado.com.br/declaracao-de-privacidade" style={{ color: "#193281" }} target="_blank" rel="noopener noreferrer">Política de Privacidade</a>
         </span>
       </label>
 

@@ -258,7 +258,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
                   Termos de Uso
                 </a>{" "}
                 e a{" "}
-                <a href="#" className={styles.termsLink} target="_blank" rel="noopener">
+                <a href="https://www.mobilemercado.com.br/declaracao-de-privacidade" className={styles.termsLink} target="_blank" rel="noopener noreferrer">
                   Política de Privacidade
                 </a>
               </label>
