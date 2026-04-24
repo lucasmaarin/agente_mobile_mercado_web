@@ -1046,7 +1046,7 @@ const AgentePage: React.FC = () => {
         if (texto.includes("Buscar produtos")) {
           await salvarRespostaLocal(
             "Para buscar um produto é simples: basta digitar o nome do que você quer!\n\n" +
-            "Exemplos:\n• \"arroz\"\n• \"leite integral 1L\"\n• \"refrigerante Coca-Cola\"\n\n" +
+            "Exemplos:\narroz\nleite integral 1L\nrefrigerante Coca-Cola\n\n" +
             "Vou mostrar as opções disponíveis para você escolher. 😊"
           );
           return;

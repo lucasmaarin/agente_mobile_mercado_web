@@ -24,7 +24,7 @@ function getEstabelecimentos(): Estabelecimento[] {
     if (seen.has(companyId)) continue;
     seen.add(companyId);
 
-    list.push({ companyId, slug, domain: `${slug}.agentemobile.com.br`, nome: null, logo: null, loading: true });
+    list.push({ companyId, slug, domain: `agentemobile.com.br/${slug}`, nome: null, logo: null, loading: true });
   }
 
   // Estabelecimento de teste fixo
@@ -220,7 +220,7 @@ export default function HomePage() {
 
 function EstabelecimentoCard({ item }: { item: Estabelecimento }) {
   const { companyId, slug, domain, nome, logo, loading } = item;
-  const href = `/${slug}`;
+  const href = `https://agentemobile.com.br/${slug}`;
   const displayNome = nome ?? (loading ? "" : companyId);
 
   if (loading) {
