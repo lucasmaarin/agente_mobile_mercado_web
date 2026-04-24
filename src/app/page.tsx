@@ -8,6 +8,7 @@ import { buscarNomeEstabelecimento, buscarLogoEstabelecimento } from "@/services
 
 interface Estabelecimento {
   companyId: string;
+  slug: string;
   domain: string | null;
   nome: string | null;
   logo: string | null;
@@ -19,20 +20,18 @@ function getEstabelecimentos(): Estabelecimento[] {
   const seen = new Set<string>();
   const list: Estabelecimento[] = [];
 
-  for (const [key, companyId] of Object.entries(DOMAIN_SLUGS)) {
+  for (const [slug, companyId] of Object.entries(DOMAIN_SLUGS)) {
     if (seen.has(companyId)) continue;
     seen.add(companyId);
 
-    // Chave com ponto = domínio real; sem ponto = apenas identificador interno
-    const domain = key.includes(".") ? key.replace(/^https?:\/\/(www\.)?/, "") : null;
-
-    list.push({ companyId, domain, nome: null, logo: null, loading: true });
+    list.push({ companyId, slug, domain: `${slug}.agentemobile.com.br`, nome: null, logo: null, loading: true });
   }
 
   // Estabelecimento de teste fixo
   if (!seen.has("estabelecimento-teste")) {
     list.push({
       companyId: "estabelecimento-teste",
+      slug: "estabelecimento-teste",
       domain: null,
       nome: "Estabelecimento Teste",
       logo: null,
@@ -220,8 +219,8 @@ export default function HomePage() {
 }
 
 function EstabelecimentoCard({ item }: { item: Estabelecimento }) {
-  const { companyId, domain, nome, logo, loading } = item;
-  const href = `/${companyId}`;
+  const { companyId, slug, domain, nome, logo, loading } = item;
+  const href = `/${slug}`;
   const displayNome = nome ?? (loading ? "" : companyId);
 
   if (loading) {

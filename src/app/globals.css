@@ -137,7 +137,7 @@ a {
 .font-semibold { font-weight: var(--font-weight-semibold); }
 .font-bold { font-weight: var(--font-weight-bold); }
 
-/* Oculta o badge do reCAPTCHA */
 .grecaptcha-badge {
-  visibility: hidden !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }

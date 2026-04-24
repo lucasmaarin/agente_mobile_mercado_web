@@ -1,13 +1,10 @@
 // Mapeamento: domínio do cliente → slug do estabelecimento
 // Adicione uma linha por cliente e redeploy no Render
 export const DOMAIN_SLUGS: Record<string, string> = {
-  // 'royal.com.br':            'royal',
-  // 'zerograu.com.br':         'zerograu',
-  // 'padaria-center.com.br':   'padaria-center',
-  'https://www.uaumart.com.br': 'q0IPIusmpEq3pHbMyfWY', // UAU Mart
-  'vidal': 'XAXMOP6aweRbBAb0gUvU',
-  'zero grau': 'jQQjHTCc2zW1tuZMQzGF',
-  'g&s': 'GkFYWdOBKD1vbzYoem9K',
+  'uaumart':  'q0IPIusmpEq3pHbMyfWY',  // uaumart.agentemobile.com.br
+  'vidal':    'XAXMOP6aweRbBAb0gUvU',  // vidal.agentemobile.com.br
+  'zerograu': 'jQQjHTCc2zW1tuZMQzGF',  // zerograu.agentemobile.com.br
+  'gs':       'GkFYWdOBKD1vbzYoem9K',  // gs.agentemobile.com.br
 };
 
 // Mapa de slug em minúsculo → ID real do Firestore (com casing correto)
@@ -32,5 +29,5 @@ export const LOGO_OVERRIDES: Record<string, string> = {
 
 // Nomes sobrescritos por companyId
 export const NOME_OVERRIDES: Record<string, string> = {
-  XAXMOP6aweRbBAb0gUvU: 'Vidal',
+  XAXMOP6aweRbBAb0gUvU: 'Vidal Supermercados',
 };
