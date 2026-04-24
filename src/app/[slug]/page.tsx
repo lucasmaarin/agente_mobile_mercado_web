@@ -1022,7 +1022,7 @@ const AgentePage: React.FC = () => {
       const montarMensagemSelecaoItem = (_estado: ListaPedidoState, item: ListaPedidoItem, _index: number) => {
         const opcoes = item.candidatos.slice(0, 5);
         return {
-          texto: `Essas são as opções de '${item.termoOriginal ?? item.termoBusca}' que temos hoje ⬇️`,
+          texto: `Essas são as opções de ${item.termoOriginal ?? item.termoBusca} que temos hoje ⬇️`,
           produtosCard: opcoes,
           suggestions: ["Cancelar item"],
         };
@@ -1274,7 +1274,7 @@ const AgentePage: React.FC = () => {
             };
             setItemUnicoQtdState(novoEstadoUnico);
             await salvarRespostaLocal(
-              `Essas são as opções de '${novoEstadoUnico.termoDisplay}' que temos hoje ⬇️`,
+              `Essas são as opções de ${novoEstadoUnico.termoDisplay} que temos hoje ⬇️`,
               candidatosItemUnico,
               ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
@@ -1295,7 +1295,7 @@ const AgentePage: React.FC = () => {
               produtoSugerido: sugerido,
             });
             await salvarRespostaLocal(
-              `Essas são as opções de '${itemUnicoExtraido.termoBusca}' que temos hoje ⬇️`,
+              `Essas são as opções de ${itemUnicoExtraido.termoBusca} que temos hoje ⬇️`,
               [sugerido],
               ["Finalizar pedido", "Continuar comprando"],
               itemUnicoExtraido.termoBusca
@@ -1843,7 +1843,7 @@ const AgentePage: React.FC = () => {
                 candidatos: agregados.slice(0, 6),
               });
               await salvarRespostaLocal(
-                `Essas são as opções de '${nomeContextoLocal}' que temos hoje ⬇️`,
+                `Essas são as opções de ${nomeContextoLocal} que temos hoje ⬇️`,
                 agregados,
                 ["Finalizar pedido", "Continuar comprando"],
                 nomeContextoLocal
@@ -1875,7 +1875,7 @@ const AgentePage: React.FC = () => {
               candidatos: todosResultadosDiretos.slice(0, 6),
             });
             await salvarRespostaLocal(
-              `Essas são as opções de '${termoDisplay}' que temos hoje ⬇️`,
+              `Essas são as opções de ${termoDisplay} que temos hoje ⬇️`,
               todosResultadosDiretos,
               ["Finalizar pedido", "Continuar comprando"],
               termoBuscaLimpo
@@ -2525,7 +2525,7 @@ const AgentePage: React.FC = () => {
         } else {
           const opcoes = itemProx.candidatos.slice(0, 5);
           await salvarRespostaAgente(
-            `Essas são as opções de '${itemProx.termoOriginal ?? itemProx.termoBusca}' que temos hoje ⬇️`,
+            `Essas são as opções de ${itemProx.termoOriginal ?? itemProx.termoBusca} que temos hoje ⬇️`,
             opcoes,
             ["Cancelar item"],
             itemProx.termoBusca
