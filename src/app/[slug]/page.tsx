@@ -2562,7 +2562,7 @@ const AgentePage: React.FC = () => {
   // ============================================================
   return (
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
-      <div id="recaptcha-container" style={{ position: 'fixed', bottom: 80, left: 0, zIndex: 9999 }}></div>
+      <div id="recaptcha-container" style={{ position: 'fixed', bottom: 160, left: 0, zIndex: 9999 }}></div>
       <Header
         nomeEstabelecimento={nomeEstabelecimento}
         cartTotal={totalCarrinho}
