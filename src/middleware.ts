@@ -4,7 +4,7 @@ const BYPASS = ["/_next", "/api", "/favicon", "/logo", "/prodSemImg"];
 
 // Domínios raiz que NÃO são slugs (adicione todos os seus domínios aqui)
 const ROOT_DOMAINS = [
-  "agentemobile.com.br",
+  "agentemercado.com.br",
   "mobilemercado.com.br",
   "agentemercado.com.br",
   "localhost",

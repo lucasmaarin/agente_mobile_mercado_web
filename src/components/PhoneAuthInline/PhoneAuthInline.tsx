@@ -170,8 +170,9 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
   };
 
   return (
+    <>
+      <div id="recaptcha-inline" style={{ position: 'fixed', bottom: 80, left: 0, zIndex: 9999 }} />
     <div className={styles.wrapper}>
-      <div id="recaptcha-inline" />
 
       {/* Área de mensagens — ocupa espaço abaixo do Header da loja */}
       <div className={styles.messagesArea}>
@@ -279,6 +280,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 

@@ -1,10 +1,10 @@
 // Mapeamento: domínio do cliente → slug do estabelecimento
 // Adicione uma linha por cliente e redeploy no Render
 export const DOMAIN_SLUGS: Record<string, string> = {
-  'uaumart':  'q0IPIusmpEq3pHbMyfWY',  // uaumart.agentemobile.com.br
-  'vidal':    'XAXMOP6aweRbBAb0gUvU',  // vidal.agentemobile.com.br
-  'zerograu': 'jQQjHTCc2zW1tuZMQzGF',  // zerograu.agentemobile.com.br
-  'gs':       'GkFYWdOBKD1vbzYoem9K',  // gs.agentemobile.com.br
+  'uaumart':  'q0IPIusmpEq3pHbMyfWY',  // uaumart.agentemercado.com.br
+  'vidal':    'XAXMOP6aweRbBAb0gUvU',  // vidal.agentemercado.com.br
+  'zerograu': 'jQQjHTCc2zW1tuZMQzGF',  // zerograu.agentemercado.com.br
+  'gs':       'GkFYWdOBKD1vbzYoem9K',  // gs.agentemercado.com.br
 };
 
 // Mapa de slug em minúsculo → ID real do Firestore (com casing correto)
