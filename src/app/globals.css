@@ -140,4 +140,9 @@ a {
 .grecaptcha-badge {
   visibility: visible !important;
   opacity: 1 !important;
+  bottom: auto !important;
+  top: 0 !important;
+  right: 0 !important;
+  transform: scale(0.7) !important;
+  transform-origin: top right !important;
 }
