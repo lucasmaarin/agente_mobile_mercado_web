@@ -196,6 +196,9 @@ const ESTADO_LABEL: Record<FlowState, string> = {
 // TOUR ONBOARDING
 // ============================================================
 const TOUR_KEY = "agente_tour_visto";
+const chatHistoryKey = (slug: string, userId: string) => `chat_msgs_${slug}_${userId}`;
+const CHAT_HISTORY_MAX = 100;
+const CHAT_HISTORY_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const TOUR_STEPS = [
   {
@@ -375,6 +378,27 @@ const AgentePage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
+  // -------- Salva histórico de mensagens no localStorage --------
+  useEffect(() => {
+    if (!userDocId || mensagens.length === 0) return;
+    const toSave = mensagens
+      .filter(m =>
+        !m.id.startsWith('auth-') &&
+        !m.id.startsWith('logout-') &&
+        !m.skeletonCardCount &&
+        !m.authCheckboxCard
+      )
+      .slice(-CHAT_HISTORY_MAX)
+      .map(m => ({ ...m, timestamp: m.timestamp instanceof Date ? m.timestamp.toISOString() : m.timestamp }));
+    if (toSave.length === 0) return;
+    try {
+      localStorage.setItem(
+        chatHistoryKey(rawSlug, userDocId),
+        JSON.stringify({ savedAt: new Date().toISOString(), msgs: toSave })
+      );
+    } catch {}
+  }, [mensagens, userDocId, rawSlug]);
+
   // -------- Botão flutuante: posição inicial --------
   useEffect(() => {
     setBtnCartPos({ x: window.innerWidth - 80, y: window.innerHeight - 150 });
@@ -518,8 +542,7 @@ const AgentePage: React.FC = () => {
     }
   }, [authLoading, carregandoConversa, mensagens.length, tourIniciado]);
 
-  // -------- Iniciar sempre uma conversa nova na interface --------
-  // Mantém o histórico no DB, mas não reidrata mensagens após recarregar a página.
+  // -------- Iniciar conversa — restaura histórico do localStorage se existir --------
   useEffect(() => {
     if (!userDocId || !produtosCarregados || !nomeEstabelecimentoCarregado) return;
 
@@ -528,35 +551,55 @@ const AgentePage: React.FC = () => {
       try {
         const conversaAtiva = await buscarConversaAtiva(userDocId);
         if (conversaAtiva) {
-          // Encerra a conversa ativa para preservar histórico sem reaproveitar sessão.
           await atualizarConversa(userDocId, conversaAtiva.conversaId, {
             status:  "abandonada",
             endedAt: Timestamp.now(),
           });
         }
-        // Reinicia apenas a interface/sessão local.
         setConversaId(null);
         setCarrinho([]);
         setCustomerData({});
         setCartRecoveryPending(false);
-        // Não sobrescreve COLLECTING_NAME/CPF_ONBOARDING definidos no onAuthStateChanged
-        const isNewUser = nomeCliente === 'Cliente' || !nomeCliente;
-        if (!isNewUser) setFlowState(FLOW_STATES.BROWSING);
-        const welcomeContent = isNewUser
-          ? `Como você gostaria de ser chamado?`
-          : `Como posso ajudar você hoje?`;
-        const welcomeSuggestions = isNewUser ? undefined : ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"];
-        // Preserva mensagens de auth anteriores e appenda a boas-vindas
-        setMensagens(prev => {
-          const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
-          return [...authMsgs, {
-            id: 'welcome', role: 'assistant' as const,
-            content: welcomeContent, isWelcomeCard: true, timestamp: new Date(),
-            suggestions: welcomeSuggestions,
-          }];
-        });
+
+        // Tenta restaurar histórico do localStorage
+        let restoredFromHistory = false;
+        try {
+          const raw = localStorage.getItem(chatHistoryKey(rawSlug, userDocId));
+          if (raw) {
+            const parsed = JSON.parse(raw) as { savedAt: string; msgs: (Omit<Mensagem, 'timestamp'> & { timestamp: string })[] };
+            const age = Date.now() - new Date(parsed.savedAt).getTime();
+            if (age <= CHAT_HISTORY_MAX_AGE_MS && parsed.msgs.length > 0) {
+              const restored: Mensagem[] = parsed.msgs.map(m => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+              }));
+              setMensagens(prev => {
+                const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
+                return [...authMsgs, ...restored];
+              });
+              restoredFromHistory = true;
+            }
+          }
+        } catch {}
+
+        if (!restoredFromHistory) {
+          const isNewUser = nomeCliente === 'Cliente' || !nomeCliente;
+          if (!isNewUser) setFlowState(FLOW_STATES.BROWSING);
+          const welcomeContent = isNewUser
+            ? `Como você gostaria de ser chamado?`
+            : `Como posso ajudar você hoje?`;
+          const welcomeSuggestions = isNewUser ? undefined : ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"];
+          setMensagens(prev => {
+            const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
+            return [...authMsgs, {
+              id: 'welcome', role: 'assistant' as const,
+              content: welcomeContent, isWelcomeCard: true, timestamp: new Date(),
+              suggestions: welcomeSuggestions,
+            }];
+          });
+        }
       } catch (e) {
-        console.error("Erro ao iniciar nova conversa:", e);
+        console.error("Erro ao iniciar conversa:", e);
         setMensagens(prev => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
           return [...authMsgs, {
@@ -585,6 +628,10 @@ const AgentePage: React.FC = () => {
       } catch (e) {
         console.error("Erro ao encerrar conversa:", e);
       }
+    }
+    // Remove histórico salvo para que a próxima sessão comece limpa
+    if (userDocId) {
+      try { localStorage.removeItem(chatHistoryKey(rawSlug, userDocId)); } catch {}
     }
     setConversaId(null);
     setCarrinho([]);
