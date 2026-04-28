@@ -182,20 +182,25 @@ export function extrairItensSimples(
   if (texto.trim().endsWith("?")) return [];
 
   // Prioridade 1: quebra de linha (usuário colou uma lista)
+  // Se cada linha contém vírgulas, expande em sub-itens individuais
   const temQuebraLinha = texto.includes("\n");
   if (temQuebraLinha) {
-    const candidatos = texto.split("\n").map((p) => p.trim()).filter(Boolean);
-    if (candidatos.length >= 2) {
+    const linhas = texto.split("\n").map((p) => p.trim()).filter(Boolean);
+    if (linhas.length >= 2) {
       const itens: Array<{ termoOriginal: string; termoBusca: string; quantidade: number }> = [];
-      for (const c of candidatos) {
-        // Remove alternativas após "ou" — "Arroz tipo 1 ou integral" → "Arroz tipo 1"
-        // O conteúdo após "ou" é preferência do usuário, não requisito de busca
-        const semAlternativa = c.replace(/\s+ou\b.*/i, "").trim();
-        const termoOriginal = semAlternativa || c;
-        const termoBusca = limparTermoItemLista(termoOriginal);
-        const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
-        if (palavrasValidas.length === 0) continue;
-        itens.push({ termoOriginal, termoBusca, quantidade: 1 });
+      for (const linha of linhas) {
+        // Se a linha tem vírgulas, trata cada parte como item separado
+        const partes = linha.includes(",")
+          ? linha.split(",").map((s) => s.trim()).filter(Boolean)
+          : [linha];
+        for (const c of partes) {
+          const semAlternativa = c.replace(/\s+ou\b.*/i, "").trim();
+          const termoOriginal = semAlternativa || c;
+          const termoBusca = limparTermoItemLista(termoOriginal);
+          const palavrasValidas = extrairPalavrasBaseBusca(termoBusca);
+          if (palavrasValidas.length === 0) continue;
+          itens.push({ termoOriginal, termoBusca, quantidade: 1 });
+        }
       }
       if (itens.length >= 2) return itens;
     }
@@ -228,22 +233,17 @@ export function extrairItensSimples(
 }
 
 /**
- * Remove itens duplicados ou genéricos quando existe versão mais específica.
- * Ex: ["Suco", "Suco garrafa", "Suco caixinha"] → mantém só "Suco garrafa" e "Suco caixinha"
- * Ex: ["Bebida", "Bebidas"] → mantém só "Bebida"
+ * Remove apenas itens com termoBusca exatamente igual (após normalização).
+ * Mantém variações explícitas como "cerveja" e "cerveja gelada" como buscas separadas.
  */
 function deduplicarItens<T extends { termoBusca: string }>(itens: T[]): T[] {
-  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  return itens.filter((item, idx) => {
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  const seen = new Set<string>();
+  return itens.filter((item) => {
     const n = norm(item.termoBusca);
-    // Remove apenas se é prefixo de outro item mais específico (Suco → "Suco garrafa")
-    // Duplicatas exatas são mantidas para que o cliente possa pedir o mesmo item várias vezes
-    const temMaisEspecifico = itens.some((outro, j) => {
-      if (j === idx) return false;
-      const nOutro = norm(outro.termoBusca);
-      return nOutro !== n && nOutro.startsWith(n + " ");
-    });
-    return !temMaisEspecifico;
+    if (seen.has(n)) return false;
+    seen.add(n);
+    return true;
   });
 }
 

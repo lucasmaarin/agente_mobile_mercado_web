@@ -80,7 +80,11 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
   };
 
   const setupRecaptcha = (): RecaptchaVerifier => {
-    if (window.recaptchaVerifierInline) return window.recaptchaVerifierInline;
+    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
+    if (window.recaptchaVerifierInline) {
+      try { window.recaptchaVerifierInline.clear(); } catch {}
+      window.recaptchaVerifierInline = undefined;
+    }
     const verifier = new RecaptchaVerifier(auth, "recaptcha-inline", {
       size: "invisible",
       callback: () => {},
