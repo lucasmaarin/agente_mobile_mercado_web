@@ -1119,7 +1119,7 @@ const AgentePage: React.FC = () => {
         // ============================================================
         if (ehIntencaoCheckout(texto) && wCart.length > 0) {
           // Cliente quer finalizar o pedido durante navegação
-          const minimo = lojaConfig?.pedidoMinimo ?? 0;
+          const minimo = lojaConfig?.pedidoMinimo ?? 60;
           const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
           
           if (minimo > 0 && totalAtual < minimo) {
@@ -1444,7 +1444,7 @@ const AgentePage: React.FC = () => {
           if (estadoAtual.stage === "await_confirm") {
             // Finalizar pedido → abre checkout (respeitando pedido mínimo)
             if (ehIntencaoCheckout(texto)) {
-              const minimo = lojaConfig?.pedidoMinimo ?? 0;
+              const minimo = lojaConfig?.pedidoMinimo ?? 60;
               const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
               if (minimo > 0 && totalAtual < minimo) {
                 setListaPedidoState(null);
@@ -1673,7 +1673,7 @@ const AgentePage: React.FC = () => {
         // FINALIZAR PEDIDO (quando há itemUnicoQtdState ativo)
         // ============================================================
         if (itemUnicoQtdState && ehIntencaoCheckout(texto) && wCart.length > 0) {
-          const minimo = lojaConfig?.pedidoMinimo ?? 0;
+          const minimo = lojaConfig?.pedidoMinimo ?? 60;
           const totalAtual = wCart.reduce((s, i) => s + i.price * i.quantity, 0);
           
           if (minimo > 0 && totalAtual < minimo) {
@@ -2735,7 +2735,7 @@ const AgentePage: React.FC = () => {
               <button
                 className={styles.agFinalizarBtn}
                 onClick={() => {
-                  const minimo = lojaConfig?.pedidoMinimo ?? 0;
+                  const minimo = lojaConfig?.pedidoMinimo ?? 60;
                   if (minimo > 0 && totalCarrinho < minimo) {
                     setMostrarCarrinho(false);
                     const falta = (minimo - totalCarrinho).toFixed(2).replace('.', ',');

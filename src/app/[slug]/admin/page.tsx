@@ -25,6 +25,38 @@ export default function AdminPage() {
 
   const [userId, setUserId] = useState<string | null>(null);
   const [autenticando, setAutenticando] = useState(true);
+
+  // Proteção por senha master
+  const [adminOk, setAdminOk] = useState(false);
+  const [senhaInput, setSenhaInput] = useState("");
+  const [senhaErro, setSenhaErro] = useState("");
+  const [validandoSenha, setValidandoSenha] = useState(false);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("admin_auth") === "1") setAdminOk(true);
+  }, []);
+
+  async function validarSenha() {
+    setValidandoSenha(true);
+    setSenhaErro("");
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senha: senhaInput }),
+      });
+      if (res.ok) {
+        sessionStorage.setItem("admin_auth", "1");
+        setAdminOk(true);
+      } else {
+        setSenhaErro("Senha incorreta.");
+      }
+    } catch {
+      setSenhaErro("Erro ao validar. Tente novamente.");
+    } finally {
+      setValidandoSenha(false);
+    }
+  }
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
@@ -104,6 +136,36 @@ export default function AdminPage() {
     } finally {
       setEnviando(false);
     }
+  }
+
+  if (!adminOk) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f9fafb", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "40px 32px", width: "100%", maxWidth: "360px", boxShadow: "0 4px 24px rgba(0,0,0,0.10)", display: "flex", flexDirection: "column", gap: "20px" }}>
+          <div>
+            <h1 style={{ fontSize: "20px", fontWeight: 700, color: "#111827", margin: "0 0 4px" }}>Acesso restrito</h1>
+            <p style={{ fontSize: "14px", color: "#6b7280", margin: 0 }}>Digite a senha para acessar o painel admin.</p>
+          </div>
+          <input
+            type="password"
+            placeholder="Senha"
+            value={senhaInput}
+            onChange={(e) => setSenhaInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && validarSenha()}
+            style={{ padding: "12px 14px", borderRadius: "10px", border: "1.5px solid #e5e7eb", fontSize: "15px", outline: "none", color: "#111827" }}
+            autoFocus
+          />
+          {senhaErro && <p style={{ fontSize: "13px", color: "#ef4444", margin: 0 }}>{senhaErro}</p>}
+          <button
+            onClick={validarSenha}
+            disabled={validandoSenha || !senhaInput}
+            style={{ padding: "12px", background: "#3632f8", color: "#fff", border: "none", borderRadius: "10px", fontSize: "15px", fontWeight: 600, cursor: "pointer", opacity: validandoSenha || !senhaInput ? 0.6 : 1 }}
+          >
+            {validandoSenha ? "Verificando..." : "Entrar"}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   if (autenticando) {

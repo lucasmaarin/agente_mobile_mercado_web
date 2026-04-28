@@ -36,3 +36,12 @@ next-env.d.ts
 anotaçoes.txt
 
 /scripts/
+
+# Dados locais do banco
+/db_json/
+
+# Logs de build
+build-output.txt
+
+# Configurações locais do Claude
+.claude/
