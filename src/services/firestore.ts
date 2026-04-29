@@ -67,13 +67,12 @@ export async function criarOuObterUsuarioConvidado(): Promise<string> {
   return GUEST_USER_DOC_ID;
 }
 
-export async function criarUsuarioNovo(uid: string, telefone?: string, userEstabelecimentoId?: string): Promise<string> {
+export async function criarUsuarioNovo(uid: string, telefone?: string): Promise<string> {
   const now = Timestamp.now();
   const ref = await addDoc(collection(db, 'Users'), {
     userAuthId: uid,
     nomeCompleto: '',
     telefone: telefone ?? '',
-    userEstabelecimentoId: userEstabelecimentoId ?? '',
     createAt: now,
     updateAt: now,
   });
@@ -89,7 +88,7 @@ export async function atualizarNomeUsuario(docId: string, nome: string): Promise
 
 export async function atualizarDadosUsuario(
   docId: string,
-  dados: { nomeCompleto?: string; cpf?: string; telefone?: string; userEstabelecimentoId?: string }
+  dados: { nomeCompleto?: string; cpf?: string; telefone?: string }
 ): Promise<void> {
   await updateDoc(doc(db, 'Users', docId), {
     ...dados,
@@ -566,6 +565,7 @@ export interface DadosConversa {
   conversaId:              string;
   userId:                  string;
   companyId:               string;
+  userEstabelecimentoId:   string;
   clienteNome:             string;
   startedAt:               Timestamp;
   updatedAt:               Timestamp;
@@ -599,10 +599,11 @@ export interface DadosMensagem {
 }
 
 export async function criarConversa(
-  userId:      string,
-  clienteNome: string,
-  companyId:   string,
-  flowState:   FlowState
+  userId:               string,
+  clienteNome:          string,
+  companyId:            string,
+  flowState:            FlowState,
+  userEstabelecimentoId: string
 ): Promise<string> {
   // Garante que o documento do usuário existe com dados básicos
   await setDoc(USUARIO_DOC(userId), {
@@ -619,6 +620,7 @@ export async function criarConversa(
       conversaId:            '',
       userId,
       companyId,
+      userEstabelecimentoId,
       clienteNome,
       startedAt:             now,
       updatedAt:             now,
