@@ -460,6 +460,8 @@ const AgentePage: React.FC = () => {
             const d    = snap.docs[0];
             const data = d.data() as any;
             setUserDocId(d.id);
+            // Atualiza o estabelecimento mais recente acessado pelo usuário
+            atualizarDadosUsuario(d.id, { userEstabelecimentoId: companyId }).catch(() => {});
             if (isGuestMode) {
               setNomeCliente('Convidado');
             } else {
@@ -472,7 +474,7 @@ const AgentePage: React.FC = () => {
               }
             }
           } else {
-            const newDocId = await criarUsuarioNovo(currentUser.uid, currentUser.phoneNumber ?? undefined);
+            const newDocId = await criarUsuarioNovo(currentUser.uid, currentUser.phoneNumber ?? undefined, companyId);
             setUserDocId(newDocId);
             if (!isGuestMode) {
               setFlowState(FLOW_STATES.COLLECTING_NAME);
@@ -983,7 +985,7 @@ const AgentePage: React.FC = () => {
       // Criar conversa na primeira mensagem
       let cid = conversaId;
       if (!cid && userDocId) {
-        cid = await criarConversa(userDocId, nomeCliente, flowStateAntes);
+        cid = await criarConversa(userDocId, nomeCliente, companyId, flowStateAntes);
         setConversaId(cid);
       }
 
