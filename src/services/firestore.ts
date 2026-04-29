@@ -565,7 +565,6 @@ export interface DadosConversa {
   conversaId:              string;
   userId:                  string;
   companyId:               string;
-  userEstabelecimentoId:   string;
   clienteNome:             string;
   startedAt:               Timestamp;
   updatedAt:               Timestamp;
@@ -599,11 +598,10 @@ export interface DadosMensagem {
 }
 
 export async function criarConversa(
-  userId:               string,
-  clienteNome:          string,
-  companyId:            string,
-  flowState:            FlowState,
-  userEstabelecimentoId: string
+  userId:      string,
+  clienteNome: string,
+  companyId:   string,
+  flowState:   FlowState
 ): Promise<string> {
   // Garante que o documento do usuário existe com dados básicos
   await setDoc(USUARIO_DOC(userId), {
@@ -620,7 +618,6 @@ export async function criarConversa(
       conversaId:            '',
       userId,
       companyId,
-      userEstabelecimentoId,
       clienteNome,
       startedAt:             now,
       updatedAt:             now,

@@ -983,7 +983,7 @@ const AgentePage: React.FC = () => {
       // Criar conversa na primeira mensagem
       let cid = conversaId;
       if (!cid && userDocId) {
-        cid = await criarConversa(userDocId, nomeCliente, companyId, flowStateAntes, rawSlug);
+        cid = await criarConversa(userDocId, nomeCliente, companyId, flowStateAntes);
         setConversaId(cid);
       }
 
