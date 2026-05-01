@@ -63,7 +63,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       return window.recaptchaVerifier;
     }
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'normal',
+      'size': 'invisible',
       'callback': () => {}
     });
     window.recaptchaVerifier = verifier;
