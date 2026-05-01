@@ -50,6 +50,11 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return () => unsubscribe();
   }, [router]);
 
+
+  useEffect(() => {
+    setupRecaptcha();
+  }, []);
+
   const formatPhoneInput = (value: string): string => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
     if (digits.length <= 2) return digits;
@@ -58,16 +63,16 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
-  const setupRecaptcha = (): RecaptchaVerifier => {
-    if (window.recaptchaVerifier) {
-      return window.recaptchaVerifier;
-    }
+  const setupRecaptcha = async () => {
+    if (window.recaptchaVerifier) return;
+
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'normal',
-      'callback': () => {}
+      size: 'normal'
     });
+
+    await verifier.render();
+
     window.recaptchaVerifier = verifier;
-    return verifier;
   };
 
   const handlePhoneLogin = async () => {
@@ -77,7 +82,12 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     setError("");
 
     try {
-      const appVerifier = setupRecaptcha();
+      // 🔥 garante que existe
+      if (!window.recaptchaVerifier) {
+        await setupRecaptcha();
+      }
+
+      const appVerifier = window.recaptchaVerifier!;
 
       const formattedPhone = validatePhone(phoneNumber);
       if (!formattedPhone) {
@@ -87,6 +97,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       }
 
       const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+
       setConfirmationResult(result);
       setIsCodeSent(true);
       setIsVerificationModalOpen(true);
@@ -94,6 +105,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
     } catch (error: unknown) {
       const code = (error as { code?: string })?.code;
+
       if (code === 'auth/too-many-requests') {
         setError("Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.");
       } else if (code === 'auth/invalid-phone-number') {
@@ -104,10 +116,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
         setError("Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.");
       }
 
-      if (typeof window !== 'undefined' && window.recaptchaVerifier) {
-        window.recaptchaVerifier.clear();
-        window.recaptchaVerifier = undefined;
-      }
+      // ❌ REMOVIDO: NÃO destruir o captcha
     } finally {
       setIsLoading(false);
     }
@@ -169,11 +178,6 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     setConfirmationResult(null);
     setVerificationCode("");
     setIsVerificationModalOpen(false);
-
-    if (typeof window !== 'undefined' && window.recaptchaVerifier) {
-      window.recaptchaVerifier.clear();
-      window.recaptchaVerifier = undefined;
-    }
   };
 
   const closeModal = () => {
