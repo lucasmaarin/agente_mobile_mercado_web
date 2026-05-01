@@ -1,7 +1,7 @@
 // components/pages/Login.tsx
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import styles from "./Login.module.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -27,11 +27,6 @@ interface LoginProps {
   redirectTo?: string;
 }
 
-const isMobileDevice = (): boolean => {
-  if (typeof navigator === 'undefined') return false;
-  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-};
-
 const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -40,10 +35,8 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [error, setError] = useState("");
-  const [showRecaptcha, setShowRecaptcha] = useState(false);
   const router = useRouter();
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
-  const pendingPhoneRef = useRef<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -54,14 +47,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       setIsCheckingAuth(false);
     });
 
-    return () => {
-      unsubscribe();
-      // Limpa o verifier ao desmontar
-      if (typeof window !== 'undefined' && window.recaptchaVerifier) {
-        try { window.recaptchaVerifier.clear(); } catch (_) {}
-        window.recaptchaVerifier = undefined;
-      }
-    };
+    return () => unsubscribe();
   }, [router]);
 
   const formatPhoneInput = (value: string): string => {
@@ -72,48 +58,40 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
-  const clearRecaptcha = () => {
-    if (typeof window !== 'undefined' && window.recaptchaVerifier) {
-      try { window.recaptchaVerifier.clear(); } catch (_) {}
-      window.recaptchaVerifier = undefined;
+  const setupRecaptcha = (): RecaptchaVerifier => {
+    if (window.recaptchaVerifier) {
+      return window.recaptchaVerifier;
     }
-  };
-
-  const setupRecaptcha = async (): Promise<RecaptchaVerifier> => {
-    clearRecaptcha();
-
-    const mobile = isMobileDevice();
-
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: mobile ? 'normal' : 'normal',
-      callback: async () => {
-        // No mobile, o callback é disparado após o usuário resolver o reCAPTCHA
-        // Aí enviamos o SMS com o número que estava pendente
-        if (mobile && pendingPhoneRef.current) {
-          await sendSms(pendingPhoneRef.current, verifier);
-        }
-      },
-      'expired-callback': () => {
-        clearRecaptcha();
-        setShowRecaptcha(false);
-        setIsLoading(false);
-        setError("reCAPTCHA expirou. Tente novamente.");
-      },
+      'size': 'normal',
+      'callback': () => {}
     });
-
-    await verifier.render();
     window.recaptchaVerifier = verifier;
     return verifier;
   };
 
-  const sendSms = async (formattedPhone: string, verifier: RecaptchaVerifier) => {
+  const handlePhoneLogin = async () => {
+    if (!phoneNumber.trim()) return;
+
+    setIsLoading(true);
+    setError("");
+
     try {
-      const result = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+      const appVerifier = setupRecaptcha();
+
+      const formattedPhone = validatePhone(phoneNumber);
+      if (!formattedPhone) {
+        setError("Número inválido. Digite o DDD + número, ex: (11) 99999-9999.");
+        setIsLoading(false);
+        return;
+      }
+
+      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
       setConfirmationResult(result);
       setIsCodeSent(true);
       setIsVerificationModalOpen(true);
-      setShowRecaptcha(false);
       setError("");
+
     } catch (error: unknown) {
       const code = (error as { code?: string })?.code;
       if (code === 'auth/too-many-requests') {
@@ -125,45 +103,12 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       } else {
         setError("Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.");
       }
-      clearRecaptcha();
-      setShowRecaptcha(false);
-    } finally {
-      setIsLoading(false);
-      pendingPhoneRef.current = null;
-    }
-  };
 
-  const handlePhoneLogin = async () => {
-    if (!phoneNumber.trim()) return;
-
-    setIsLoading(true);
-    setError("");
-
-    const formattedPhone = validatePhone(phoneNumber);
-    if (!formattedPhone) {
-      setError("Número inválido. Digite o DDD + número, ex: (11) 99999-9999.");
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      const mobile = isMobileDevice();
-      const verifier = await setupRecaptcha();
-
-      if (mobile) {
-        // No mobile: guarda o número e mostra o reCAPTCHA para o usuário resolver
-        // O envio do SMS acontece no callback do reCAPTCHA
-        pendingPhoneRef.current = formattedPhone;
-        setShowRecaptcha(true);
-        // isLoading continua true até o callback resolver
-      } else {
-        // No desktop: fluxo invisível normal
-        await sendSms(formattedPhone, verifier);
+      if (typeof window !== 'undefined' && window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = undefined;
       }
-    } catch (error: unknown) {
-      setError("Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.");
-      clearRecaptcha();
-      setShowRecaptcha(false);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -193,6 +138,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
+
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (error: unknown) {
@@ -206,6 +152,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
   const handleAppleLogin = async () => {
     setIsLoading(true);
+
     try {
       await signInWithPopup(auth, appleProvider);
     } catch (error: unknown) {
@@ -222,9 +169,11 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     setConfirmationResult(null);
     setVerificationCode("");
     setIsVerificationModalOpen(false);
-    setShowRecaptcha(false);
-    pendingPhoneRef.current = null;
-    clearRecaptcha();
+
+    if (typeof window !== 'undefined' && window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = undefined;
+    }
   };
 
   const closeModal = () => {
@@ -271,6 +220,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
   return (
     <div className={styles.login}>
+      <div id="recaptcha-container"></div>
 
       {/* Header simples com logo */}
       <div className={styles.loginHeader}>
@@ -306,28 +256,12 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
                 <button
                   onClick={handlePhoneLogin}
                   className={styles.phoneButton}
-                  disabled={!phoneNumber.trim() || isLoading || showRecaptcha}
+                  disabled={!phoneNumber.trim() || isLoading}
                 >
-                  {isLoading && !showRecaptcha ? "Enviando..." : "Continuar"}
+                  {isLoading ? "Enviando..." : "Continuar"}
                 </button>
               </div>
             </div>
-
-            {/* reCAPTCHA — invisível no desktop, checkbox no mobile */}
-            <div
-              id="recaptcha-container"
-              style={{
-                display: showRecaptcha ? 'flex' : 'none',
-                justifyContent: 'center',
-                margin: '12px 0',
-              }}
-            />
-
-            {showRecaptcha && (
-              <p style={{ textAlign: 'center', fontSize: '13px', color: '#666', marginTop: '8px' }}>
-                Complete a verificação acima para receber o SMS
-              </p>
-            )}
 
             <div className={styles.divider}>
               <span className={styles.dividerText}>ou</span>
@@ -340,7 +274,12 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
                 disabled={isLoading}
               >
                 <div className={styles.googleIcon}>
-                  <Image src="/google.png" alt="Google" width={20} height={20} />
+                  <Image
+                    src="/google.png"
+                    alt="Google"
+                    width={20}
+                    height={20}
+                  />
                 </div>
                 {isLoading ? "Carregando..." : "Continuar com Google"}
               </button>
@@ -351,7 +290,12 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
                 disabled={isLoading}
               >
                 <div className={styles.appleIcon}>
-                  <Image src="/apple.png" alt="Apple" width={20} height={20} />
+                  <Image
+                    src="/apple.png"
+                    alt="Apple"
+                    width={20}
+                    height={20}
+                  />
                 </div>
                 {isLoading ? "Carregando..." : "Continuar com Apple"}
               </button>
@@ -362,8 +306,14 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
       {/* Modal de Verificação */}
       {isVerificationModalOpen && (
-        <div className={styles.modalOverlay} onClick={closeModal}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={closeModal}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <h2>Verificação de Telefone</h2>
               <button
@@ -383,7 +333,9 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
               <p className={styles.phoneDisplay}>{phoneNumber}</p>
 
               {error && (
-                <div className={styles.modalError}>{error}</div>
+                <div className={styles.modalError}>
+                  {error}
+                </div>
               )}
 
               <input
@@ -421,7 +373,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
             <div className={styles.modalFooter}>
               <button
-                onClick={resetPhoneLogin}
+                onClick={() => { resetPhoneLogin(); }}
                 className={styles.resendButton}
                 disabled={isLoading}
               >
