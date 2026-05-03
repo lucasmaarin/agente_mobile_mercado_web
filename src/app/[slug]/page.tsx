@@ -561,50 +561,23 @@ const AgentePage: React.FC = () => {
         setCustomerData({});
         setCartRecoveryPending(false);
 
-        // Tenta restaurar histórico do localStorage
-        let restoredFromHistory = false;
-        try {
-          const raw = localStorage.getItem(chatHistoryKey(rawSlug, userDocId));
-          if (raw) {
-            const parsed = JSON.parse(raw) as { savedAt: string; msgs: (Omit<Mensagem, 'timestamp'> & { timestamp: string })[] };
-            const age = Date.now() - new Date(parsed.savedAt).getTime();
-            if (age <= CHAT_HISTORY_MAX_AGE_MS && parsed.msgs.length > 0) {
-              const restored: Mensagem[] = parsed.msgs.map(m => ({
-                ...m,
-                timestamp: new Date(m.timestamp),
-              }));
-              setMensagens(prev => {
-                const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
-                return [...authMsgs, ...restored];
-              });
-              restoredFromHistory = true;
-            }
-          }
-        } catch {}
-
-        if (!restoredFromHistory) {
-          const isNewUser = nomeCliente === 'Cliente' || !nomeCliente;
-          if (!isNewUser) setFlowState(FLOW_STATES.BROWSING);
-          const welcomeContent = isNewUser
-            ? `Como você gostaria de ser chamado?`
-            : `Como posso ajudar você hoje?`;
-          const welcomeSuggestions = isNewUser ? undefined : ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"];
-          setMensagens(prev => {
-            const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
-            return [...authMsgs, {
-              id: 'welcome', role: 'assistant' as const,
-              content: welcomeContent, isWelcomeCard: true, timestamp: new Date(),
-              suggestions: welcomeSuggestions,
-            }];
-          });
-        }
+        // Always fresh welcome - no localStorage restore
+        setFlowState(FLOW_STATES.BROWSING);
+        setMensagens(prev => {
+          const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
+          return [...authMsgs, {
+            id: 'welcome', role: 'assistant' as const,
+            content: `Como posso ajudar você hoje?`, isWelcomeCard: true, timestamp: new Date(),
+            suggestions: ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"],
+          }];
+        });
       } catch (e) {
         console.error("Erro ao iniciar conversa:", e);
         setMensagens(prev => {
           const authMsgs = prev.filter(m => m.id.startsWith('auth-') || m.id.startsWith('logout-'));
           return [...authMsgs, {
             id: 'welcome', role: 'assistant' as const,
-            content: 'Como posso ajudar você hoje?', isWelcomeCard: true, timestamp: new Date(),
+            content: `Como posso ajudar você hoje?`, isWelcomeCard: true, timestamp: new Date(),
             suggestions: ["🛒 Digitar a minha lista de compras", "🧺 Buscar produtos", "Ver pedidos"],
           }];
         });
