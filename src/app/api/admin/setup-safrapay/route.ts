@@ -1,19 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as admin from "firebase-admin";
 
-// Inicializar Firebase Admin SDK
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_KEY?.replace(/\\n/g, "\n"),
-    } as any),
-    databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`,
-  });
-}
+function getAdminDb(): admin.firestore.Firestore | null {
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_ADMIN_EMAIL;
+  const privateKey = process.env.FIREBASE_ADMIN_KEY?.replace(/\\n/g, "\n");
 
-const db = admin.firestore();
+  if (!projectId || !clientEmail || !privateKey) {
+    return null;
+  }
+
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+      databaseURL: `https://${projectId}.firebaseio.com`,
+    });
+  }
+
+  return admin.firestore();
+}
 
 /**
  * Endpoint para configurar Safrapay em um estabelecimento
@@ -50,6 +59,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Parâmetros obrigatórios faltando" },
         { status: 400 }
+      );
+    }
+
+    const db = getAdminDb();
+    if (!db) {
+      return NextResponse.json(
+        { error: "Firebase Admin nÃ£o configurado no servidor" },
+        { status: 500 }
       );
     }
 
