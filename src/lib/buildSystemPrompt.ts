@@ -65,6 +65,21 @@ export interface CustomerData {
   cardBrand?: string;
   changeAmount?: string;
   cpf?: string;
+  // Dados Safrapay
+  safrapayPixData?: {
+    qrCode: string;
+    copyPasteKey: string;
+    transactionId?: string;
+    chargeId?: string;
+    expiresAt?: string;
+  };
+  safrapayCardData?: {
+    cardNumber: string;
+    cardholderName: string;
+    expirationMonth: number;
+    expirationYear: number;
+    installments: number;
+  };
 }
 
 export interface EnderecoSalvo {

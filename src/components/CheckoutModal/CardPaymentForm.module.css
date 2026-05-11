@@ -1,0 +1,204 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #c33;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Card Preview */
+.cardPreview {
+  perspective: 1000px;
+}
+
+.cardFront {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  padding: 1.5rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  min-height: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.cardFront::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  transform: translate(50%, -50%);
+}
+
+.cardChip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+}
+
+.cardNumber {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-family: "Courier New", monospace;
+  word-break: break-all;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.cardInfo {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin: 0 0 0.25rem;
+  font-weight: 400;
+}
+
+.value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  font-family: "Courier New", monospace;
+}
+
+/* Form */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.field input,
+.field select {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+  transition: border-color 0.3s;
+}
+
+.field input:focus,
+.field select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.field input:disabled,
+.field select:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.fieldRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.cvvContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cvvContainer input {
+  width: 100%;
+  padding-right: 2.5rem;
+}
+
+.cvvToggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #667eea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  transition: color 0.3s;
+}
+
+.cvvToggle:hover {
+  color: #764ba2;
+}
+
+.cvvToggle:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Security Info */
+.security {
+  background: #f0f8ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #0056b3;
+  text-align: center;
+}
+
+.security p {
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .cardFront {
+    min-height: 200px;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  .cardNumber {
+    font-size: 1.25rem;
+  }
+
+  .fieldRow {
+    grid-template-columns: 1fr;
+  }
+}

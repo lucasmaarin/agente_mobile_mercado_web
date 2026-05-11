@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import styles from "./CheckoutModal.module.css";
 import { MapPin, CreditCard, Banknote, QrCode, X, ChevronLeft, Check, Loader2 } from "lucide-react";
 import {
@@ -7,7 +7,10 @@ import {
   doc, Timestamp, GeoPoint,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { createOrder } from "@/services/firestore";
+import { createOrder, buscarInfoEstabelecimento, type SafrapayConfig, type PaymentProviderData } from "@/services/firestore";
+import { SLUG_PARA_COMPANY_ID } from "@/config/dominios";
+import type { PixPaymentData } from "./PIXPaymentForm";
+import { CardPaymentForm, type CardData } from "./CardPaymentForm";
 import type { CartItem, CustomerData } from "@/lib/buildSystemPrompt";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -41,7 +44,7 @@ interface CheckoutModalProps {
   onSuccess: (orderNumber: string, total: number) => void;
 }
 
-type Step = "pagamento" | "enderecos" | "confirmacao" | "sucesso";
+type Step = "enderecos" | "pagamento" | "confirmacao" | "sucesso";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -68,15 +71,21 @@ function getPaymentIcon(id: string) {
 }
 
 function normalizePaymentId(nome: string): string {
-  const n = nome.toLowerCase();
+  const n = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (n.includes("pix"))                return "pix";
   if (n.includes("dinheiro"))           return "dinheiro";
-  if (n.includes("cr") && n.includes("dito")) return "credito";
-  if (n.includes("d") && n.includes("bito"))  return "debito";
-  return nome;
+  if (n.includes("credito") || (n.includes("cr") && n.includes("dito"))) return "credito";
+  if (n.includes("debito") || (n.includes("d") && n.includes("bito")))  return "debito";
+  return nome.toLowerCase();
 }
 
 const BANDEIRAS = ["Visa", "Mastercard", "Elo", "Hipercard", "American Express"];
+
+function requiresSafrapayDocument(paymentName: string | null, config?: SafrapayConfig) {
+  if (!paymentName || !config?.enabled) return false;
+  const id = normalizePaymentId(paymentName);
+  return id === "pix" || id === "credito" || id === "debito";
+}
 
 // ─── Sub-modais inline ────────────────────────────────────────────────────────
 
@@ -157,7 +166,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const total = subtotal + taxaEntrega;
 
   // Navegação
-  const [step, setStep] = useState<Step>("pagamento");
+  const [step, setStep] = useState<Step>("enderecos");
 
   // Pagamento
   const [metodoPagamento, setMetodoPagamento] = useState<string | null>(null);
@@ -167,6 +176,14 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [cpf, setCpf]                         = useState("");
   const [showTroco, setShowTroco]             = useState(false);
   const [showBandeira, setShowBandeira]       = useState(false);
+  
+  // Dados Safrapay
+  const [cardData, setCardData]               = useState<CardData | null>(null);
+  const [pixData, setPixData]                 = useState<PixPaymentData | null>(null);
+  const [safrapayError, setSafrapayError]     = useState<string>("");
+  const [safrapayConfig, setSafrapayConfig]   = useState<SafrapayConfig | undefined>();
+  const [loadingSafrapay, setLoadingSafrapay] = useState(true);
+  const [paymentOrderId, setPaymentOrderId]   = useState(() => `${companyId}-${Date.now()}`);
 
   // Endereços
   const [addresses, setAddresses]               = useState<Address[]>([]);
@@ -217,6 +234,25 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       }
     })();
   }, [userDocId]);
+
+  // ── Carregar Safrapay Config ─────────────────────────────────────────────────
+  useEffect(() => {
+    (async () => {
+      setLoadingSafrapay(true);
+      try {
+        // Converter slug para ID real se necessário
+        const realCompanyId = SLUG_PARA_COMPANY_ID[companyId.toLowerCase()] || companyId;
+        
+        const info = await buscarInfoEstabelecimento(realCompanyId);
+        setSafrapayConfig(info.safrapay);
+      } catch (err) {
+        console.error("Erro ao carregar Safrapay config:", err);
+        setSafrapayConfig(undefined);
+      } finally {
+        setLoadingSafrapay(false);
+      }
+    })();
+  }, [companyId]);
 
   // ── Geolocalização ───────────────────────────────────────────────────────────
   const handleUseLocation = () => {
@@ -284,8 +320,26 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const pagamentoValido = () => {
     if (!metodoPagamento) return false;
     const id = normalizePaymentId(metodoPagamento);
+    const safraRequiresCpf = requiresSafrapayDocument(metodoPagamento, safrapayConfig);
+    if (safraRequiresCpf && cpf.replace(/\D/g, "").length !== 11) return false;
+    
+    // Validação para PIX com Safrapay (formulário preenche automaticamente)
+    if (id === "pix" && safrapayConfig?.enabled) return true;
+    
+    // Validação para Cartão com Safrapay (usuário preenche, mas permite prosseguir)
+    if ((id === "credito" || id === "debito") && safrapayConfig?.enabled) {
+      return Boolean(
+        cardData &&
+        cardData.cardNumber.replace(/\D/g, "").length >= 13 &&
+        cardData.cardholderName.trim() &&
+        cardData.cvv.length >= 3
+      );
+    }
+    
+    // Validação para formas antigas (sem Safrapay)
     if (id === "dinheiro" && !trocoValor) return false;
     if ((id === "credito" || id === "debito") && !bandeiraCartao) return false;
+    
     if (cpfNaNota && cpf.replace(/\D/g, "").length !== 11) return false;
     return true;
   };
@@ -297,6 +351,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
     const payId = normalizePaymentId(metodoPagamento!);
 
+    // Dados base do cliente
     const customerData: CustomerData = {
       name:         nomeCliente,
       street:       addr.endereco,
@@ -310,19 +365,180 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   : payId === "debito"  ? "Cartão Débito"
                   : payId === "pix"     ? "Pix"
                   : "Dinheiro",
-      cardBrand:    bandeiraCartao,
+      cardBrand:    bandeiraCartao || (cardData ? cardData.cardNumber.substring(0, 2) : undefined),
       changeAmount: trocoValor ? `R$${trocoValor}` : undefined,
       cpf:          cpfNaNota ? cpf.replace(/\D/g, "") : undefined,
+      safrapayPixData: pixData ? {
+        qrCode: pixData.qrCode,
+        copyPasteKey: pixData.copyPasteKey,
+        transactionId: pixData.transactionId,
+        chargeId: pixData.chargeId,
+        expiresAt: pixData.expiresAt,
+      } : undefined,
+      safrapayCardData: cardData ? { 
+        cardNumber: cardData.cardNumber,
+        cardholderName: cardData.cardholderName,
+        expirationMonth: cardData.expirationMonth,
+        expirationYear: cardData.expirationYear,
+        installments: cardData.installments,
+      } : undefined,
     };
 
     setProcessando(true);
     try {
-      const result = await createOrder(companyId, customerData, carrinho, userDocId, nomeCliente);
+      // Se for PIX ou Cartão com Safrapay, processar pagamento primeiro
+      let paymentStatus = "pending";
+      let purchaseStatus = "PurchaseStatus.pending";
+      let paymentTransactionId = "";
+      let paymentChargeId = "";
+      let paymentExpiresAt = "";
+
+      if (payId === "pix" && pixData) {
+        paymentStatus = "waitingForPayment";
+        purchaseStatus = "PurchaseStatus.waitingForPayment";
+        paymentTransactionId = pixData.transactionId || "";
+        paymentChargeId = pixData.chargeId || "";
+        paymentExpiresAt = pixData.expiresAt || "";
+      } else if (payId === "pix" && safrapayConfig?.enabled) {
+        paymentStatus = "waitingForPayment";
+        purchaseStatus = "PurchaseStatus.waitingForPayment";
+      } else if ((payId === "credito" || payId === "debito") && cardData) {
+        // Validar se Safrapay está configurado
+        if (!safrapayConfig || !safrapayConfig.enabled) {
+          setSafrapayError("Safrapay não está configurado para este estabelecimento");
+          setProcessando(false);
+          return;
+        }
+
+        // Chamar API de Safrapay
+        const paymentResponse = await fetch("/api/payment/safrapay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "card",
+            companyId,
+            amount: Math.round(total * 100), // Em centavos
+            orderId: paymentOrderId,
+            description: `Pedido para ${nomeCliente} - ${carrinho.length} itens`,
+            customerName: nomeCliente,
+            customerDocument: cpf.replace(/\D/g, ""),
+            paymentMethod: payId === "debito" ? "debit" : "credit",
+            safrapayConfig: {
+              enabled: safrapayConfig.enabled,
+              environment: safrapayConfig.environment,
+            },
+            ...(cardData && {
+              cardNumber: cardData.cardNumber,
+              cardholderName: cardData.cardholderName,
+              expirationMonth: cardData.expirationMonth,
+              expirationYear: cardData.expirationYear,
+              cvv: cardData.cvv,
+              installments: cardData.installments,
+            }),
+          }),
+        });
+
+        if (!paymentResponse.ok) {
+          let errorMessage = "Erro ao processar pagamento";
+          try {
+            const errorData = await paymentResponse.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch (parseError) {
+            // Se não conseguir fazer parse do JSON, tenta pegar como texto
+            try {
+              const errorText = await paymentResponse.text();
+              errorMessage = errorText || `Erro ${paymentResponse.status}`;
+            } catch {
+              errorMessage = `Erro do servidor (${paymentResponse.status})`;
+            }
+          }
+          setSafrapayError(errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        const paymentData = await paymentResponse.json();
+        paymentStatus = paymentData.orderStatus || "pending";
+        paymentTransactionId = paymentData.transactionId;
+        paymentChargeId = paymentData.chargeId;
+
+      }
+
+      const paymentProviderData: PaymentProviderData | undefined =
+        paymentTransactionId || paymentChargeId || (payId === "pix" && safrapayConfig?.enabled)
+          ? {
+              provider: "safrapay",
+              paymentStatus,
+              purchaseStatus,
+              paymentTransactionId,
+              paymentChargeId,
+              paymentExpiresAt,
+            }
+          : undefined;
+
+      // Criar pedido com status de pagamento
+      const result = await createOrder(companyId, customerData, carrinho, userDocId, nomeCliente, paymentProviderData);
+
+      if (payId === "pix" && safrapayConfig?.enabled) {
+        const paymentResponse = await fetch("/api/payment/safrapay", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "pix",
+            companyId,
+            amount: Math.round(total * 100),
+            orderId: result.id,
+            description: `Pedido ${result.orderNumber} para ${nomeCliente} - ${carrinho.length} itens`,
+            customerName: nomeCliente,
+            customerDocument: cpf.replace(/\D/g, ""),
+            safrapayConfig: {
+              enabled: safrapayConfig.enabled,
+              environment: safrapayConfig.environment,
+            },
+          }),
+        });
+
+        if (!paymentResponse.ok) {
+          let errorMessage = "Pedido criado, mas nao foi possivel gerar o PIX";
+          try {
+            const errorData = await paymentResponse.json();
+            errorMessage = errorData.error || errorMessage;
+          } catch {
+            errorMessage = `Pedido criado, mas o PIX falhou (${paymentResponse.status})`;
+          }
+          setSafrapayError(errorMessage);
+          throw new Error(errorMessage);
+        }
+
+        const paymentData = await paymentResponse.json();
+        const pixPaymentData: PixPaymentData = {
+          qrCode: paymentData.qrCode || "",
+          qrCodeUrl: paymentData.qrCodeUrl,
+          copyPasteKey: paymentData.copyPasteKey || "",
+          transactionId: paymentData.transactionId,
+          chargeId: paymentData.chargeId,
+          expiresAt: paymentData.expiresAt,
+        };
+
+        setPixData(pixPaymentData);
+        await updateDoc(doc(db, "PurchaseRequests", result.id), {
+          paymentProvider: "safrapay",
+          paymentStatus: "waitingForPayment",
+          paymentTransactionId: pixPaymentData.transactionId || null,
+          paymentChargeId: pixPaymentData.chargeId || null,
+          paymentExpiresAt: pixPaymentData.expiresAt || null,
+          updatedAt: Timestamp.now(),
+        });
+      }
+
       setOrderResult({ orderNumber: result.orderNumber, total: result.total });
       setStep("sucesso");
     } catch (e) {
       console.error(e);
-      alert("Erro ao finalizar pedido. Tente novamente.");
+      alert(
+        e instanceof Error && (e.message.includes("pagamento") || e.message.includes("PIX") || e.message.includes("Pedido criado"))
+          ? e.message
+          : "Erro ao finalizar pedido. Tente novamente."
+      );
     } finally {
       setProcessando(false);
     }
@@ -342,10 +558,45 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
     if (id === "dinheiro" && trocoValor) return `Dinheiro — troco para R$ ${formatarPreco(trocoValor)}`;
     if ((id === "credito" || id === "debito") && bandeiraCartao)
       return `Cartão de ${id === "credito" ? "crédito" : "débito"} — ${bandeiraCartao}`;
+    if ((id === "credito" || id === "debito") && cardData)
+      return `Cartão de ${id === "credito" ? "crédito" : "débito"} — ****${cardData.cardNumber.slice(-4)}`;
+    if (id === "pix") return "PIX — QR Code";
     return metodoPagamento;
   };
 
+  const handleCardDataChange = useCallback((data: CardData) => {
+    setCardData(data);
+  }, []);
+
+  // Filtrar métodos de pagamento baseado em Safrapay
+  const metodosPagamentoFiltrados = formasPagamento.filter((nome) => {
+    const isSafrapayMethod = nome.includes("Safra") || nome.includes("safra") || 
+                            normalizePaymentId(nome) === "pix" || 
+                            normalizePaymentId(nome) === "credito" || 
+                            normalizePaymentId(nome) === "debito";
+    
+    // Só esconder se for método Safrapay E Safrapay foi carregado E está desabilitado
+    if (isSafrapayMethod && !loadingSafrapay && safrapayConfig && safrapayConfig.enabled === false) {
+      return false;
+    }
+    return true;
+  });
+
+  const metodosPagamentoExibidos = (() => {
+    if (!safrapayConfig?.enabled) return metodosPagamentoFiltrados;
+
+    const ids = new Set(metodosPagamentoFiltrados.map((nome) => normalizePaymentId(nome)));
+    const metodos = [...metodosPagamentoFiltrados];
+
+    if (ids.has("credito") && !ids.has("debito")) {
+      metodos.push("Cartão Débito");
+    }
+
+    return metodos;
+  })();
+
   const addrSelecionado = addresses.find((a) => a.id === selectedAddressId);
+  const safraDocumentRequired = requiresSafrapayDocument(metodoPagamento, safrapayConfig);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // TELA DE SUCESSO
@@ -360,6 +611,23 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
           <h2>Pedido realizado!</h2>
           <p className={styles.successOrder}>Nº {orderResult.orderNumber}</p>
           <p className={styles.successTotal}>Total: <b>R$ {formatarPreco(orderResult.total)}</b></p>
+          {pixData?.copyPasteKey && (
+            <div className={styles.confirmValues}>
+              <p className={styles.confirmLabel}>PIX aguardando pagamento</p>
+              {pixData.qrCodeUrl && (
+                <img
+                  src={pixData.qrCodeUrl}
+                  alt="QR Code PIX"
+                  style={{ width: 180, height: 180, margin: "8px auto", display: "block" }}
+                />
+              )}
+              <textarea
+                readOnly
+                value={pixData.copyPasteKey}
+                style={{ width: "100%", minHeight: 84, resize: "none" }}
+              />
+            </div>
+          )}
           <button
             className={styles.successBtn}
             onClick={() => onSuccess(orderResult.orderNumber, orderResult.total)}
@@ -380,17 +648,17 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* HEADER */}
         <div className={styles.modalHeader}>
-          {step !== "pagamento" && (
+          {step !== "enderecos" && (
             <button className={styles.backBtn} onClick={() => {
-              if (step === "enderecos")   setStep("pagamento");
-              if (step === "confirmacao") setStep("enderecos");
+              if (step === "pagamento")   setStep("enderecos");
+              if (step === "confirmacao") setStep("pagamento");
             }}>
               <ChevronLeft size={22} color="#fff" />
             </button>
           )}
           <h2 className={styles.modalTitle}>
-            {step === "pagamento"   && "Forma de pagamento"}
             {step === "enderecos"   && "Endereço de entrega"}
+            {step === "pagamento"   && "Forma de pagamento"}
             {step === "confirmacao" && "Confirme seu pedido"}
           </h2>
           <button className={styles.closeBtn} onClick={onClose}>
@@ -400,58 +668,6 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* BODY */}
         <div className={styles.modalBody}>
-
-          {/* ════════════ PAGAMENTO ════════════ */}
-          {step === "pagamento" && (
-            <>
-              <div className={styles.methodList}>
-                {formasPagamento.map((nome) => {
-                  const id = normalizePaymentId(nome);
-                  const sel = metodoPagamento === nome;
-                  return (
-                    <button
-                      key={nome}
-                      className={`${styles.methodBtn} ${sel ? styles.methodBtnSel : ""}`}
-                      onClick={() => {
-                        setMetodoPagamento(nome);
-                        setBandeiraCartao(undefined);
-                        setTrocoValor(undefined);
-                        if (id === "dinheiro")              setShowTroco(true);
-                        if (id === "credito" || id === "debito") setShowBandeira(true);
-                      }}
-                    >
-                      <span className={styles.methodIcon}>{getPaymentIcon(nome)}</span>
-                      <span className={styles.methodNome}>{nome}</span>
-                      {sel && bandeiraCartao && <span className={styles.methodDetail}>{bandeiraCartao}</span>}
-                      {sel && trocoValor && <span className={styles.methodDetail}>Troco p/ R$ {formatarPreco(trocoValor)}</span>}
-                      {sel && <Check size={16} className={styles.methodCheck} />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className={styles.cpfRow}>
-                <label className={styles.cpfLabel}>
-                  <input type="checkbox" checked={cpfNaNota} onChange={(e) => { setCpfNaNota(e.target.checked); if (!e.target.checked) setCpf(""); }} />
-                  CPF na nota
-                </label>
-                {cpfNaNota && (
-                  <input
-                    className={styles.cpfInput}
-                    placeholder="000.000.000-00"
-                    maxLength={14}
-                    value={cpf}
-                    onChange={(e) => setCpf(formatCpf(e.target.value))}
-                  />
-                )}
-              </div>
-
-              <div className={styles.totalRow}>
-                <span>Total</span>
-                <span className={styles.totalVal}>R$ {formatarPreco(total)}</span>
-              </div>
-            </>
-          )}
 
           {/* ════════════ ENDEREÇOS ════════════ */}
           {step === "enderecos" && (
@@ -532,6 +748,88 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             </>
           )}
 
+          {/* ════════════ PAGAMENTO ════════════ */}
+          {step === "pagamento" && (
+            <>
+              <div className={styles.methodList}>
+                {metodosPagamentoExibidos.map((nome) => {
+                  const id = normalizePaymentId(nome);
+                  const sel = metodoPagamento === nome;
+                  return (
+                    <button
+                      key={nome}
+                      className={`${styles.methodBtn} ${sel ? styles.methodBtnSel : ""}`}
+                      onClick={() => {
+                        setMetodoPagamento(nome);
+                        setBandeiraCartao(undefined);
+                        setTrocoValor(undefined);
+                        setCardData(null);
+                        setPixData(null);
+                        setPaymentOrderId(`${companyId}-${Date.now()}`);
+                        setSafrapayError("");
+                        if (id === "dinheiro")              setShowTroco(true);
+                        if ((id === "credito" || id === "debito") && !safrapayConfig?.enabled) {
+                          // Para cartão via Safrapay, não mostrar modal
+                          if (nome.includes("Safra") || nome.includes("safra")) {
+                            // Safrapay
+                          } else {
+                            setShowBandeira(true);
+                          }
+                        }
+                      }}
+                    >
+                      <span className={styles.methodIcon}>{getPaymentIcon(nome)}</span>
+                      <span className={styles.methodNome}>{nome}</span>
+                      {sel && bandeiraCartao && <span className={styles.methodDetail}>{bandeiraCartao}</span>}
+                      {sel && trocoValor && <span className={styles.methodDetail}>Troco p/ R$ {formatarPreco(trocoValor)}</span>}
+                      {sel && cardData && <span className={styles.methodDetail}>Cartão ****{cardData.cardNumber.slice(-4)}</span>}
+                      {sel && pixData && <span className={styles.methodDetail}>PIX QR Code pronto</span>}
+                      {sel && <Check size={16} className={styles.methodCheck} />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Card Form */}
+              {(() => {
+                const shouldShow = metodoPagamento && (normalizePaymentId(metodoPagamento) === "credito" || normalizePaymentId(metodoPagamento) === "debito") && safrapayConfig?.enabled;
+                return shouldShow && (
+                  <CardPaymentForm
+                    error={safrapayError}
+                    loading={processando}
+                    onCardDataChange={handleCardDataChange}
+                  />
+                );
+              })()}
+
+              <div className={styles.cpfRow}>
+                <label className={styles.cpfLabel}>
+                  <input
+                    type="checkbox"
+                    checked={cpfNaNota || safraDocumentRequired}
+                    disabled={safraDocumentRequired}
+                    onChange={(e) => { setCpfNaNota(e.target.checked); if (!e.target.checked) setCpf(""); }}
+                  />
+                  {safraDocumentRequired ? "CPF para pagamento" : "CPF na nota"}
+                </label>
+                {(cpfNaNota || safraDocumentRequired) && (
+                  <input
+                    className={styles.cpfInput}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                    value={cpf}
+                    onChange={(e) => setCpf(formatCpf(e.target.value))}
+                  />
+                )}
+              </div>
+
+              <div className={styles.totalRow}>
+                <span>Total</span>
+                <span className={styles.totalVal}>R$ {formatarPreco(total)}</span>
+              </div>
+            </>
+          )}
+
           {/* ════════════ CONFIRMAÇÃO ════════════ */}
           {step === "confirmacao" && addrSelecionado && (
             <div className={styles.confirmList}>
@@ -577,19 +875,19 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
 
         {/* FOOTER */}
         <div className={styles.modalFooter}>
-          {step === "pagamento" && (
-            <button
-              className={styles.btnFooter}
-              disabled={!pagamentoValido()}
-              onClick={() => setStep("enderecos")}
-            >
-              Continuar
-            </button>
-          )}
           {step === "enderecos" && (
             <button
               className={styles.btnFooter}
               disabled={!selectedAddressId || loadingAddr}
+              onClick={() => setStep("pagamento")}
+            >
+              Continuar
+            </button>
+          )}
+          {step === "pagamento" && (
+            <button
+              className={styles.btnFooter}
+              disabled={!pagamentoValido()}
               onClick={() => setStep("confirmacao")}
             >
               Continuar

@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Produto, CartItem, CustomerData, FlowState, EnderecoSalvo } from '@/lib/buildSystemPrompt';
+import { UAU_MART_COMPANY_ID } from '@/config/dominios';
 
 export const DELIVERY_PRICE = 5.00;
 
@@ -52,6 +53,15 @@ export async function buscarNomeEstabelecimento(companyId: string): Promise<stri
 }
 
 export const GUEST_USER_DOC_ID = 'guest_test';
+
+export interface PaymentProviderData {
+  provider: 'safrapay';
+  paymentStatus: string;
+  purchaseStatus?: string;
+  paymentTransactionId?: string;
+  paymentChargeId?: string;
+  paymentExpiresAt?: string;
+}
 
 export async function criarOuObterUsuarioConvidado(): Promise<string> {
   const ref = doc(db, 'Users', GUEST_USER_DOC_ID);
@@ -177,6 +187,14 @@ export async function buscarConfigLoja(companyId: string): Promise<ConfigLoja> {
   }
 }
 
+export interface SafrapayConfig {
+  enabled: boolean;
+  merchantId?: string;
+  accessToken?: string;
+  webhookSecret?: string;
+  environment?: 'hml' | 'prod';
+}
+
 export interface InfoEstabelecimento {
   aberto?: boolean;
   horarioFechamento?: string;
@@ -184,6 +202,7 @@ export interface InfoEstabelecimento {
   tempoMax?: number;
   taxaEntrega?: number;
   avaliacao?: number;
+  safrapay?: SafrapayConfig;
 }
 
 export async function buscarInfoEstabelecimento(companyId: string): Promise<InfoEstabelecimento> {
@@ -218,7 +237,17 @@ export async function buscarInfoEstabelecimento(companyId: string): Promise<Info
       horarioFechamento = extrairHoraDeValor(todayEntry.closeHours);
     }
 
-    return { aberto, horarioFechamento, tempoMin, tempoMax, taxaEntrega, avaliacao: 4.9 };
+    // Dados Safrapay
+    const safrapayRaw = data.safrapay as Record<string, unknown> | undefined;
+    const safrapay: SafrapayConfig | undefined = safrapayRaw
+      ? {
+          enabled: Boolean(safrapayRaw.enabled),
+          merchantId: typeof safrapayRaw.merchantId === 'string' ? safrapayRaw.merchantId : undefined,
+          environment: (safrapayRaw.environment === 'hml' || safrapayRaw.environment === 'prod') ? safrapayRaw.environment : 'hml',
+        }
+      : undefined;
+
+    return { aberto, horarioFechamento, tempoMin, tempoMax, taxaEntrega, avaliacao: 4.9, safrapay };
   } catch {
     return {};
   }
@@ -232,7 +261,7 @@ export async function getProducts(companyId: string): Promise<Produto[]> {
     where('isTrashed', '==', false)
   );
   const snap = await getDocs(q);
-  const isTestEstab = companyId === 'estabelecimento-teste';
+  const isTestEstab = companyId === UAU_MART_COMPANY_ID;
   const toStringArray = (value: unknown): string[] => {
     const fromUnknown = (item: unknown): string[] => {
       if (item == null) return [];
@@ -309,7 +338,8 @@ export async function createOrder(
   customerData: CustomerData,
   cart: CartItem[],
   clientId: string,
-  clienteNome: string = 'Cliente'
+  clienteNome: string = 'Cliente',
+  paymentProviderData?: PaymentProviderData
 ): Promise<{ id: string; orderNumber: string; total: number }> {
   const now        = Timestamp.now();
   const cartTotal  = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -401,13 +431,18 @@ export async function createOrder(
     price:            cartTotal,
     deliveryPrice:    DELIVERY_PRICE,
     total,
-    currentPurchaseStatus: 'PurchaseStatus.pending',
-    statusList: [{ purchaseStatus: 'PurchaseStatus.pending', createdAt: now }],
+    currentPurchaseStatus: paymentProviderData?.purchaseStatus ?? 'PurchaseStatus.pending',
+    statusList: [{ purchaseStatus: paymentProviderData?.purchaseStatus ?? 'PurchaseStatus.pending', createdAt: now }],
     purchasePayment: {
       paymentType:  PAYMENT_LABELS[customerData.paymentType ?? ''] ?? 'PaymentType.cash',
       paymentValue: 0,
       valueBack,
     },
+    paymentProvider: paymentProviderData?.provider ?? null,
+    paymentStatus: paymentProviderData?.paymentStatus ?? 'pending',
+    paymentTransactionId: paymentProviderData?.paymentTransactionId ?? null,
+    paymentChargeId: paymentProviderData?.paymentChargeId ?? null,
+    paymentExpiresAt: paymentProviderData?.paymentExpiresAt ?? null,
     scheduling:            deliveryTs,
     schedule: {
       id:                  scheduleId,

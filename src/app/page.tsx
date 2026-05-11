@@ -15,7 +15,7 @@ interface Estabelecimento {
   loading: boolean;
 }
 
-// Monta lista de estabelecimentos únicos a partir do DOMAIN_SLUGS + teste fixo
+// Monta lista de estabelecimentos unicos a partir do DOMAIN_SLUGS
 function getEstabelecimentos(): Estabelecimento[] {
   const seen = new Set<string>();
   const list: Estabelecimento[] = [];
@@ -25,18 +25,6 @@ function getEstabelecimentos(): Estabelecimento[] {
     seen.add(companyId);
 
     list.push({ companyId, slug, domain: `www.agentemercado.com.br/${slug}`, nome: null, logo: null, loading: true });
-  }
-
-  // Estabelecimento de teste fixo
-  if (!seen.has("estabelecimento-teste")) {
-    list.push({
-      companyId: "estabelecimento-teste",
-      slug: "estabelecimento-teste",
-      domain: null,
-      nome: "Estabelecimento Teste",
-      logo: null,
-      loading: false,
-    });
   }
 
   return list;

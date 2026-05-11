@@ -46,3 +46,11 @@ build-output.txt
 # Configurações locais do Claude
 .claude/
 
+# Firebase Service Account (credenciais sensíveis)
+firebase-service-account.json
+appmobileprod-19505.json
+
+# Markdown files (exceto README)
+*.md
+!README.md
+

@@ -1,0 +1,135 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.error {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #c33;
+  font-size: 0.9rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #333;
+}
+
+.qrContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.qrBox {
+  width: 200px;
+  height: 200px;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.loadingQr {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.qrHint {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0;
+}
+
+.copyContainer {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.copyInput {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: "Courier New", monospace;
+  background: #f9f9f9;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copyBtn {
+  padding: 0.75rem 1rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.copyBtn:hover {
+  background: #0056b3;
+}
+
+.copiedMsg {
+  font-size: 0.85rem;
+  color: #28a745;
+  margin: 0.25rem 0 0;
+}
+
+.info {
+  background: #f0f8ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.info p {
+  margin: 0 0 0.5rem;
+}
+
+.info p:last-child {
+  margin-bottom: 0;
+}
+
+.info strong {
+  font-weight: 600;
+  display: block;
+  color: #0056b3;
+}
+
+.infoHint {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.75rem !important;
+  font-style: italic;
+}

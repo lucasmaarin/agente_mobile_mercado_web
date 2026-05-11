@@ -1,7 +1,9 @@
 // Mapeamento: domínio do cliente → slug do estabelecimento
 // Adicione uma linha por cliente e redeploy no Render
+export const UAU_MART_COMPANY_ID = 'q0IPIusmpEq3pHbMyfWY';
+
 export const DOMAIN_SLUGS: Record<string, string> = {
-  'uaumart':  'q0IPIusmpEq3pHbMyfWY',  // uaumart.agentemercado.com.br
+  'uaumart':  UAU_MART_COMPANY_ID,  // uaumart.agentemercado.com.br
   'vidal':    'XAXMOP6aweRbBAb0gUvU',  // vidal.agentemercado.com.br
   'zerograu': 'jQQjHTCc2zW1tuZMQzGF',  // zerograu.agentemercado.com.br
   'gs':       'GkFYWdOBKD1vbzYoem9K',  // gs.agentemercado.com.br
@@ -16,14 +18,15 @@ export const SLUG_PARA_COMPANY_ID: Record<string, string> = Object.fromEntries(
 // Redirecionamento temporário de dados: companyId → ID real usado nas queries
 // Use quando o estabelecimento ainda não tem dados próprios no Firestore
 export const COMPANY_DATA_SOURCE: Record<string, string> = {
-  XAXMOP6aweRbBAb0gUvU: 'q0IPIusmpEq3pHbMyfWY',
+  XAXMOP6aweRbBAb0gUvU: UAU_MART_COMPANY_ID,
+  GkFYWdOBKD1vbzYoem9K: UAU_MART_COMPANY_ID,
 };
 
 // Logos locais por companyId (sobrescrevem o Firestore)
 export const LOGO_OVERRIDES: Record<string, string> = {
   jQQjHTCc2zW1tuZMQzGF: '/logos/logo_zero.svg',
   XAXMOP6aweRbBAb0gUvU: '/logos/logo_vidal.webp',
-  q0IPIusmpEq3pHbMyfWY: '/logos/logouaumart.svg',
+  [UAU_MART_COMPANY_ID]: '/logos/logouaumart.svg',
   GkFYWdOBKD1vbzYoem9K: '/logos/logogs.svg',
 };
 
