@@ -79,16 +79,19 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const setupRecaptcha = (): RecaptchaVerifier => {
+  const setupRecaptcha = async (): Promise<RecaptchaVerifier> => {
     // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
     if (window.recaptchaVerifierInline) {
       try { window.recaptchaVerifierInline.clear(); } catch {}
       window.recaptchaVerifierInline = undefined;
     }
+    const container = document.getElementById("recaptcha-inline");
+    if (container) container.innerHTML = "";
     const verifier = new RecaptchaVerifier(auth, "recaptcha-inline", {
       size: "invisible",
       callback: () => {},
     });
+    await verifier.render();
     window.recaptchaVerifierInline = verifier;
     return verifier;
   };
@@ -128,7 +131,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
     try {
       const persistence = keepLogged ? browserLocalPersistence : browserSessionPersistence;
       await setPersistence(auth, persistence);
-      const verifier = setupRecaptcha();
+      const verifier = await setupRecaptcha();
       const result = await signInWithPhoneNumber(auth, formatted, verifier);
       setConfirmation(result);
       setStep("code_modal");

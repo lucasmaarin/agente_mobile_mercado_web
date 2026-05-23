@@ -728,7 +728,7 @@ const AgentePage: React.FC = () => {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const setupRecaptchaAuth = (): RecaptchaVerifier => {
+  const setupRecaptchaAuth = async (): Promise<RecaptchaVerifier> => {
     // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
     if (window.recaptchaVerifier) {
       try { window.recaptchaVerifier.clear(); } catch {}
@@ -738,6 +738,8 @@ const AgentePage: React.FC = () => {
       try { recaptchaAuthRef.current.clear(); } catch {}
       recaptchaAuthRef.current = undefined;
     }
+    const container = document.getElementById('recaptcha-container');
+    if (container) container.innerHTML = '';
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       size: 'invisible',
       callback: () => {},
@@ -749,6 +751,7 @@ const AgentePage: React.FC = () => {
         }
       },
     });
+    await verifier.render();
     window.recaptchaVerifier = verifier;
     recaptchaAuthRef.current = verifier;
     return verifier;
@@ -774,7 +777,7 @@ const AgentePage: React.FC = () => {
     ]);
     try {
       await setPersistence(auth, authKeepLogged ? browserLocalPersistence : browserSessionPersistence);
-      const result = await signInWithPhoneNumber(auth, formatted, setupRecaptchaAuth());
+      const result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth());
       setAuthConfirmation(result);
       setMensagens(prev => [
         ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card'].includes(m.id)),
