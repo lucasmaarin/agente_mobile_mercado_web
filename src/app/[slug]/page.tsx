@@ -73,7 +73,7 @@ import {
   buildSystemPrompt,
   NivelConfianca,
 } from "@/lib/buildSystemPrompt";
-import { SLUG_PARA_COMPANY_ID, COMPANY_DATA_SOURCE } from "@/config/dominios";
+import { SLUG_PARA_COMPANY_ID, COMPANY_DATA_SOURCE, UAU_MART_COMPANY_ID } from "@/config/dominios";
 import { parseAgentResponse, COLLECTING_FIELD, NEXT_STATE, nextStateAfterPayment } from "@/lib/parseAgentResponse";
 import {
   getProducts,
@@ -913,6 +913,8 @@ const AgentePage: React.FC = () => {
 
     // Helper: valida distância de entrega; retorna false e envia msg se fora do raio
     const validarDistanciaEntrega = async (endData: CustomerData): Promise<boolean> => {
+      if (companyId === UAU_MART_COMPANY_ID) return true;
+
       const coords = lojaConfig?.coordsEstabelecimento;
       const limiteKm = lojaConfig?.distanciaMaxima;
       if (!coords || !limiteKm) return true; // sem configuração → permite

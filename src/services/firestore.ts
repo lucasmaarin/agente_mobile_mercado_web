@@ -240,12 +240,17 @@ export async function buscarInfoEstabelecimento(companyId: string): Promise<Info
     }
 
     // Dados Safrapay
-    const safrapayRaw = data.safrapay as Record<string, unknown> | undefined;
+    const paymentGatewayRaw = data.paymentGateway as Record<string, unknown> | undefined;
+    const safrapayRaw =
+      (data.safrapay as Record<string, unknown> | undefined) ||
+      (paymentGatewayRaw?.safrapay as Record<string, unknown> | undefined);
     const safrapay: SafrapayConfig | undefined = safrapayRaw
       ? {
           enabled: Boolean(safrapayRaw.enabled),
           merchantId: typeof safrapayRaw.merchantId === 'string' ? safrapayRaw.merchantId : undefined,
-          environment: (safrapayRaw.environment === 'hml' || safrapayRaw.environment === 'prod') ? safrapayRaw.environment : 'hml',
+          environment: (safrapayRaw.environment === 'hml' || safrapayRaw.environment === 'prod')
+            ? safrapayRaw.environment
+            : (safrapayRaw.env === 'hml' || safrapayRaw.env === 'prod') ? safrapayRaw.env : 'hml',
         }
       : undefined;
 

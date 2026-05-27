@@ -62,10 +62,15 @@ async function resolveSafrapayCredentials(
 
   if (id && adminDb) {
     const snap = await adminDb.collection("estabelecimentos").doc(id).get();
-    const safrapay = snap.data()?.safrapay as Record<string, unknown> | undefined;
+    const data = snap.data();
+    const paymentGateway = data?.paymentGateway as Record<string, unknown> | undefined;
+    const safrapay =
+      (data?.safrapay as Record<string, unknown> | undefined) ||
+      (paymentGateway?.safrapay as Record<string, unknown> | undefined);
 
     if (safrapay?.enabled) {
-      const environment = normalizeEnvironment(safrapay.environment || fallbackEnvironment);
+      const environment = normalizeEnvironment(safrapay.environment || safrapay.env || fallbackEnvironment);
+      const gatewayUrl = typeof safrapay.gatewayUrl === "string" ? safrapay.gatewayUrl.trim() : "";
       const merchantId = typeof safrapay.merchantId === "string" ? safrapay.merchantId.trim() : "";
       const merchantToken =
         typeof safrapay.merchantToken === "string" ? safrapay.merchantToken.trim()
@@ -77,7 +82,7 @@ async function resolveSafrapayCredentials(
           merchantId,
           merchantToken,
           environment,
-          endpoint: endpointMap[environment],
+          endpoint: gatewayUrl || endpointMap[environment],
           source: "firestore",
         };
       }
@@ -87,7 +92,7 @@ async function resolveSafrapayCredentials(
           merchantId,
           merchantToken,
           environment,
-          endpoint: endpointMap.prod,
+          endpoint: gatewayUrl || endpointMap.prod,
           source: "firestore",
           missingFields: [
             !merchantId ? "safrapay.merchantId" : "",
@@ -110,6 +115,27 @@ async function resolveSafrapayCredentials(
 
 function onlyDigits(value: unknown): string {
   return typeof value === "string" ? value.replace(/\D/g, "") : "";
+}
+
+function isValidCardNumber(cardNumber: string): boolean {
+  if (!/^\d{13,19}$/.test(cardNumber)) return false;
+
+  let sum = 0;
+  let shouldDouble = false;
+
+  for (let i = cardNumber.length - 1; i >= 0; i -= 1) {
+    let digit = Number(cardNumber[i]);
+
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+
+  return sum % 10 === 0;
 }
 
 function buildCustomer(body: Record<string, unknown>) {
@@ -271,12 +297,16 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const cardDigits = onlyDigits(cardNumber);
+      const cvvDigits = onlyDigits(cvv);
+      const parsedInstallments = parseInt(String(installments), 10);
+
       if (
-        !cardNumber ||
+        !cardDigits ||
         !cardholderName ||
         !expirationMonth ||
         !expirationYear ||
-        !cvv ||
+        !cvvDigits ||
         !customer.document
       ) {
         return NextResponse.json(
@@ -285,19 +315,33 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      if (!isValidCardNumber(cardDigits)) {
+        return NextResponse.json(
+          { error: "NÃºmero do cartÃ£o invÃ¡lido. Digite novamente o nÃºmero completo do cartÃ£o." },
+          { status: 400 }
+        );
+      }
+
+      if (cvvDigits.length < 3 || cvvDigits.length > 4) {
+        return NextResponse.json(
+          { error: "CVV invÃ¡lido. Informe o cÃ³digo de 3 ou 4 dÃ­gitos." },
+          { status: 400 }
+        );
+      }
+
       try {
         const cardResponse = await client.createCardCharge({
           amount,
-          cardNumber: cardNumber.replace(/\D/g, ""),
+          cardNumber: cardDigits,
           cardholderName,
           cardholderDocument: customer.document,
           expirationMonth: parseInt(expirationMonth, 10),
           expirationYear: parseInt(expirationYear, 10),
-          cvv,
+          cvv: cvvDigits,
           paymentType: SafrapayPaymentType.Credit,
-          installments: parseInt(installments, 10),
+          installments: parsedInstallments,
           installmentType:
-            installments > 1
+            parsedInstallments > 1
               ? SafrapayInstallmentType.Merchant
               : SafrapayInstallmentType.None,
           orderId,
