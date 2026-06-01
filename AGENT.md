@@ -127,6 +127,16 @@ Eventos atuais:
 - `return_second_visit`: voltou pela segunda vez.
 - `return_tenth_visit`: voltou pela decima vez.
 - `return_more_than_30_visits`: passou de 30 visitas.
+- `search_performed`: usuario pesquisou um termo/produto.
+- `search_no_results`: busca sem resultado.
+- `product_shown`: card de produto exibido.
+- `product_added`: produto adicionado ao carrinho.
+- `checkout_started`: checkout aberto.
+- `checkout_abandoned`: checkout fechado sem concluir pedido.
+- `order_completed`: pedido concluido.
+- `payment_error`: erro de pagamento.
+- `minimum_order_block`: pedido minimo bloqueou finalizacao.
+- `feedback_submitted`: nota ou feedback recebido.
 
 Os eventos usam `eventId` deterministico e transacao Firestore para evitar incrementar contadores duplicados.
 

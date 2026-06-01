@@ -18,6 +18,16 @@ const CAPTURE_COUNTER_FIELD: Record<AgenteCaptureEventType, string> = {
   return_second_visit: "usuariosVoltaramSegundaVez",
   return_tenth_visit: "usuariosVoltaramDecimaVez",
   return_more_than_30_visits: "usuariosVoltaramMaisDe30Vezes",
+  search_performed: "buscasRealizadas",
+  search_no_results: "buscasSemResultado",
+  product_shown: "produtosExibidos",
+  product_added: "produtosAdicionados",
+  checkout_started: "checkoutsIniciados",
+  checkout_abandoned: "checkoutsAbandonados",
+  order_completed: "pedidosConcluidos",
+  payment_error: "errosPagamento",
+  minimum_order_block: "bloqueiosPedidoMinimo",
+  feedback_submitted: "feedbacksRecebidos",
 };
 
 function getAdminDb(): admin.firestore.Firestore | null {

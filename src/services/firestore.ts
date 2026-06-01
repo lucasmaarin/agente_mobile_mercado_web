@@ -39,7 +39,17 @@ export type AgenteCaptureEventType =
   | 'return_visit'
   | 'return_second_visit'
   | 'return_tenth_visit'
-  | 'return_more_than_30_visits';
+  | 'return_more_than_30_visits'
+  | 'search_performed'
+  | 'search_no_results'
+  | 'product_shown'
+  | 'product_added'
+  | 'checkout_started'
+  | 'checkout_abandoned'
+  | 'order_completed'
+  | 'payment_error'
+  | 'minimum_order_block'
+  | 'feedback_submitted';
 
 export interface AgenteCaptureEvent {
   eventId: string;
@@ -62,7 +72,7 @@ export async function registrarCapturaDadosAgente(
   });
 
   if (!res.ok) {
-    throw new Error(`Erro ao registrar captura: ${res.status}`);
+    console.warn(`Erro ao registrar captura: ${res.status}`);
   }
 }
 
@@ -87,6 +97,20 @@ export async function salvarNotaFeedbackAgente(dados: {
   if (!res.ok) {
     throw new Error(`Erro ao salvar feedback: ${res.status}`);
   }
+
+  await registrarCapturaDadosAgente({
+    eventId: `${dados.companyId}:${dados.sessionId}:feedback_submitted:${Date.now()}`,
+    eventType: 'feedback_submitted',
+    companyId: dados.companyId,
+    visitorId: dados.visitorId,
+    sessionId: dados.sessionId,
+    userDocId: dados.userDocId ?? null,
+    metadata: {
+      nota: dados.nota ?? null,
+      conversaId: dados.conversaId ?? null,
+      hasFeedbackText: Boolean(dados.feedback?.trim()),
+    },
+  });
 
   const data = await res.json() as { id?: string };
   return data.id ?? '';

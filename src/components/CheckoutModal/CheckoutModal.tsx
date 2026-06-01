@@ -42,6 +42,7 @@ interface CheckoutModalProps {
   taxaEntrega: number;
   onClose: () => void;
   onSuccess: (orderNumber: string, total: number, pixCopyPasteKey?: string, orderId?: string) => void;
+  onPaymentError?: (error: string, paymentMethod: string | null) => void;
 }
 
 type Step = "enderecos" | "pagamento" | "confirmacao" | "sucesso";
@@ -163,7 +164,7 @@ const BandeiraModal: React.FC<{
 
 const CheckoutModal: React.FC<CheckoutModalProps> = ({
   carrinho, userDocId, companyId, nomeCliente, formasPagamento,
-  subtotal, taxaEntrega, onClose, onSuccess,
+  subtotal, taxaEntrega, onClose, onSuccess, onPaymentError,
 }) => {
   const total = subtotal + taxaEntrega;
 
@@ -490,6 +491,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             }
           }
           setSafrapayError(errorMessage);
+          onPaymentError?.(errorMessage, payId);
           throw new Error(errorMessage);
         }
 
@@ -557,6 +559,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             errorMessage = `Pedido criado, mas o PIX falhou (${paymentResponse.status})`;
           }
           setSafrapayError(errorMessage);
+          onPaymentError?.(errorMessage, payId);
           throw new Error(errorMessage);
         }
 
@@ -585,6 +588,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setStep("sucesso");
     } catch (e) {
       console.error(e);
+      onPaymentError?.(e instanceof Error ? e.message : "Erro ao finalizar pedido", payId);
       alert(
         e instanceof Error && (e.message.includes("pagamento") || e.message.includes("PIX") || e.message.includes("Pedido criado"))
           ? e.message

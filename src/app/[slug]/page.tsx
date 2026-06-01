@@ -390,6 +390,10 @@ const AgentePage: React.FC = () => {
   const capturaEnteredWithoutLoginRef = useRef(false);
   const capturaLoggedInRef = useRef(false);
   const capturaCartFilledRef = useRef(false);
+  const capturaShownProductsRef = useRef<Set<string>>(new Set());
+  const capturaPreviousCartRef = useRef<CartItem[]>([]);
+  const capturaCartCompareReadyRef = useRef(false);
+  const capturaLastCheckoutStartRef = useRef<string | null>(null);
   const isGuestMode = process.env.NEXT_PUBLIC_GUEST_MODE === 'true';
 
   const registrarCaptura = React.useCallback((
@@ -485,6 +489,27 @@ const AgentePage: React.FC = () => {
 
   useEffect(() => {
     capturaCartRef.current = carrinho;
+
+    if (!capturaCartCompareReadyRef.current) {
+      capturaCartCompareReadyRef.current = true;
+      capturaPreviousCartRef.current = carrinho;
+    } else {
+      for (const item of carrinho) {
+        const anterior = capturaPreviousCartRef.current.find((prev) => prev.id === item.id);
+        const quantidadeAnterior = anterior?.quantity ?? 0;
+        if (item.quantity > quantidadeAnterior) {
+          registrarCaptura('product_added', `${capturaSessionIdRef.current}:product_added:${item.id}:${Date.now()}:${item.quantity}`, {
+            productId: item.id,
+            productName: item.name,
+            deltaQuantity: item.quantity - quantidadeAnterior,
+            quantity: item.quantity,
+            price: item.price,
+          });
+        }
+      }
+      capturaPreviousCartRef.current = carrinho;
+    }
+
     if (carrinho.length === 0 || capturaCartFilledRef.current) return;
     capturaCartFilledRef.current = true;
     registrarCaptura('cart_filled', `${capturaSessionIdRef.current}:cart_filled`, {
@@ -493,6 +518,36 @@ const AgentePage: React.FC = () => {
       total: carrinho.reduce((sum, item) => sum + item.price * item.quantity, 0),
     });
   }, [carrinho, registrarCaptura]);
+
+  useEffect(() => {
+    for (const msg of mensagens) {
+      if (!msg.produtosCard || msg.produtosCard.length === 0) continue;
+      for (const produto of msg.produtosCard.slice(0, msg.maxProdutos ?? 6)) {
+        const eventKey = `${msg.id}:product_shown:${produto.id}`;
+        if (capturaShownProductsRef.current.has(eventKey)) continue;
+        capturaShownProductsRef.current.add(eventKey);
+        registrarCaptura('product_shown', eventKey, {
+          productId: produto.id,
+          productName: produto.name,
+          category: produto.category,
+          price: produto.price,
+          messageId: msg.id,
+          termoBusca: msg.termoBusca ?? null,
+        });
+      }
+    }
+  }, [mensagens, registrarCaptura]);
+
+  useEffect(() => {
+    if (!showCheckout || carrinho.length === 0) return;
+    const eventKey = `${capturaSessionIdRef.current}:checkout_started:${Date.now()}`;
+    capturaLastCheckoutStartRef.current = eventKey;
+    registrarCaptura('checkout_started', eventKey, {
+      itens: carrinho.length,
+      quantidadeTotal: carrinho.reduce((sum, item) => sum + item.quantity, 0),
+      total: carrinho.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    });
+  }, [carrinho, registrarCaptura, showCheckout]);
 
   useEffect(() => {
     const registrarSaida = () => {
@@ -1035,6 +1090,19 @@ const AgentePage: React.FC = () => {
 
     // ---- Pré-captura direta nos estados de coleta ----
     // Garante que o dado seja salvo mesmo que o agente não emita a tag [SET_*].
+    const deveCapturarBusca =
+      wFlowState === FLOW_STATES.BROWSING &&
+      !ehSaudacaoCurta(texto) &&
+      !ehIntencaoCheckout(texto) &&
+      !ehAcaoContinuarComprando(texto) &&
+      !ehIntencaoSemProduto(texto);
+
+    if (deveCapturarBusca) {
+      registrarCaptura('search_performed', `${msgUsuario.id}:search_performed`, {
+        termo: texto,
+      });
+    }
+
     const collectingField = COLLECTING_FIELD[wFlowState];
     if (collectingField !== undefined) {
       const rawValor = texto.trim();
@@ -1186,6 +1254,28 @@ const AgentePage: React.FC = () => {
         suggestions?: string[],
         termoBusca?: string
       ) => {
+        const contentNormalizadoCaptura = normalizar(content);
+        if (
+          wFlowState === FLOW_STATES.BROWSING &&
+          !produtosCard?.length &&
+          (contentNormalizadoCaptura.includes("nao encontrei") ||
+            contentNormalizadoCaptura.includes("nao temos") ||
+            contentNormalizadoCaptura.includes("sem resultado"))
+        ) {
+          registrarCaptura('search_no_results', `${msgUsuario.id}:search_no_results:${normalizar(termoBusca ?? texto).slice(0, 80)}`, {
+            termo: termoBusca ?? texto,
+            resposta: content.slice(0, 240),
+          });
+        }
+
+        if (contentNormalizadoCaptura.includes("pedido minimo")) {
+          registrarCaptura('minimum_order_block', `${msgUsuario.id}:minimum_order_block`, {
+            totalCarrinho: wCart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+            itens: wCart.length,
+            pedidoMinimo: lojaConfig?.pedidoMinimo ?? 60,
+          });
+        }
+
         const contentFormatado = limparMarkdownBasico(content);
         setMensagens((prev) => [
           ...prev,
@@ -2271,6 +2361,12 @@ const AgentePage: React.FC = () => {
       }
 
       if (wFlowState === FLOW_STATES.BROWSING && produtosFoco.length === 0 && !ehSaudacaoCurta(texto) && !ehIntencaoSemProduto(texto)) {
+        if (deveCapturarBusca) {
+          registrarCaptura('search_no_results', `${msgUsuario.id}:search_no_results:${normalizar(texto).slice(0, 80)}`, {
+            termo: texto,
+            origem: 'product_discovery',
+          });
+        }
         const termoNorm = normalizar(texto).trim();
         const sr = semResultadoRef.current;
         if (sr.termo === termoNorm) {
@@ -2503,6 +2599,12 @@ const AgentePage: React.FC = () => {
           setCustomerData(wCustomerData);
           const orderResult = await createOrder(companyId, wCustomerData, wCart, userDocId, nomeCliente);
           capturaOrderCompletedRef.current = true;
+          registrarCaptura('order_completed', `${orderResult.id}:order_completed`, {
+            orderNumber: orderResult.orderNumber,
+            orderId: orderResult.id,
+            total: orderResult.total,
+            source: 'chat',
+          });
 
           // Subscrever notificações push para este cliente
           if ("serviceWorker" in navigator && "PushManager" in window) {
@@ -2993,6 +3095,11 @@ const AgentePage: React.FC = () => {
                   const minimo = lojaConfig?.pedidoMinimo ?? 60;
                   if (minimo > 0 && totalCarrinho < minimo) {
                     setMostrarCarrinho(false);
+                    registrarCaptura('minimum_order_block', `cart-sidebar-${Date.now()}:minimum_order_block`, {
+                      totalCarrinho,
+                      itens: carrinho.length,
+                      pedidoMinimo: minimo,
+                    });
                     const falta = (minimo - totalCarrinho).toFixed(2).replace('.', ',');
                     const minimoFmt = minimo.toFixed(2).replace('.', ',');
                     const msgId = `sys-${Date.now()}`;
@@ -3424,9 +3531,24 @@ const AgentePage: React.FC = () => {
           formasPagamento={formasPagamento.length > 0 ? formasPagamento : ["Pix", "Dinheiro", "Cartão Crédito"]}
           subtotal={totalCarrinho}
           taxaEntrega={DELIVERY_PRICE}
-          onClose={() => setShowCheckout(false)}
+          onClose={() => {
+            if (!capturaOrderCompletedRef.current && carrinho.length > 0) {
+              registrarCaptura('checkout_abandoned', `${capturaLastCheckoutStartRef.current ?? capturaSessionIdRef.current}:checkout_abandoned`, {
+                itens: carrinho.length,
+                quantidadeTotal: carrinho.reduce((sum, item) => sum + item.quantity, 0),
+                total: carrinho.reduce((sum, item) => sum + item.price * item.quantity, 0),
+              });
+            }
+            setShowCheckout(false);
+          }}
           onSuccess={(orderNumber, total, pixCopyPasteKey, orderId) => {
             capturaOrderCompletedRef.current = true;
+            registrarCaptura('order_completed', `${orderId ?? orderNumber}:order_completed`, {
+              orderNumber,
+              orderId: orderId ?? null,
+              total,
+              source: 'checkout_modal',
+            });
             setShowCheckout(false);
             setCarrinho([]);
             if (pixCopyPasteKey && orderId) setPendingPixOrderId(orderId);
@@ -3441,6 +3563,13 @@ const AgentePage: React.FC = () => {
               timestamp: new Date(),
               suggestions: ["Continuar comprando"],
             }]);
+          }}
+          onPaymentError={(error, paymentMethod) => {
+            registrarCaptura('payment_error', `${capturaSessionIdRef.current}:payment_error:${paymentMethod ?? 'unknown'}:${normalizar(error).slice(0, 120)}`, {
+              error,
+              paymentMethod,
+              total: totalCarrinho,
+            });
           }}
         />
       )}
