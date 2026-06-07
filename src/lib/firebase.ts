@@ -19,6 +19,7 @@ const app: FirebaseApp = initializeApp(firebaseConfig);
 
 export const db: Firestore = getFirestore(app);
 export const auth: Auth = getAuth(app);
+auth.languageCode = "pt-BR";
 export const storage: FirebaseStorage = getStorage(app);
 
 export const googleProvider = new GoogleAuthProvider();

@@ -261,6 +261,7 @@ const AgentePage: React.FC = () => {
   const [authSending, setAuthSending]         = useState(false);
   const [loginCompleto, setLoginCompleto]     = useState(false);
   const [authDigitando, setAuthDigitando]     = useState(false);
+  const [recaptchaVisivel, setRecaptchaVisivel] = useState(false);
   const recaptchaAuthRef = useRef<RecaptchaVerifier | undefined>(undefined);
   const authIniciado = useRef(false); // garante que mensagens de auth só são adicionadas uma vez
 
@@ -927,8 +928,7 @@ const AgentePage: React.FC = () => {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const setupRecaptchaAuth = async (): Promise<RecaptchaVerifier> => {
-    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
+  const clearRecaptchaAuth = () => {
     if (window.recaptchaVerifier) {
       try { window.recaptchaVerifier.clear(); } catch {}
       window.recaptchaVerifier = undefined;
@@ -939,15 +939,29 @@ const AgentePage: React.FC = () => {
     }
     const container = document.getElementById('recaptcha-container');
     if (container) container.innerHTML = '';
-    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'invisible',
+  };
+
+  const setupRecaptchaAuth = async (mode: 'invisible' | 'normal' = 'invisible'): Promise<RecaptchaVerifier> => {
+    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile.
+    clearRecaptchaAuth();
+    setRecaptchaVisivel(mode === 'normal');
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
+
+    const container = document.getElementById('recaptcha-container');
+    if (!container) {
+      throw new Error('recaptcha-container-not-found');
+    }
+    container.innerHTML = '';
+
+    const verifier = new RecaptchaVerifier(auth, container, {
+      size: mode,
       callback: () => {},
       'expired-callback': () => {
         // Limpa ao expirar para forçar recriação na próxima tentativa
-        if (window.recaptchaVerifier) {
-          try { window.recaptchaVerifier.clear(); } catch {}
-          window.recaptchaVerifier = undefined;
-        }
+        clearRecaptchaAuth();
+        setRecaptchaVisivel(false);
       },
     });
     await verifier.render();
@@ -956,7 +970,12 @@ const AgentePage: React.FC = () => {
     return verifier;
   };
 
-  const handleAuthSendCode = async () => {
+  const shouldRetryWithVisibleRecaptcha = (code?: string) => (
+    code === 'auth/captcha-check-failed' ||
+    code === 'auth/missing-app-credential'
+  );
+
+  const handleAuthSendCode = async (options?: { resend?: boolean }) => {
     const formatted = validatePhone(authPhone);
     if (!formatted) {
       setMensagens(prev => [
@@ -968,11 +987,15 @@ const AgentePage: React.FC = () => {
     setAuthSending(true);
     setAuthStep('validating');
     const ts = Date.now();
+    const isResend = Boolean(options?.resend);
     // Adiciona bubble do usuário + "Enviando..."
     setMensagens(prev => [
-      ...prev.filter(m => !['auth-phone-error', 'auth-validating', 'auth-phone-user'].includes(m.id)),
+      ...prev.filter(m =>
+        !['auth-phone-error', 'auth-validating', 'auth-phone-user', 'auth-code-card', 'auth-code-error', 'auth-recaptcha-visible'].includes(m.id) &&
+        !m.id.startsWith('auth-code-sent')
+      ),
       { id: 'auth-phone-user', role: 'user', content: authPhone, timestamp: new Date() },
-      { id: 'auth-validating', role: 'assistant', content: `Enviando SMS para ${authPhone}…`, timestamp: new Date() },
+      { id: 'auth-validating', role: 'assistant', content: `${isResend ? 'Reenviando' : 'Enviando'} SMS para ${authPhone}…`, timestamp: new Date() },
     ]);
     try {
       try {
@@ -980,32 +1003,64 @@ const AgentePage: React.FC = () => {
       } catch (persistenceError) {
         console.warn('[PhoneAuth] Nao foi possivel ajustar persistencia; continuando com o padrao.', persistenceError);
       }
-      const result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth());
+      let result: ConfirmationResult;
+      try {
+        result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth('invisible'));
+      } catch (firstError: unknown) {
+        const firstErr = firstError as { code?: string; message?: string };
+        console.error('[PhoneAuth] Falha no reCAPTCHA invisivel:', {
+          code: firstErr.code,
+          message: firstErr.message,
+          error: firstError,
+        });
+        if (!shouldRetryWithVisibleRecaptcha(firstErr.code)) throw firstError;
+
+        setMensagens(prev => [
+          ...prev.filter(m => m.id !== 'auth-recaptcha-visible'),
+          {
+            id: 'auth-recaptcha-visible',
+            role: 'assistant',
+            content: 'Para confirmar a segurança, marque o reCAPTCHA que apareceu na tela.',
+            timestamp: new Date(),
+          },
+        ]);
+        result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth('normal'));
+      }
       setAuthConfirmation(result);
+      setRecaptchaVisivel(false);
       setMensagens(prev => [
-        ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card'].includes(m.id)),
+        ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card', 'auth-recaptcha-visible'].includes(m.id)),
         { id: `auth-code-sent-${ts}`, role: 'assistant', content: `Código enviado para ${authPhone}. Digite os 6 dígitos no campo abaixo:`, timestamp: new Date() },
         { id: 'auth-code-card', role: 'assistant', content: '', authCheckboxCard: true, timestamp: new Date() },
       ]);
       setAuthStep('code_modal');
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
-      console.error('[PhoneAuth] Erro ao enviar SMS:', err.code, err.message, e);
+      console.error('[PhoneAuth] Erro ao enviar SMS:', {
+        code: err.code,
+        message: err.message,
+        error: e,
+      });
       const errMsgs: Record<string, string> = {
         'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
         'auth/invalid-phone-number': 'Número inválido. Confira o DDD e os dígitos.',
         'auth/quota-exceeded': 'Limite de SMS atingido. Tente mais tarde.',
         'auth/captcha-check-failed': 'Verificação de segurança falhou. Recarregue a página.',
-        'auth/invalid-app-credential': 'Erro de configuração. Tente novamente.',
+        'auth/network-request-failed': 'Falha de conexão. Verifique a internet e tente novamente.',
+        'auth/internal-error': 'Erro interno ao enviar o SMS. Tente novamente em instantes.',
+        'auth/missing-app-credential': 'Não foi possível validar o reCAPTCHA neste aparelho. Recarregue a página e tente novamente.',
+        'auth/invalid-app-credential': `Erro de configuração do Firebase Auth para este domínio (${window.location.hostname}). Verifique os domínios autorizados.`,
+        'auth/app-not-authorized': `Este domínio (${window.location.hostname}) não está autorizado no Firebase Auth.`,
+        'auth/operation-not-allowed': 'Login por telefone não está habilitado no Firebase Auth.',
       };
       const msgErro = errMsgs[err.code ?? ''] ?? 'Não foi possível enviar o SMS. Tente novamente.';
       setMensagens(prev => [
-        ...prev.filter(m => !['auth-validating', 'auth-phone-error'].includes(m.id)),
+        ...prev.filter(m => !['auth-validating', 'auth-phone-error', 'auth-recaptcha-visible'].includes(m.id)),
         { id: 'auth-phone-error', role: 'assistant', content: msgErro, timestamp: new Date() },
       ]);
       setAuthStep('phone');
-      if (window.recaptchaVerifier) { window.recaptchaVerifier.clear(); window.recaptchaVerifier = undefined; }
-      recaptchaAuthRef.current = undefined;
+      clearRecaptchaAuth();
+      setRecaptchaVisivel(false);
     } finally { setAuthSending(false); }
   };
 
@@ -1043,19 +1098,16 @@ const AgentePage: React.FC = () => {
     } finally { setAuthSending(false); }
   };
 
-  const handleAuthResend = () => {
+  const handleAuthResend = async () => {
     setAuthCode('');
-    setAuthStep('phone');
     setAuthConfirmation(null);
-    if (recaptchaAuthRef.current) {
-      try { recaptchaAuthRef.current.clear(); } catch {}
-      recaptchaAuthRef.current = undefined;
-    }
-    if (window.recaptchaVerifier) {
-      try { window.recaptchaVerifier.clear(); } catch {}
-      window.recaptchaVerifier = undefined;
-    }
-    setMensagens(prev => prev.filter(m => !['auth-code-sent', 'auth-code-card', 'auth-code-error', 'auth-validating'].includes(m.id)));
+    clearRecaptchaAuth();
+    setRecaptchaVisivel(false);
+    setMensagens(prev => prev.filter(m =>
+      !['auth-code-card', 'auth-code-error', 'auth-validating', 'auth-recaptcha-visible'].includes(m.id) &&
+      !m.id.startsWith('auth-code-sent')
+    ));
+    await handleAuthSendCode({ resend: true });
   };
 
   // -------- Enviar mensagem --------
@@ -2931,7 +2983,22 @@ const AgentePage: React.FC = () => {
   // ============================================================
   return (
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
-      <div id="recaptcha-container" style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999, transform: 'scale(0.7)', transformOrigin: 'top right' }}></div>
+      <div
+        id="recaptcha-container"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          bottom: 18,
+          zIndex: 9999,
+          transform: recaptchaVisivel ? 'translateX(-50%)' : 'translateX(-50%) scale(0.7)',
+          transformOrigin: 'bottom center',
+          background: recaptchaVisivel ? '#fff' : 'transparent',
+          borderRadius: recaptchaVisivel ? 8 : 0,
+          boxShadow: recaptchaVisivel ? '0 10px 30px rgba(0,0,0,0.22)' : 'none',
+          padding: recaptchaVisivel ? 10 : 0,
+          pointerEvents: recaptchaVisivel ? 'auto' : 'none',
+        }}
+      />
       <Header
         nomeEstabelecimento={nomeEstabelecimento}
         cartTotal={totalCarrinho}
@@ -2970,8 +3037,8 @@ const AgentePage: React.FC = () => {
           setAuthPhone('');
           setAuthCode('');
           setAuthConfirmation(null);
-          if (window.recaptchaVerifier) { window.recaptchaVerifier.clear(); window.recaptchaVerifier = undefined; }
-          recaptchaAuthRef.current = undefined;
+          clearRecaptchaAuth();
+          setRecaptchaVisivel(false);
           // NÃO resetar authIniciado para o useEffect não substituir as mensagens
           // Mensagens de logout com delay natural (typing indicator)
           setAuthDigitando(true);

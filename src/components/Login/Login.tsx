@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import styles from "./Login.module.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import '@/app/globals.css';
+
 import { validatePhone } from '@/lib/validation';
 import {
   signInWithPopup,
@@ -51,9 +51,6 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
   }, [router]);
 
 
-  useEffect(() => {
-    setupRecaptcha();
-  }, []);
 
   const formatPhoneInput = (value: string): string => {
     const digits = value.replace(/\D/g, '').slice(0, 11);
@@ -63,16 +60,51 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
   };
 
-  const setupRecaptcha = async () => {
-    if (window.recaptchaVerifier) return;
+  const clearRecaptcha = () => {
+    if (window.recaptchaVerifier) {
+      try { window.recaptchaVerifier.clear(); } catch {}
+      window.recaptchaVerifier = undefined;
+    }
+    const container = document.getElementById("recaptcha-container");
+    if (container) container.innerHTML = "";
+  };
 
-    const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      size: 'normal'
+  const setupRecaptcha = async () => {
+    if (typeof window === "undefined") return null;
+
+    clearRecaptcha();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    const container = document.getElementById("recaptcha-container");
+    if (!container) return null;
+    container.innerHTML = "";
+
+    const verifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+      size: "invisible",
+      callback: () => {
+        console.log("reCAPTCHA resolvido");
+      },
+      "expired-callback": () => {
+        console.log("reCAPTCHA expirou");
+        clearRecaptcha();
+      },
     });
 
     await verifier.render();
-
     window.recaptchaVerifier = verifier;
+    return verifier;
+  };
+
+  const smsErrorMessage = (code?: string): string => {
+    switch (code) {
+      case "auth/too-many-requests":      return "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.";
+      case "auth/invalid-phone-number":   return "Número de telefone inválido. Confira o DDD e os dígitos.";
+      case "auth/quota-exceeded":         return "Limite de SMS atingido. Tente novamente mais tarde.";
+      case "auth/captcha-check-failed":   return "Falha no reCAPTCHA. Recarregue a página e tente novamente.";
+      case "auth/network-request-failed": return "Falha de conexão. Verifique a internet e tente novamente.";
+      case "auth/internal-error":         return "Erro interno ao enviar o SMS. Tente novamente em instantes.";
+      default:                            return "Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.";
+    }
   };
 
   const handlePhoneLogin = async () => {
@@ -82,17 +114,17 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
     setError("");
 
     try {
-      // 🔥 garante que existe
-      if (!window.recaptchaVerifier) {
-        await setupRecaptcha();
-      }
-
-      const appVerifier = window.recaptchaVerifier!;
-
       const formattedPhone = validatePhone(phoneNumber);
+
       if (!formattedPhone) {
         setError("Número inválido. Digite o DDD + número, ex: (11) 99999-9999.");
-        setIsLoading(false);
+        return;
+      }
+
+      const appVerifier = await setupRecaptcha();
+
+      if (!appVerifier) {
+        setError("Não foi possível iniciar a verificação. Tente novamente.");
         return;
       }
 
@@ -102,24 +134,25 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       setIsCodeSent(true);
       setIsVerificationModalOpen(true);
       setError("");
-
     } catch (error: unknown) {
-      const code = (error as { code?: string })?.code;
-
-      if (code === 'auth/too-many-requests') {
-        setError("Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.");
-      } else if (code === 'auth/invalid-phone-number') {
-        setError("Número de telefone inválido. Confira o DDD e os dígitos.");
-      } else if (code === 'auth/quota-exceeded') {
-        setError("Limite de SMS atingido. Tente novamente mais tarde.");
-      } else {
-        setError("Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.");
-      }
-
-      // ❌ REMOVIDO: NÃO destruir o captcha
+      const err = error as { code?: string; message?: string };
+      console.error("[Login] Erro ao enviar SMS:", {
+        code: err.code,
+        message: err.message,
+        error,
+      });
+      setError(smsErrorMessage(err.code));
+      clearRecaptcha();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResendCode = async () => {
+    setVerificationCode("");
+    setConfirmationResult(null);
+    clearRecaptcha();
+    await handlePhoneLogin();
   };
 
   const verifyPhoneCode = async () => {
@@ -224,7 +257,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
   return (
     <div className={styles.login}>
-      <div id="recaptcha-container"></div>
+      <div id="recaptcha-container" style={{ position: "fixed", top: 0, right: 0, zIndex: 9999, transform: "scale(0.7)", transformOrigin: "top right", pointerEvents: "none" }}></div>
 
       {/* Header simples com logo */}
       <div className={styles.loginHeader}>
@@ -377,7 +410,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
             <div className={styles.modalFooter}>
               <button
-                onClick={() => { resetPhoneLogin(); }}
+                onClick={handleResendCode}
                 className={styles.resendButton}
                 disabled={isLoading}
               >

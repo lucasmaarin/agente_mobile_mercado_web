@@ -64,10 +64,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
 
   useEffect(() => {
     return () => {
-      if (window.recaptchaVerifierInline) {
-        window.recaptchaVerifierInline.clear();
-        window.recaptchaVerifierInline = undefined;
-      }
+      clearRecaptcha();
     };
   }, []);
 
@@ -79,17 +76,30 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
     return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
   };
 
-  const setupRecaptcha = async (): Promise<RecaptchaVerifier> => {
-    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile
+  const clearRecaptcha = () => {
     if (window.recaptchaVerifierInline) {
       try { window.recaptchaVerifierInline.clear(); } catch {}
       window.recaptchaVerifierInline = undefined;
     }
     const container = document.getElementById("recaptcha-inline");
     if (container) container.innerHTML = "";
+  };
+
+  const setupRecaptcha = async (): Promise<RecaptchaVerifier> => {
+    // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile.
+    clearRecaptcha();
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    const container = document.getElementById("recaptcha-inline");
+    if (!container) throw new Error("recaptcha-inline-not-found");
+    container.innerHTML = "";
+
     const verifier = new RecaptchaVerifier(auth, "recaptcha-inline", {
       size: "invisible",
       callback: () => {},
+      "expired-callback": () => {
+        clearRecaptcha();
+      },
     });
     await verifier.render();
     window.recaptchaVerifierInline = verifier;
@@ -102,6 +112,8 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
       case "auth/invalid-phone-number":     return "Número de telefone inválido. Confira o DDD e os dígitos.";
       case "auth/quota-exceeded":           return "Limite de SMS atingido. Tente novamente mais tarde.";
       case "auth/captcha-check-failed":     return "Verificação de segurança falhou. Recarregue a página e tente novamente.";
+      case "auth/network-request-failed":   return "Falha de conexão. Verifique a internet e tente novamente.";
+      case "auth/internal-error":           return "Erro interno ao enviar o SMS. Tente novamente em instantes.";
       case "auth/missing-phone-number":     return "Informe um número de telefone antes de continuar.";
       case "auth/user-disabled":            return "Esta conta foi desativada. Entre em contato com o suporte.";
       case "auth/operation-not-allowed":    return "Login por SMS não está habilitado. Entre em contato com o suporte.";
@@ -141,13 +153,14 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
       setStep("code_modal");
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
-      console.error("[PhoneAuth] Erro ao enviar SMS:", err.code, err.message, e);
+      console.error("[PhoneAuth] Erro ao enviar SMS:", {
+        code: err.code,
+        message: err.message,
+        error: e,
+      });
       setPhoneError(smsErrorMessage(err.code));
       setStep("phone");
-      if (window.recaptchaVerifierInline) {
-        window.recaptchaVerifierInline.clear();
-        window.recaptchaVerifierInline = undefined;
-      }
+      clearRecaptcha();
     } finally {
       setLoading(false);
     }
@@ -172,17 +185,14 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
   const handleResend = async () => {
     setCode("");
     setCodeError("");
-    setStep("phone");
     setConfirmation(null);
-    if (window.recaptchaVerifierInline) {
-      window.recaptchaVerifierInline.clear();
-      window.recaptchaVerifierInline = undefined;
-    }
+    clearRecaptcha();
+    await handleSendCode();
   };
 
   return (
     <>
-      <div id="recaptcha-inline" style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999, transform: 'scale(0.7)', transformOrigin: 'top right' }} />
+      <div id="recaptcha-inline" style={{ position: 'fixed', top: 0, right: 0, zIndex: 9999, transform: 'scale(0.7)', transformOrigin: 'top right', pointerEvents: 'none' }} />
     <div className={styles.wrapper}>
 
       {/* Área de mensagens — ocupa espaço abaixo do Header da loja */}

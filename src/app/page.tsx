@@ -9,14 +9,31 @@ import { buscarNomeEstabelecimento, buscarLogoEstabelecimento } from "@/services
 interface Estabelecimento {
   companyId: string;
   slug: string;
+  href: string;
   domain: string | null;
   nome: string | null;
   logo: string | null;
   loading: boolean;
 }
 
+function isLocalDevelopmentHost(hostname: string): boolean {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function getHrefForSlug(slug: string, localOrigin: string | null = null): string {
+  if (localOrigin) {
+    return `${localOrigin}/${slug}`;
+  }
+
+  return LINK_OVERRIDES[slug] ?? `https://www.agentemercado.com.br/${slug}`;
+}
+
+function getDisplayDomain(href: string): string {
+  return href.replace(/^https?:\/\//, "");
+}
+
 // Monta lista de estabelecimentos unicos a partir do DOMAIN_SLUGS
-function getEstabelecimentos(): Estabelecimento[] {
+function getEstabelecimentos(localOrigin: string | null = null): Estabelecimento[] {
   const seen = new Set<string>();
   const list: Estabelecimento[] = [];
 
@@ -24,10 +41,10 @@ function getEstabelecimentos(): Estabelecimento[] {
     if (seen.has(companyId)) continue;
     seen.add(companyId);
 
-    const href = LINK_OVERRIDES[slug] ?? `https://www.agentemercado.com.br/${slug}`;
-    const domain = href.replace(/^https?:\/\//, "");
+    const href = getHrefForSlug(slug, localOrigin);
+    const domain = getDisplayDomain(href);
 
-    list.push({ companyId, slug, domain, nome: null, logo: null, loading: true });
+    list.push({ companyId, slug, href, domain, nome: null, logo: null, loading: true });
   }
 
   return list;
@@ -36,6 +53,20 @@ function getEstabelecimentos(): Estabelecimento[] {
 export default function HomePage() {
   const [items, setItems] = useState<Estabelecimento[]>(getEstabelecimentos);
   const [busca, setBusca] = useState("");
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !isLocalDevelopmentHost(window.location.hostname)) {
+      return;
+    }
+
+    const localOrigin = window.location.origin;
+    setItems(prev =>
+      prev.map(item => {
+        const href = getHrefForSlug(item.slug, localOrigin);
+        return { ...item, href, domain: getDisplayDomain(href) };
+      })
+    );
+  }, []);
 
   useEffect(() => {
     items.forEach(({ companyId }) => {
@@ -210,8 +241,7 @@ export default function HomePage() {
 }
 
 function EstabelecimentoCard({ item }: { item: Estabelecimento }) {
-  const { companyId, slug, domain, nome, logo, loading } = item;
-  const href = LINK_OVERRIDES[slug] ?? `https://www.agentemercado.com.br/${slug}`;
+  const { companyId, href, domain, nome, logo, loading } = item;
   const displayNome = nome ?? (loading ? "" : companyId);
 
   if (loading) {
