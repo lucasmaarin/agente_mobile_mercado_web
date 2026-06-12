@@ -10,12 +10,10 @@ runConfig:
 # Required runtime secrets:
 # - OPENAI_API_KEY
 # - ADMIN_SECRET
-# - SAFRAPAY_MERCHANT_ID
-# - SAFRAPAY_MERCHANT_TOKEN
-# - SAFRAPAY_WEBHOOK_SECRET
+# Required runtime vars:
+# - SAFRAPAY_MOBILE_API_URL=https://safrapi--appmobileprod-19505.us-east4.hosted.app/
 # Optional runtime vars:
-# - SAFRAPAY_ENV
-# - SAFRAPAY_GATEWAY_URL
+# - SAFRAPAY_WEBHOOK_SECRET
 # - VAPID_PUBLIC_KEY
 # - VAPID_PRIVATE_KEY
 # - VAPID_SUBJECT

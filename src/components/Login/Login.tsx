@@ -278,7 +278,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
           transform: "translateX(-50%) scale(0.7)",
           transformOrigin: "bottom center",
           zIndex: 9999,
-          pointerEvents: "none",
+          pointerEvents: "auto",
         }}
       />
 

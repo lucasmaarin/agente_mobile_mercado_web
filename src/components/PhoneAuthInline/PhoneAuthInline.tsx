@@ -213,7 +213,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
           transform: 'translateX(-50%) scale(0.7)',
           transformOrigin: 'bottom center',
           zIndex: 9999,
-          pointerEvents: 'none',
+          pointerEvents: 'auto',
         }}
       />
     <div className={styles.wrapper}>

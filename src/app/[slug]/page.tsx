@@ -266,6 +266,8 @@ const AgentePage: React.FC = () => {
   const [authPhoneError, setAuthPhoneError]   = useState('');
   const [authCodeError, setAuthCodeError]     = useState('');
   const [authSending, setAuthSending]         = useState(false);
+  const [authSmsCooldownUntil, setAuthSmsCooldownUntil] = useState(0);
+  const [authCooldownNow, setAuthCooldownNow] = useState(Date.now());
   const [loginCompleto, setLoginCompleto]     = useState(false);
   const [authDigitando, setAuthDigitando]     = useState(false);
   const [recaptchaVisivel, setRecaptchaVisivel] = useState(false);
@@ -300,6 +302,25 @@ const AgentePage: React.FC = () => {
     formasPagamento,
     lojaConfig,
   } = useEstabelecimento(companyId, dataCompanyId);
+
+  const authSmsCooldownMs = Math.max(0, authSmsCooldownUntil - authCooldownNow);
+  const authSmsCooldownLabel = authSmsCooldownMs
+    ? `${String(Math.ceil(authSmsCooldownMs / 60000)).padStart(2, '0')} min`
+    : '';
+
+  useEffect(() => {
+    if (!authSmsCooldownUntil) return;
+
+    const interval = window.setInterval(() => {
+      const now = Date.now();
+      setAuthCooldownNow(now);
+      if (now >= authSmsCooldownUntil) {
+        setAuthSmsCooldownUntil(0);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [authSmsCooldownUntil]);
 
   // Atualiza favicon e título com a logo/nome do estabelecimento
   useEffect(() => {
@@ -981,12 +1002,29 @@ const AgentePage: React.FC = () => {
     return verifier;
   };
 
-  const shouldRetryWithVisibleRecaptcha = (code?: string) => (
+  const shouldRetryWithVisibleRecaptcha = (code?: string, message?: string) => (
     code === 'auth/captcha-check-failed' ||
-    code === 'auth/missing-app-credential'
+    code === 'auth/missing-app-credential' ||
+    (
+      code === 'auth/internal-error' &&
+      Boolean(message?.toLowerCase().includes('recaptcha'))
+    )
   );
 
   const handleAuthSendCode = async (options?: { resend?: boolean }) => {
+    if (authSmsCooldownMs > 0) {
+      setMensagens(prev => [
+        ...prev.filter(m => m.id !== 'auth-phone-error'),
+        {
+          id: 'auth-phone-error',
+          role: 'assistant',
+          content: `Muitas tentativas de SMS. Aguarde ${authSmsCooldownLabel} antes de tentar novamente.`,
+          timestamp: new Date(),
+        },
+      ]);
+      return;
+    }
+
     const formatted = validatePhone(authPhone);
     if (!formatted) {
       setMensagens(prev => [
@@ -1019,12 +1057,16 @@ const AgentePage: React.FC = () => {
         result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth('invisible'));
       } catch (firstError: unknown) {
         const firstErr = firstError as { code?: string; message?: string };
+        console.error(
+          `[PhoneAuth] Falha no reCAPTCHA invisivel code=${firstErr.code ?? 'sem-code'} message=${firstErr.message ?? 'sem-message'}`,
+          firstError
+        );
         console.error('[PhoneAuth] Falha no reCAPTCHA invisivel:', {
           code: firstErr.code,
           message: firstErr.message,
           error: firstError,
         });
-        if (!shouldRetryWithVisibleRecaptcha(firstErr.code)) throw firstError;
+        if (!shouldRetryWithVisibleRecaptcha(firstErr.code, firstErr.message)) throw firstError;
 
         setMensagens(prev => [
           ...prev.filter(m => m.id !== 'auth-recaptcha-visible'),
@@ -1035,7 +1077,16 @@ const AgentePage: React.FC = () => {
             timestamp: new Date(),
           },
         ]);
-        result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth('normal'));
+        try {
+          result = await signInWithPhoneNumber(auth, formatted, await setupRecaptchaAuth('normal'));
+        } catch (visibleError: unknown) {
+          const visibleErr = visibleError as { code?: string; message?: string };
+          console.error(
+            `[PhoneAuth] Falha no reCAPTCHA visivel code=${visibleErr.code ?? 'sem-code'} message=${visibleErr.message ?? 'sem-message'}`,
+            visibleError
+          );
+          throw visibleError;
+        }
       }
       setAuthConfirmation(result);
       setRecaptchaVisivel(false);
@@ -1047,20 +1098,28 @@ const AgentePage: React.FC = () => {
       setAuthStep('code_modal');
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
+      if (err.code === 'auth/too-many-requests') {
+        setAuthSmsCooldownUntil(Date.now() + 10 * 60 * 1000);
+        setAuthCooldownNow(Date.now());
+      }
+      console.error(
+        `[PhoneAuth] Erro ao enviar SMS code=${err.code ?? 'sem-code'} message=${err.message ?? 'sem-message'}`,
+        e
+      );
       console.error('[PhoneAuth] Erro ao enviar SMS:', {
         code: err.code,
         message: err.message,
         error: e,
       });
       const errMsgs: Record<string, string> = {
-        'auth/too-many-requests': 'Muitas tentativas. Aguarde alguns minutos.',
+        'auth/too-many-requests': 'Muitas tentativas de SMS. Aguarde alguns minutos antes de tentar novamente.',
         'auth/invalid-phone-number': 'Número inválido. Confira o DDD e os dígitos.',
         'auth/quota-exceeded': 'Limite de SMS atingido. Tente mais tarde.',
         'auth/captcha-check-failed': 'Verificação de segurança falhou. Recarregue a página.',
         'auth/network-request-failed': 'Falha de conexão. Verifique a internet e tente novamente.',
         'auth/internal-error': 'Erro interno ao enviar o SMS. Tente novamente em instantes.',
         'auth/missing-app-credential': 'Não foi possível validar o reCAPTCHA neste aparelho. Recarregue a página e tente novamente.',
-        'auth/invalid-app-credential': `Erro de configuração do Firebase Auth para este domínio (${window.location.hostname}). Verifique os domínios autorizados.`,
+        'auth/invalid-app-credential': `O Firebase recusou a credencial do app neste domínio (${window.location.hostname}). Verifique Firebase Auth > Domínios autorizados, restrições da API key e se o login por telefone está habilitado.`,
         'auth/app-not-authorized': `Este domínio (${window.location.hostname}) não está autorizado no Firebase Auth.`,
         'auth/operation-not-allowed': 'Login por telefone não está habilitado no Firebase Auth.',
       };
@@ -2842,6 +2901,23 @@ const AgentePage: React.FC = () => {
   const ultimaMensagemAgente = [...mensagens].reverse().find((m) => m.role === "assistant");
   const ultimaMensagemTemChips = (ultimaMensagemAgente?.suggestions?.length ?? 0) > 0;
   const quickReplies = ultimaMensagemTemChips ? [] : getQuickReplies(flowState, carrinho.length);
+  const getResponseChips = (msg: Mensagem): string[] => {
+    const chips = msg.suggestions?.length
+      ? [...msg.suggestions]
+      : msg.id === ultimaMsgAssistenteId
+        ? getQuickReplies(flowState, carrinho.length)
+        : [];
+
+    if (
+      msg.role === "assistant" &&
+      msg.id === ultimaMsgAssistenteId &&
+      carrinho.length > 0 &&
+      !chips.some((chip) => normalizar(chip).includes("finalizar pedido"))
+    ) {
+      chips.unshift("Finalizar pedido");
+    }
+    return chips;
+  };
   // Chat tem conteúdo se há mensagem de welcome OU mensagens de auth (não mostra tela de loading)
   const saudacaoInicialCarregada = mensagens.length > 0;
 
@@ -3014,7 +3090,7 @@ const AgentePage: React.FC = () => {
           borderRadius: recaptchaVisivel ? 10 : 0,
           boxShadow: recaptchaVisivel ? '0 10px 28px rgba(15,23,42,0.24)' : 'none',
           padding: recaptchaVisivel ? 10 : 0,
-          pointerEvents: recaptchaVisivel ? 'auto' : 'none',
+          pointerEvents: 'auto',
         }}
       />
       <Header
@@ -3379,10 +3455,10 @@ const AgentePage: React.FC = () => {
                 </div>
               )}
 
-              {/* Chips de sugestão do agente [SUGGEST:...] */}
-              {msg.suggestions && msg.suggestions.length > 0 && msg.id === ultimaMsgAssistenteId && !enviando && (
+              {/* Chips de sugestão do agente [SUGGEST:...] + ação fixa de checkout */}
+              {getResponseChips(msg).length > 0 && msg.id === ultimaMsgAssistenteId && !enviando && (
                 <div className={styles.selectionChips}>
-                  {msg.suggestions.map((s) => (
+                  {getResponseChips(msg).map((s) => (
                     <button
                       key={s}
                       className={styles.selectionChip}
@@ -3414,7 +3490,7 @@ const AgentePage: React.FC = () => {
                     </div>
                   )}
                   {/* Chips de texto para outros estados */}
-                  {quickReplies.length > 0 && (
+                  {getResponseChips(msg).length === 0 && quickReplies.length > 0 && (
                     <div className={styles.selectionChips}>
                       {quickReplies.map((label) => (
                         <button
@@ -3542,7 +3618,7 @@ const AgentePage: React.FC = () => {
             type={authStep !== 'code_modal' ? "tel" : "text"}
             inputMode={authStep === 'code_modal' ? "numeric" : undefined}
             maxLength={authStep === 'code_modal' ? 6 : undefined}
-            placeholder={authStep === 'code_modal' ? "000000" : "(11) 99999-9999"}
+            placeholder={authSmsCooldownMs > 0 ? `Aguarde ${authSmsCooldownLabel}` : authStep === 'code_modal' ? "000000" : "(11) 99999-9999"}
             className={styles.messageInput}
             style={authStep === 'code_modal' ? { letterSpacing: '0.4em', textAlign: 'center', fontSize: '1.1rem', fontWeight: 700 } : undefined}
             value={authStep === 'code_modal' ? authCode : authPhone}
@@ -3557,7 +3633,7 @@ const AgentePage: React.FC = () => {
                 else handleAuthSendCode();
               }
             }}
-            disabled={authSending || authStep === 'validating'}
+            disabled={authSending || authStep === 'validating' || authSmsCooldownMs > 0}
           />
         ) : (
           <textarea
@@ -3602,7 +3678,7 @@ const AgentePage: React.FC = () => {
           disabled={
             !precisaLogin ? (!inputText.trim() || enviando || !produtosCarregados) :
             authStep === 'code_modal' ? (authCode.length !== 6 || authSending) :
-            (!authPhone.trim() || authSending || authStep === 'validating')
+            (!authPhone.trim() || authSending || authStep === 'validating' || authSmsCooldownMs > 0)
           }
           aria-label="Enviar mensagem"
         >

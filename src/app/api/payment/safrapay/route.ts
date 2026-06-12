@@ -1,372 +1,202 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  SafrapayClient,
-  SafrapayPaymentType,
-  SafrapayInstallmentType,
-  SafrapayTransactionStatus,
-} from "@/lib/safrapay";
-import { getAdminDb } from "@/lib/firebaseAdmin";
 
-const endpointMap = {
-  hml: "https://payment-hml.safrapay.com.br",
-  prod: "https://payment.safrapay.com.br",
-} as const;
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-type SafrapayEnvironment = keyof typeof endpointMap;
+const DEFAULT_SAFRAPAY_MOBILE_API_URL =
+  "https://safrapi--appmobileprod-19505.us-east4.hosted.app";
 
-function normalizeEnvironment(value: unknown): SafrapayEnvironment {
-  return value === "prod" ? "prod" : "hml";
+type SafrapayPaymentType = "pix" | "card";
+
+interface IncomingSafrapayBody {
+  type?: unknown;
+  amount?: unknown;
+  orderId?: unknown;
+  companyId?: unknown;
+  companySlug?: unknown;
+  whitelabelId?: unknown;
+  description?: unknown;
+  customerName?: unknown;
+  customerDocument?: unknown;
+  customerPhone?: unknown;
+  customerEmail?: unknown;
+  paymentMethod?: unknown;
+  cardNumber?: unknown;
+  cardholderName?: unknown;
+  expirationMonth?: unknown;
+  expirationYear?: unknown;
+  cvv?: unknown;
+  installments?: unknown;
 }
 
-async function resolveSafrapayCredentials(
-  companyId: unknown,
-  requestedEnvironment: unknown
-) {
-  const id = typeof companyId === "string" ? companyId.trim() : "";
-  const fallbackEnvironment = normalizeEnvironment(requestedEnvironment || process.env.SAFRAPAY_ENV);
-  const adminDb = getAdminDb();
+function getSafrapayApiBaseUrl() {
+  const configured =
+    process.env.SAFRAPAY_MOBILE_API_URL ||
+    process.env.SAFRAPAY_API_BASE_URL ||
+    "";
 
-  if (!adminDb && fallbackEnvironment === "prod") {
-    return {
-      merchantId: "",
-      merchantToken: "",
-      environment: "prod" as const,
-      endpoint: endpointMap.prod,
-      source: "firestore",
-      missingFields: ["Firebase Admin SDK"],
-    };
+  if (configured.trim()) {
+    return configured.trim().replace(/\/+$/, "");
   }
 
-  if (id && adminDb) {
-    const snap = await adminDb.collection("estabelecimentos").doc(id).get();
-    const data = snap.data();
-    const paymentGateway = data?.paymentGateway as Record<string, unknown> | undefined;
-    const safrapay =
-      (data?.safrapay as Record<string, unknown> | undefined) ||
-      (paymentGateway?.safrapay as Record<string, unknown> | undefined);
-
-    if (safrapay?.enabled) {
-      const environment = normalizeEnvironment(safrapay.environment || safrapay.env || fallbackEnvironment);
-      const gatewayUrl = typeof safrapay.gatewayUrl === "string" ? safrapay.gatewayUrl.trim() : "";
-      const merchantId = typeof safrapay.merchantId === "string" ? safrapay.merchantId.trim() : "";
-      const merchantToken =
-        typeof safrapay.merchantToken === "string" ? safrapay.merchantToken.trim()
-        : typeof safrapay.accessToken === "string" ? safrapay.accessToken.trim()
-        : "";
-
-      if (merchantId && merchantToken) {
-        return {
-          merchantId,
-          merchantToken,
-          environment,
-          endpoint: gatewayUrl || endpointMap[environment],
-          source: "firestore",
-        };
-      }
-
-      if (environment === "prod") {
-        return {
-          merchantId,
-          merchantToken,
-          environment,
-          endpoint: gatewayUrl || endpointMap.prod,
-          source: "firestore",
-          missingFields: [
-            !merchantId ? "safrapay.merchantId" : "",
-            !merchantToken ? "safrapay.merchantToken" : "",
-          ].filter(Boolean),
-        };
-      }
-    }
-  }
-
-  const environment = fallbackEnvironment;
-  return {
-    merchantId: process.env.SAFRAPAY_MERCHANT_ID || "",
-    merchantToken: process.env.SAFRAPAY_MERCHANT_TOKEN || process.env.SAFRAPAY_ACCESS_TOKEN || "",
-    environment,
-    endpoint: process.env.SAFRAPAY_GATEWAY_URL || endpointMap[environment],
-    source: "env",
-  };
+  return DEFAULT_SAFRAPAY_MOBILE_API_URL;
 }
 
 function onlyDigits(value: unknown): string {
-  return typeof value === "string" ? value.replace(/\D/g, "") : "";
+  return typeof value === "string" || typeof value === "number"
+    ? String(value).replace(/\D/g, "")
+    : "";
 }
 
-function isValidCardNumber(cardNumber: string): boolean {
-  if (!/^\d{13,19}$/.test(cardNumber)) return false;
-
-  let sum = 0;
-  let shouldDouble = false;
-
-  for (let i = cardNumber.length - 1; i >= 0; i -= 1) {
-    let digit = Number(cardNumber[i]);
-
-    if (shouldDouble) {
-      digit *= 2;
-      if (digit > 9) digit -= 9;
-    }
-
-    sum += digit;
-    shouldDouble = !shouldDouble;
-  }
-
-  return sum % 10 === 0;
+function getString(value: unknown): string {
+  return typeof value === "string" || typeof value === "number"
+    ? String(value).trim()
+    : "";
 }
 
-function buildCustomer(body: Record<string, unknown>) {
-  const document = onlyDigits(body.customerDocument);
-  if (document.length !== 11 && document.length !== 14) {
-    throw new Error("CPF/CNPJ do cliente é obrigatório para pagamentos Safrapay");
+function normalizePaymentType(value: unknown): SafrapayPaymentType | null {
+  return value === "pix" || value === "card" ? value : null;
+}
+
+function normalizeAmount(value: unknown): number | null {
+  const amount = Number(value);
+  return Number.isInteger(amount) && amount > 0 ? amount : null;
+}
+
+function buildExternalPayload(body: IncomingSafrapayBody) {
+  const type = normalizePaymentType(body.type);
+  const amount = normalizeAmount(body.amount);
+  const orderId = getString(body.orderId);
+  const description = getString(body.description);
+
+  if (!type || !amount || !orderId || !description) {
+    return {
+      error: "Parametros obrigatorios faltando",
+      payload: null,
+      type,
+    };
   }
 
-  const rawPhone = onlyDigits(body.customerPhone) || "11999999999";
-  const areaCode = rawPhone.length >= 10 ? rawPhone.slice(0, 2) : "11";
-  const number = rawPhone.length >= 10 ? rawPhone.slice(2) : "999999999";
-  const orderId = String(body.orderId || "pedido").replace(/[^a-zA-Z0-9]/g, "").slice(0, 40);
+  const customerDocument = onlyDigits(body.customerDocument);
+  if (customerDocument.length !== 11 && customerDocument.length !== 14) {
+    return {
+      error: "CPF/CNPJ do cliente e obrigatorio para pagamentos Safrapay",
+      payload: null,
+      type,
+    };
+  }
+
+  const commonPayload = {
+    amount,
+    orderId,
+    description,
+    companyId: getString(body.companyId) || undefined,
+    companySlug: getString(body.companySlug) || undefined,
+    whitelabelId: getString(body.whitelabelId) || undefined,
+    customer: {
+      name: getString(body.customerName) || "Cliente",
+      document: customerDocument,
+      phone: onlyDigits(body.customerPhone) || undefined,
+      email: getString(body.customerEmail) || undefined,
+    },
+  };
+
+  if (type === "pix") {
+    return { error: "", payload: commonPayload, type };
+  }
 
   return {
-    name: String(body.customerName || "Cliente"),
-    email: typeof body.customerEmail === "string" && body.customerEmail.includes("@")
-      ? body.customerEmail
-      : `cliente.${orderId || Date.now()}@mobilemercado.com.br`,
-    document,
-    documentType: document.length === 14 ? 2 : 1,
-    phone: {
-      countryCode: "55",
-      areaCode,
-      number,
-      type: 5,
+    error: "",
+    type,
+    payload: {
+      ...commonPayload,
+      paymentMethod: getString(body.paymentMethod) || "credit",
+      card: {
+        cardNumber: onlyDigits(body.cardNumber),
+        cardholderName: getString(body.cardholderName),
+        expirationMonth: Number(body.expirationMonth),
+        expirationYear: Number(body.expirationYear),
+        cvv: onlyDigits(body.cvv),
+        installments: Number(body.installments || 1),
+      },
     },
   };
 }
 
-/**
- * Processa pagamentos com Safrapay
- * POST /api/payment/safrapay
- * 
- * Body:
- * {
- *   type: "pix" | "card",
- *   amount: number,
- *   orderId: string,
- *   companyId: string,
- *   description: string,
- *   customerName: string,
- *   safrapayConfig?: { enabled, environment },
- *   // Para cartão:
- *   cardNumber?: string,
- *   cardholderName?: string,
- *   expirationMonth?: number,
- *   expirationYear?: number,
- *   cvv?: string,
- *   installments?: number,
- * }
- */
+async function readApiResponse(response: Response) {
+  const text = await response.text();
+  if (!text) return {};
+
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { error: text };
+  }
+}
+
+function normalizeSuccessResponse(type: SafrapayPaymentType, data: Record<string, unknown>) {
+  if (type === "pix") {
+    return {
+      ...data,
+      success: data.success !== false,
+      type: "pix",
+      orderStatus: "waitingForOrderPayment",
+    };
+  }
+
+  return {
+    ...data,
+    success: data.success === true,
+    type: "card",
+    orderStatus: data.orderStatus || (data.success === true ? "paidAwaitingConfirmation" : "paymentDenied"),
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { type, amount, orderId, description, safrapayConfig, companyId } = body;
-
-    if (!type || !amount || !orderId || !description) {
+    const apiBaseUrl = getSafrapayApiBaseUrl();
+    if (!apiBaseUrl) {
       return NextResponse.json(
-        { error: "Parâmetros obrigatórios faltando" },
-        { status: 400 }
-      );
-    }
-
-    if (type !== "pix" && type !== "card") {
-      return NextResponse.json(
-        { error: "Tipo de pagamento inválido" },
-        { status: 400 }
-      );
-    }
-
-    const credentials = await resolveSafrapayCredentials(companyId, safrapayConfig?.environment);
-    const { merchantId, merchantToken, endpoint } = credentials;
-
-    if (!merchantId || !merchantToken) {
-      const missingFields =
-        "missingFields" in credentials && credentials.missingFields
-          ? credentials.missingFields
-          : [
-              !merchantId ? "SAFRAPAY_MERCHANT_ID" : "",
-              !merchantToken ? "SAFRAPAY_MERCHANT_TOKEN" : "",
-            ].filter(Boolean);
-      
-      console.error("Safrapay Config Error:", {
-        missingFields,
-        companyId,
-        source: credentials.source,
-        environment: credentials.environment,
-      });
-
-      return NextResponse.json(
-        { 
-          error: `Credenciais Safrapay não configuradas. Faltando: ${missingFields.join(", ")}`,
-          debug: { missingFields }
-        },
+        { error: "SAFRAPAY_MOBILE_API_URL nao configurada" },
         { status: 500 }
       );
     }
 
-    const client = new SafrapayClient(merchantId, merchantToken, endpoint);
-    let customer: ReturnType<typeof buildCustomer>;
-    try {
-      customer = buildCustomer(body);
-    } catch (error) {
+    const body = (await request.json()) as IncomingSafrapayBody;
+    const { error, payload, type } = buildExternalPayload(body);
+
+    if (error || !payload || !type) {
+      return NextResponse.json({ error: error || "Tipo de pagamento invalido" }, { status: 400 });
+    }
+
+    const endpoint = type === "pix" ? "/v1/payments/pix" : "/v1/payments/card";
+    const response = await fetch(`${apiBaseUrl}${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+    const data = await readApiResponse(response);
+    if (!response.ok) {
+      if (type === "card" && response.status === 402) {
+        return NextResponse.json(normalizeSuccessResponse(type, data), { status: 200 });
+      }
+
       return NextResponse.json(
-        { error: error instanceof Error ? error.message : "Dados do cliente inválidos" },
-        { status: 400 }
+        {
+          error: getString(data.error) || getString(data.message) || "Erro ao processar pagamento Safrapay",
+          details: data.details,
+        },
+        { status: response.status }
       );
     }
 
-    // Processar PIX
-    if (type === "pix") {
-      try {
-        const pixResponse = await client.createPixCharge({
-          amount,
-          orderId,
-          description,
-          customer,
-        });
-
-        return NextResponse.json({
-          success: true,
-          type: "pix",
-          transactionId: pixResponse.transactionId,
-          chargeId: pixResponse.chargeId,
-          qrCode: pixResponse.qrCode,
-          qrCodeBase64: pixResponse.qrCodeBase64,
-          qrCodeUrl: pixResponse.qrCodeBase64 ? `data:image/bmp;base64,${pixResponse.qrCodeBase64}` : undefined,
-          copyPasteKey: pixResponse.copyPasteKey,
-          expiresAt: pixResponse.expiresAt,
-          status: pixResponse.status,
-          // Para o pedido no Firebase
-          orderStatus: "waitingForOrderPayment",
-        });
-      } catch (error) {
-        console.error("Erro ao processar PIX:", error);
-        return NextResponse.json(
-          { error: "Erro ao gerar PIX. Tente novamente." },
-          { status: 500 }
-        );
-      }
-    }
-
-    // Processar Cartão
-    if (type === "card") {
-      const {
-        cardNumber,
-        cardholderName,
-        expirationMonth,
-        expirationYear,
-        cvv,
-        installments = 1,
-        paymentMethod = "credit",
-      } = body;
-
-      if (paymentMethod === "debit") {
-        return NextResponse.json(
-          { error: "Safrapay aceita apenas Cartão de Crédito e PIX neste projeto" },
-          { status: 400 }
-        );
-      }
-
-      const cardDigits = onlyDigits(cardNumber);
-      const cvvDigits = onlyDigits(cvv);
-      const parsedInstallments = parseInt(String(installments), 10);
-
-      if (
-        !cardDigits ||
-        !cardholderName ||
-        !expirationMonth ||
-        !expirationYear ||
-        !cvvDigits ||
-        !customer.document
-      ) {
-        return NextResponse.json(
-          { error: "Dados do cartão incompletos" },
-          { status: 400 }
-        );
-      }
-
-      if (!isValidCardNumber(cardDigits)) {
-        return NextResponse.json(
-          { error: "NÃºmero do cartÃ£o invÃ¡lido. Digite novamente o nÃºmero completo do cartÃ£o." },
-          { status: 400 }
-        );
-      }
-
-      if (cvvDigits.length < 3 || cvvDigits.length > 4) {
-        return NextResponse.json(
-          { error: "CVV invÃ¡lido. Informe o cÃ³digo de 3 ou 4 dÃ­gitos." },
-          { status: 400 }
-        );
-      }
-
-      try {
-        const cardResponse = await client.createCardCharge({
-          amount,
-          cardNumber: cardDigits,
-          cardholderName,
-          cardholderDocument: customer.document,
-          expirationMonth: parseInt(expirationMonth, 10),
-          expirationYear: parseInt(expirationYear, 10),
-          cvv: cvvDigits,
-          paymentType: SafrapayPaymentType.Credit,
-          installments: parsedInstallments,
-          installmentType:
-            parsedInstallments > 1
-              ? SafrapayInstallmentType.Merchant
-              : SafrapayInstallmentType.None,
-          orderId,
-          description,
-          customer,
-        });
-
-        // Verificar status da transação
-        const isApproved =
-          cardResponse.status === SafrapayTransactionStatus.Captured ||
-          cardResponse.status === SafrapayTransactionStatus.PreAuthorized ||
-          cardResponse.status === "Captured" ||
-          cardResponse.status === "PreAuthorized" ||
-          cardResponse.status === "Authorized";
-
-        return NextResponse.json({
-          success: isApproved,
-          type: "card",
-          transactionId: cardResponse.transactionId,
-          chargeId: cardResponse.chargeId,
-          authorizationCode: cardResponse.authorizationCode,
-          status: cardResponse.status,
-          responseMessage: cardResponse.responseMessage,
-          // Para o pedido no Firebase
-          orderStatus: isApproved ? "paidAwaitingConfirmation" : "paymentDenied",
-        });
-      } catch (error) {
-        console.error("Erro ao processar cartão:", error);
-        return NextResponse.json(
-          {
-            error:
-              error instanceof Error
-                ? error.message
-                : "Erro ao processar cartão. Tente novamente.",
-          },
-          { status: 500 }
-        );
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Tipo de pagamento não suportado" },
-      { status: 400 }
-    );
+    return NextResponse.json(normalizeSuccessResponse(type, data), { status: 200 });
   } catch (error) {
-    console.error("Erro na API de pagamento:", error);
+    console.error("Erro ao chamar safrapay_mobile_api:", error);
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { error: "Erro interno ao processar pagamento Safrapay" },
       { status: 500 }
     );
   }
