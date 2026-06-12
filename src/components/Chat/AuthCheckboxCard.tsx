@@ -6,6 +6,8 @@ interface AuthCheckboxCardProps {
   authAcceptTerms: boolean;
   onChangeAcceptTerms: (val: boolean) => void;
   authSending: boolean;
+  resendDisabled?: boolean;
+  resendLabel?: string;
   onResend: () => void;
 }
 
@@ -15,8 +17,12 @@ const AuthCheckboxCard: React.FC<AuthCheckboxCardProps> = ({
   authAcceptTerms,
   onChangeAcceptTerms,
   authSending,
+  resendDisabled = false,
+  resendLabel = "Reenviar código",
   onResend,
 }) => {
+  const isResendDisabled = authSending || resendDisabled;
+
   return (
     <div style={{
       background: "#fff",
@@ -55,19 +61,20 @@ const AuthCheckboxCard: React.FC<AuthCheckboxCardProps> = ({
 
       <button
         onClick={onResend}
-        disabled={authSending}
+        disabled={isResendDisabled}
         style={{
           background: "none",
           border: "none",
           color: "#6b7280",
           fontSize: "0.82rem",
-          cursor: "pointer",
+          cursor: isResendDisabled ? "not-allowed" : "pointer",
+          opacity: isResendDisabled ? 0.65 : 1,
           textDecoration: "underline",
           padding: 0,
           textAlign: "left",
         }}
       >
-        Reenviar código
+        {resendLabel}
       </button>
     </div>
   );

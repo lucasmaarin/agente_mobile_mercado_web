@@ -271,6 +271,7 @@ const AgentePage: React.FC = () => {
   const [loginCompleto, setLoginCompleto]     = useState(false);
   const [authDigitando, setAuthDigitando]     = useState(false);
   const [recaptchaVisivel, setRecaptchaVisivel] = useState(false);
+  const [recaptchaContainerKey, setRecaptchaContainerKey] = useState(0);
   const recaptchaAuthRef = useRef<RecaptchaVerifier | undefined>(undefined);
   const authIniciado = useRef(false); // garante que mensagens de auth só são adicionadas uma vez
 
@@ -971,12 +972,19 @@ const AgentePage: React.FC = () => {
     }
     const container = document.getElementById('recaptcha-container');
     if (container) container.innerHTML = '';
+    setRecaptchaContainerKey(prev => prev + 1);
   };
 
   const setupRecaptchaAuth = async (mode: 'invisible' | 'normal' = 'invisible'): Promise<RecaptchaVerifier> => {
     // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile.
     clearRecaptchaAuth();
     setRecaptchaVisivel(mode === 'normal');
+    await new Promise<void>((resolve) => {
+      setTimeout(() => resolve(), 0);
+    });
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => resolve());
+    });
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => resolve());
     });
@@ -1005,6 +1013,8 @@ const AgentePage: React.FC = () => {
   const shouldRetryWithVisibleRecaptcha = (code?: string, message?: string) => (
     code === 'auth/captcha-check-failed' ||
     code === 'auth/missing-app-credential' ||
+    Boolean(message?.toLowerCase().includes('already been rendered')) ||
+    Boolean(message?.toLowerCase().includes('recaptcha has already been rendered')) ||
     (
       code === 'auth/internal-error' &&
       Boolean(message?.toLowerCase().includes('recaptcha'))
@@ -1037,10 +1047,18 @@ const AgentePage: React.FC = () => {
     setAuthStep('validating');
     const ts = Date.now();
     const isResend = Boolean(options?.resend);
+    const mensagensRemoverAoEnviar = [
+      'auth-phone-error',
+      'auth-validating',
+      'auth-phone-user',
+      'auth-code-error',
+      'auth-recaptcha-visible',
+      ...(isResend ? [] : ['auth-code-card']),
+    ];
     // Adiciona bubble do usuário + "Enviando..."
     setMensagens(prev => [
       ...prev.filter(m =>
-        !['auth-phone-error', 'auth-validating', 'auth-phone-user', 'auth-code-card', 'auth-code-error', 'auth-recaptcha-visible'].includes(m.id) &&
+        !mensagensRemoverAoEnviar.includes(m.id) &&
         !m.id.startsWith('auth-code-sent')
       ),
       { id: 'auth-phone-user', role: 'user', content: authPhone, timestamp: new Date() },
@@ -1128,7 +1146,7 @@ const AgentePage: React.FC = () => {
         ...prev.filter(m => !['auth-validating', 'auth-phone-error', 'auth-recaptcha-visible'].includes(m.id)),
         { id: 'auth-phone-error', role: 'assistant', content: msgErro, timestamp: new Date() },
       ]);
-      setAuthStep('phone');
+      setAuthStep(isResend && authConfirmation ? 'code_modal' : 'phone');
       clearRecaptchaAuth();
       setRecaptchaVisivel(false);
     } finally { setAuthSending(false); }
@@ -1173,11 +1191,11 @@ const AgentePage: React.FC = () => {
 
   const handleAuthResend = async () => {
     setAuthCode('');
-    setAuthConfirmation(null);
+    setAuthCodeError('');
     clearRecaptchaAuth();
     setRecaptchaVisivel(false);
     setMensagens(prev => prev.filter(m =>
-      !['auth-code-card', 'auth-code-error', 'auth-validating', 'auth-recaptcha-visible'].includes(m.id) &&
+      !['auth-code-error', 'auth-validating', 'auth-recaptcha-visible'].includes(m.id) &&
       !m.id.startsWith('auth-code-sent')
     ));
     await handleAuthSendCode({ resend: true });
@@ -3074,6 +3092,7 @@ const AgentePage: React.FC = () => {
   return (
     <div className={styles.container} style={{ paddingTop: headerOffset }}>
       <div
+        key={recaptchaContainerKey}
         id="recaptcha-container"
         style={{
           position: 'fixed',
@@ -3330,6 +3349,8 @@ const AgentePage: React.FC = () => {
                   authAcceptTerms={authAcceptTerms}
                   onChangeAcceptTerms={setAuthAcceptTerms}
                   authSending={authSending}
+                  resendDisabled={authSmsCooldownMs > 0}
+                  resendLabel={authSmsCooldownMs > 0 ? `Aguarde ${authSmsCooldownLabel}` : "Reenviar código"}
                   onResend={handleAuthResend}
                 />
               ) : msg.content.trim() ? (
@@ -3633,7 +3654,7 @@ const AgentePage: React.FC = () => {
                 else handleAuthSendCode();
               }
             }}
-            disabled={authSending || authStep === 'validating' || authSmsCooldownMs > 0}
+            disabled={authSending || authStep === 'validating' || (authStep !== 'code_modal' && authSmsCooldownMs > 0)}
           />
         ) : (
           <textarea
