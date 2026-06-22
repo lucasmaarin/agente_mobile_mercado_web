@@ -76,6 +76,7 @@ import {
 import { SLUG_PARA_COMPANY_ID, COMPANY_DATA_SOURCE, UAU_MART_COMPANY_ID } from "@/config/dominios";
 import { parseAgentResponse, COLLECTING_FIELD, NEXT_STATE, nextStateAfterPayment } from "@/lib/parseAgentResponse";
 import { runProductDiscoveryAgent, runTaskOrchestrator } from "@/lib/taskAgents";
+import { buildRagContext, buscarProdutosRag, combinarResultadosRag, selecionarExemplosRag } from "@/lib/ragSearch";
 import {
   getProducts,
   createOrder,
@@ -97,6 +98,7 @@ import {
   buscarPedidosDoUsuario,
   Pedido,
   registrarCapturaDadosAgente,
+  registrarTempoRespostaAgente,
   type AgenteCaptureEventType,
 } from "@/services/firestore";
 import { Timestamp } from "firebase/firestore";
@@ -1021,20 +1023,44 @@ const AgentePage: React.FC = () => {
     )
   );
 
-  const handleAuthSendCode = async (options?: { resend?: boolean }) => {
-    if (authSmsCooldownMs > 0) {
-      setMensagens(prev => [
-        ...prev.filter(m => m.id !== 'auth-phone-error'),
-        {
-          id: 'auth-phone-error',
-          role: 'assistant',
-          content: `Muitas tentativas de SMS. Aguarde ${authSmsCooldownLabel} antes de tentar novamente.`,
-          timestamp: new Date(),
-        },
-      ]);
-      return;
+  const sendWhatsappAuthCode = async (phone: string) => {
+    const response = await fetch('/api/auth/whatsapp/send-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        phone,
+        name: nomeCliente && nomeCliente !== "Cliente" ? nomeCliente : undefined,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const error = new Error(data.error ?? 'whatsapp-send-code-failed') as Error & { code?: string };
+      error.code = data.error ?? 'whatsapp-send-code-failed';
+      throw error;
     }
 
+    return data;
+  };
+
+  const verifyWhatsappAuthCode = async () => {
+    const response = await fetch('/api/auth/whatsapp/verify-code', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: authPhone, code: authCode }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.firebaseCustomToken) {
+      const error = new Error(data.error ?? 'whatsapp-verify-code-failed') as Error & { code?: string };
+      error.code = data.error ?? 'whatsapp-verify-code-failed';
+      throw error;
+    }
+
+    await signInWithCustomToken(auth, data.firebaseCustomToken);
+  };
+
+  const handleAuthSendCode = async (options?: { resend?: boolean }) => {
     const formatted = validatePhone(authPhone);
     if (!formatted) {
       setMensagens(prev => [
@@ -1062,9 +1088,68 @@ const AgentePage: React.FC = () => {
         !m.id.startsWith('auth-code-sent')
       ),
       { id: 'auth-phone-user', role: 'user', content: authPhone, timestamp: new Date() },
-      { id: 'auth-validating', role: 'assistant', content: `${isResend ? 'Reenviando' : 'Enviando'} SMS para ${authPhone}…`, timestamp: new Date() },
+      { id: 'auth-validating', role: 'assistant', content: `${isResend ? 'Reenviando' : 'Enviando'} código para ${authPhone}…`, timestamp: new Date() },
     ]);
     try {
+      const whatsappStatus = await fetch('/api/auth/whatsapp/status', { cache: 'no-store' })
+        .then((res) => res.ok ? res.json() : { enabled: false })
+        .catch(() => ({ enabled: false }));
+
+      if (whatsappStatus.enabled) {
+        await sendWhatsappAuthCode(authPhone);
+        setAuthConfirmation(null);
+        clearRecaptchaAuth();
+        setRecaptchaVisivel(false);
+        setMensagens(prev => [
+          ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card', 'auth-recaptcha-visible'].includes(m.id)),
+          {
+            id: `auth-code-sent-${ts}`,
+            role: 'assistant',
+            content: `Enviei um código de autenticação para o WhatsApp ${authPhone}. Digite os 6 dígitos abaixo:`,
+            timestamp: new Date(),
+          },
+          { id: 'auth-code-card', role: 'assistant', content: '', authCheckboxCard: true, timestamp: new Date() },
+        ]);
+        setAuthStep('code_modal');
+        return;
+      }
+
+      const fallbackStatus = await fetch('/api/auth/phone-code', { cache: 'no-store' })
+        .then((res) => res.ok ? res.json() : { enabled: false })
+        .catch(() => ({ enabled: false }));
+
+      if (fallbackStatus.enabled) {
+        setAuthConfirmation(null);
+        clearRecaptchaAuth();
+        setRecaptchaVisivel(false);
+        setMensagens(prev => [
+          ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card', 'auth-recaptcha-visible'].includes(m.id)),
+          {
+            id: `auth-code-sent-${ts}`,
+            role: 'assistant',
+            content: `Digite o código interno de 6 dígitos para entrar com o telefone ${authPhone}.`,
+            timestamp: new Date(),
+          },
+          { id: 'auth-code-card', role: 'assistant', content: '', authCheckboxCard: true, timestamp: new Date() },
+        ]);
+        setAuthStep('code_modal');
+        return;
+      }
+
+      if (authSmsCooldownMs > 0) {
+        setMensagens(prev => [
+          ...prev.filter(m => !['auth-validating', 'auth-phone-error'].includes(m.id)),
+          {
+            id: 'auth-phone-error',
+            role: 'assistant',
+            content: `Muitas tentativas de SMS. Aguarde ${authSmsCooldownLabel} antes de tentar novamente.`,
+            timestamp: new Date(),
+          },
+        ]);
+        setAuthStep(isResend && authConfirmation ? 'code_modal' : 'phone');
+        return;
+      }
+
       try {
         await setPersistence(auth, authKeepLogged ? browserLocalPersistence : browserSessionPersistence);
       } catch (persistenceError) {
@@ -1140,9 +1225,15 @@ const AgentePage: React.FC = () => {
         'auth/invalid-app-credential': `O Firebase recusou a credencial do app neste domínio (${window.location.hostname}). Verifique Firebase Auth > Domínios autorizados, restrições da API key e se o login por telefone está habilitado.`,
         'auth/app-not-authorized': `Este domínio (${window.location.hostname}) não está autorizado no Firebase Auth.`,
         'auth/operation-not-allowed': 'Login por telefone não está habilitado no Firebase Auth.',
+        'whatsapp-send-code-failed': 'Não foi possível enviar o código pelo WhatsApp. Tente novamente.',
+        'whatsapp-auth-disabled': 'Autenticação por WhatsApp não está ativa neste ambiente.',
       };
-      const msgErro = errMsgs[err.code ?? ''] ?? 'Não foi possível enviar o SMS. Tente novamente.';
-      const permiteCodigoInterno = err.code !== 'auth/invalid-phone-number';
+      const msgErro = errMsgs[err.code ?? ''] ?? 'Não foi possível enviar o código. Tente novamente.';
+      const permiteCodigoInterno = ![
+        'auth/invalid-phone-number',
+        'whatsapp-send-code-failed',
+        'whatsapp-auth-disabled',
+      ].includes(err.code ?? '');
       setMensagens(prev => [
         ...prev.filter(m => !['auth-validating', 'auth-phone-error', 'auth-recaptcha-visible', 'auth-code-card'].includes(m.id)),
         { id: 'auth-phone-error', role: 'assistant', content: msgErro, timestamp: new Date() },
@@ -1202,7 +1293,13 @@ const AgentePage: React.FC = () => {
     setAuthSending(true);
     setAuthCodeError('');
     try {
-      if (authConfirmation) {
+      const whatsappStatus = await fetch('/api/auth/whatsapp/status', { cache: 'no-store' })
+        .then((res) => res.ok ? res.json() : { enabled: false })
+        .catch(() => ({ enabled: false }));
+
+      if (whatsappStatus.enabled) {
+        await verifyWhatsappAuthCode();
+      } else if (authConfirmation) {
         try {
           await authConfirmation.confirm(authCode);
         } catch (smsError: unknown) {
@@ -1230,6 +1327,9 @@ const AgentePage: React.FC = () => {
         'invalid-code': 'Código incorreto. Verifique o código recebido ou o código interno configurado.',
         'invalid-phone': 'Número inválido. Confira o telefone informado.',
         'firebase-admin-unavailable': 'Login interno indisponível neste servidor.',
+        'whatsapp-send-code-failed': 'Não foi possível enviar o código pelo WhatsApp. Tente novamente.',
+        'whatsapp-verify-code-failed': 'Não foi possível validar o código do WhatsApp. Tente novamente.',
+        'missing-firebase-custom-token': 'A API de WhatsApp validou o código, mas não retornou o token Firebase.',
       };
       setMensagens(prev => [
         ...prev.filter(m => m.id !== 'auth-code-error'),
@@ -1265,6 +1365,8 @@ const AgentePage: React.FC = () => {
     };
     setMensagens((prev) => [...prev, msgUsuario]);
     setEnviando(true);
+    const responseStartedAtMs = Date.now();
+    let responseTimeRecorded = false;
 
     // ---- Variáveis de trabalho sincronas (evitam stale closure) ----
     // Espelham o React state e são atualizadas imediatamente ao processar tags.
@@ -1444,6 +1546,21 @@ const AgentePage: React.FC = () => {
         setConversaId(cid);
       }
 
+      const registrarPrimeiraResposta = () => {
+        if (responseTimeRecorded || !cid || !userDocId) return;
+        responseTimeRecorded = true;
+
+        void registrarTempoRespostaAgente({
+          eventId: cid + ':' + msgUsuario.id,
+          companyId,
+          userId: userDocId,
+          conversationId: cid,
+          durationMs: Date.now() - responseStartedAtMs,
+        }).catch((error) => {
+          console.warn('Erro ao registrar tempo da primeira resposta:', error);
+        });
+      };
+
       // Salvar mensagem do usuário (não-fatal)
       if (cid && userDocId) {
         salvarMensagem(
@@ -1493,6 +1610,7 @@ const AgentePage: React.FC = () => {
             suggestions: suggestions && suggestions.length > 0 ? suggestions : undefined,
           },
         ]);
+        registrarPrimeiraResposta();
         if (cid && userDocId) {
           await salvarMensagem(
             cid,
@@ -2451,6 +2569,7 @@ const AgentePage: React.FC = () => {
       let produtosMatchDireto: Produto[] = [];
       let contextoDetectado: string | undefined;
       let nivelConfianca: NivelConfianca | undefined;
+      let produtosRag: Produto[] = [];
       if (wFlowState === FLOW_STATES.BROWSING) {
         const buscar = (t: string, cat: Produto[]) =>
           wordKeysEnabled ? filtrarProdutosWordKeys(t, cat) : filtrarProdutos(t, cat);
@@ -2564,6 +2683,20 @@ const AgentePage: React.FC = () => {
         nivelConfianca = discovery.nivelConfianca;
       }
 
+      const ragEnabled = process.env.NEXT_PUBLIC_RAG_ENABLED !== 'false';
+      if (ragEnabled && wFlowState === FLOW_STATES.BROWSING && !ehSaudacaoCurta(texto) && !ehIntencaoSemProduto(texto)) {
+        produtosRag = buscarProdutosRag(texto, produtos, 20);
+        if (produtosRag.length > 0) {
+          if (produtosFoco.length === 0) {
+            produtosFoco = produtosRag;
+            produtosMatchDireto = produtosRag;
+            nivelConfianca = nivelConfianca ?? 'medio';
+          } else if (nivelConfianca !== 'alto') {
+            produtosFoco = combinarResultadosRag(produtosFoco, produtosRag, 20);
+          }
+        }
+      }
+
       if (wFlowState === FLOW_STATES.BROWSING && produtosFoco.length === 0 && !ehSaudacaoCurta(texto) && !ehIntencaoSemProduto(texto)) {
         if (deveCapturarBusca) {
           registrarCaptura('search_no_results', `${msgUsuario.id}:search_no_results:${normalizar(texto).slice(0, 80)}`, {
@@ -2596,9 +2729,14 @@ const AgentePage: React.FC = () => {
       }
 
       // Few-shot
-      const fewShot: FewShotExemplo[] = exemplosAtivos.map((ex) => ({
-        mensagens: ex.mensagens.map((m) => ({ role: m.role, content: m.content })),
-      }));
+      const fewShot: FewShotExemplo[] = ragEnabled
+        ? selecionarExemplosRag(texto, exemplosAtivos, 4)
+        : exemplosAtivos.map((ex) => ({
+            mensagens: ex.mensagens.map((m) => ({ role: m.role, content: m.content })),
+          }));
+      const ragContext = ragEnabled && wFlowState === FLOW_STATES.BROWSING
+        ? buildRagContext(texto, produtosRag)
+        : '';
 
       // Prompt construído com o estado de trabalho atualizado
       const systemPrompt = buildSystemPrompt(
@@ -2616,7 +2754,8 @@ const AgentePage: React.FC = () => {
         lojaConfig ?? undefined,
         contextoDetectado,
         nivelConfianca,
-        taskDecision.promptHint
+        taskDecision.promptHint,
+        ragContext
       );
 
       // ---- Streaming ----
@@ -2646,6 +2785,7 @@ const AgentePage: React.FC = () => {
 
         if (!streamStarted) {
           streamStarted = true;
+          registrarPrimeiraResposta();
           setMensagens(prev => [...prev, {
             id: tempId, role: "assistant" as const,
             content: "", timestamp: new Date(),

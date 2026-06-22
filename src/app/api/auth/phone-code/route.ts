@@ -2,8 +2,17 @@ import { NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebaseAdmin";
 import { validatePhone } from "@/lib/validation";
 
+function isFallbackEnabled() {
+  return process.env.PHONE_AUTH_FALLBACK_ENABLED === "true" &&
+    Boolean(process.env.PHONE_AUTH_FALLBACK_CODE?.trim());
+}
+
+export async function GET() {
+  return NextResponse.json({ enabled: isFallbackEnabled() });
+}
+
 export async function POST(req: Request) {
-  const enabled = process.env.PHONE_AUTH_FALLBACK_ENABLED === "true";
+  const enabled = isFallbackEnabled();
   const expectedCode = process.env.PHONE_AUTH_FALLBACK_CODE?.trim();
 
   if (!enabled || !expectedCode) {

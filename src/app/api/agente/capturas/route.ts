@@ -104,6 +104,94 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
+    if (body?.kind === "response_time") {
+      const metric = body.responseTime && typeof body.responseTime === "object"
+        ? body.responseTime as Record<string, unknown>
+        : null;
+
+      if (
+        !metric ||
+        typeof metric.eventId !== "string" ||
+        typeof metric.companyId !== "string" ||
+        typeof metric.userId !== "string" ||
+        typeof metric.conversationId !== "string" ||
+        typeof metric.durationMs !== "number" ||
+        !Number.isFinite(metric.durationMs)
+      ) {
+        return NextResponse.json({ error: "Tempo de resposta invalido" }, { status: 400 });
+      }
+
+      const eventId = metric.eventId.replace(/\//g, "_").slice(0, 500);
+      const companyId = metric.companyId.slice(0, 200);
+      const userId = metric.userId.slice(0, 200);
+      const conversationId = metric.conversationId.slice(0, 200);
+      const durationMs = Math.max(0, Math.min(30 * 60 * 1000, Math.round(metric.durationMs)));
+
+      const dateParts = new Intl.DateTimeFormat("pt-BR", {
+        timeZone: "America/Sao_Paulo",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      }).formatToParts(new Date());
+      const getPart = (type: string) => dateParts.find((part) => part.type === type)?.value ?? "";
+      const dateId = getPart("day") + "-" + getPart("month") + "-" + getPart("year");
+
+      const companyRoot = db.collection("AgenteVendas").doc(companyId);
+      const eventRef = companyRoot.collection("temposResposta").doc(eventId);
+      const clientRef = db.collection("AgenteVendas").doc(userId);
+      const conversationRef = clientRef.collection("conversas").doc(conversationId);
+      const statsRefs = [
+        db.collection("estabelecimentos").doc(companyId).collection("DailyStats").doc(dateId),
+        db.collection("estabelecimentos").doc(companyId).collection("MonthlyStats").doc(dateId),
+        db.collection("estabelecimentos").doc(companyId).collection("Stats").doc("allTime"),
+      ];
+
+      await db.runTransaction(async (transaction) => {
+        const refs = [eventRef, clientRef, conversationRef, ...statsRefs];
+        const snapshots = await Promise.all(refs.map((ref) => transaction.get(ref)));
+        if (snapshots[0].exists) return;
+
+        const now = admin.firestore.Timestamp.now();
+        const writeAverage = (
+          ref: FirebaseFirestore.DocumentReference,
+          snapshot: FirebaseFirestore.DocumentSnapshot,
+          extra: Record<string, unknown> = {}
+        ) => {
+          const current = snapshot.data() ?? {};
+          const previousTotal = Number(current.agentResponseTimeTotalMs ?? 0);
+          const previousCount = Number(current.agentResponseTimeCount ?? 0);
+          const total = previousTotal + durationMs;
+          const count = previousCount + 1;
+
+          transaction.set(ref, {
+            ...extra,
+            agentResponseTimeTotalMs: total,
+            agentResponseTimeCount: count,
+            agentAverageResponseTimeMs: Math.round(total / count),
+            agentLastResponseTimeMs: durationMs,
+            agentResponseMetricsUpdatedAt: now,
+          }, { merge: true });
+        };
+
+        transaction.set(eventRef, {
+          idEvento: eventId,
+          estabelecimentoId: companyId,
+          usuarioId: userId,
+          conversaId: conversationId,
+          duracaoMs: durationMs,
+          criadoEm: now,
+        });
+
+        writeAverage(clientRef, snapshots[1], { estabelecimentoId: companyId });
+        writeAverage(conversationRef, snapshots[2], { companyId, userId });
+        statsRefs.forEach((ref, index) => {
+          writeAverage(ref, snapshots[index + 3], { estabelecimentoId: companyId, dateId });
+        });
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
     if (body?.kind === "feedback") {
       const feedback = body.feedback && typeof body.feedback === "object"
         ? body.feedback as Record<string, unknown>

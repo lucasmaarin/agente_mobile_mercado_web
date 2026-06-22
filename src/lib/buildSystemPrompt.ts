@@ -127,7 +127,8 @@ export function buildSystemPrompt(
   lojaConfig?: ConfigLojaPrompt,
   contextoDetectado?: string,
   nivelConfianca?: NivelConfianca,
-  taskAgentHint?: string
+  taskAgentHint?: string,
+  ragContext?: string
 ): string {
   const nomeSupermercado = nomeEstabelecimento || 'Mobile Mercado';
   const cartTotal = cart.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -155,6 +156,10 @@ export function buildSystemPrompt(
     ).join('\n---\n');
     secaoExemplos = `\nEXEMPLOS:\n${blocos}`;
   }
+
+  const secaoRag = ragContext?.trim()
+    ? `\nCONTEXTO RAG (recuperação local — apoio interno, não repetir literalmente):\n${ragContext.trim()}`
+    : '';
 
   let stateBlock = '';
 
@@ -389,5 +394,5 @@ COLETA: nos estados COLLECTING_*, emita [SET_*:valor_exato] — aceite qualquer 
 ${cartLine}
 
 ${stateBlock}
-${secaoProdutos}${secaoExemplos}`;
+${secaoProdutos}${secaoRag}${secaoExemplos}`;
 }

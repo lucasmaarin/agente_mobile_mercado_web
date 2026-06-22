@@ -76,6 +76,29 @@ export async function registrarCapturaDadosAgente(
   }
 }
 
+export interface AgentResponseTimeMetric {
+  eventId: string;
+  companyId: string;
+  userId: string;
+  conversationId: string;
+  durationMs: number;
+}
+
+export async function registrarTempoRespostaAgente(
+  metric: AgentResponseTimeMetric
+): Promise<void> {
+  const res = await fetch('/api/agente/capturas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ kind: 'response_time', responseTime: metric }),
+    keepalive: true,
+  });
+
+  if (!res.ok) {
+    console.warn('Erro ao registrar tempo de resposta: ' + res.status);
+  }
+}
+
 export async function salvarNotaFeedbackAgente(dados: {
   companyId: string;
   visitorId: string;
