@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ShoppingCart, Globe, ExternalLink, Search } from "lucide-react";
 import { DOMAIN_SLUGS, LINK_OVERRIDES, LOGO_OVERRIDES, NOME_OVERRIDES } from "@/config/dominios";
 import { buscarNomeEstabelecimento, buscarLogoEstabelecimento } from "@/services/firestore";
+import './globals.css';
 
 interface Estabelecimento {
   companyId: string;

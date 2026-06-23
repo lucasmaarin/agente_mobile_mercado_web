@@ -80,11 +80,11 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
 
   const clearRecaptcha = () => {
     if (window.grecaptcha && typeof window.recaptchaWidgetIdInline === "number") {
-      try { window.grecaptcha.reset(window.recaptchaWidgetIdInline); } catch {}
+      try { window.grecaptcha.reset(window.recaptchaWidgetIdInline); } catch { }
       window.recaptchaWidgetIdInline = undefined;
     }
     if (window.recaptchaVerifierInline) {
-      try { window.recaptchaVerifierInline.clear(); } catch {}
+      try { window.recaptchaVerifierInline.clear(); } catch { }
       window.recaptchaVerifierInline = undefined;
     }
     const container = document.getElementById("recaptcha-inline");
@@ -93,6 +93,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
 
   const setupRecaptcha = async (): Promise<RecaptchaVerifier> => {
     // Sempre recria o verifier — verifiers cacheados entram em estado inválido no mobile.
+    console.count("[reCAPTCHA] setupRecaptcha chamado"); // ← linha adicionada
     clearRecaptcha();
     await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
@@ -102,7 +103,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
 
     const verifier = new RecaptchaVerifier(auth, "recaptcha-inline", {
       size: "invisible",
-      callback: () => {},
+      callback: () => { },
       "expired-callback": () => {
         clearRecaptcha();
       },
@@ -114,26 +115,26 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
 
   const smsErrorMessage = (code?: string): string => {
     switch (code) {
-      case "auth/too-many-requests":        return "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.";
-      case "auth/invalid-phone-number":     return "Número de telefone inválido. Confira o DDD e os dígitos.";
-      case "auth/quota-exceeded":           return "Limite de SMS atingido. Tente novamente mais tarde.";
-      case "auth/captcha-check-failed":     return "Verificação de segurança falhou. Recarregue a página e tente novamente.";
-      case "auth/network-request-failed":   return "Falha de conexão. Verifique a internet e tente novamente.";
-      case "auth/internal-error":           return "Erro interno ao enviar o SMS. Tente novamente em instantes.";
-      case "auth/missing-phone-number":     return "Informe um número de telefone antes de continuar.";
-      case "auth/user-disabled":            return "Esta conta foi desativada. Entre em contato com o suporte.";
-      case "auth/operation-not-allowed":    return "Login por SMS não está habilitado. Entre em contato com o suporte.";
-      default:                              return "Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.";
+      case "auth/too-many-requests": return "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.";
+      case "auth/invalid-phone-number": return "Número de telefone inválido. Confira o DDD e os dígitos.";
+      case "auth/quota-exceeded": return "Limite de SMS atingido. Tente novamente mais tarde.";
+      case "auth/captcha-check-failed": return "Verificação de segurança falhou. Recarregue a página e tente novamente.";
+      case "auth/network-request-failed": return "Falha de conexão. Verifique a internet e tente novamente.";
+      case "auth/internal-error": return "Erro interno ao enviar o SMS. Tente novamente em instantes.";
+      case "auth/missing-phone-number": return "Informe um número de telefone antes de continuar.";
+      case "auth/user-disabled": return "Esta conta foi desativada. Entre em contato com o suporte.";
+      case "auth/operation-not-allowed": return "Login por SMS não está habilitado. Entre em contato com o suporte.";
+      default: return "Não foi possível enviar o SMS. Verifique sua conexão e tente novamente.";
     }
   };
 
   const codeErrorMessage = (code?: string): string => {
     switch (code) {
       case "auth/invalid-verification-code": return "Código incorreto. Verifique o SMS e tente novamente.";
-      case "auth/code-expired":              return "Código expirado. Clique em \"Reenviar código\" para receber um novo.";
+      case "auth/code-expired": return "Código expirado. Clique em \"Reenviar código\" para receber um novo.";
       case "auth/missing-verification-code": return "Digite o código de 6 dígitos recebido por SMS.";
-      case "auth/session-expired":           return "Sessão expirada. Solicite um novo código.";
-      default:                               return "Não foi possível verificar o código. Tente novamente.";
+      case "auth/session-expired": return "Sessão expirada. Solicite um novo código.";
+      default: return "Não foi possível verificar o código. Tente novamente.";
     }
   };
 
@@ -204,126 +205,126 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
         id="recaptcha-inline"
         style={{
           position: 'fixed',
-          left: '50%',
+          left: 8,                        // ← cola na esquerda
           bottom: 18,
           width: 260,
           minHeight: 60,
           overflow: 'visible',
           opacity: 1,
-          transform: 'translateX(-50%) scale(0.7)',
-          transformOrigin: 'bottom center',
-          zIndex: 9999,
-          pointerEvents: 'auto',
+          transform: 'scale(0.7)',        // ← sem translateX
+          transformOrigin: 'bottom left', // ← ancora no canto esquerdo
+          zIndex: step === 'code_modal' ? -1 : 9999, // ← some atrás do modal
+          pointerEvents: step === 'code_modal' ? 'none' : 'auto',
         }}
       />
-    <div className={styles.wrapper}>
+      <div className={styles.wrapper}>
 
-      {/* Área de mensagens — ocupa espaço abaixo do Header da loja */}
-      <div className={styles.messagesArea}>
-        {BOT_MESSAGES.slice(0, visibleMessages).map((msg, i) => (
-          <div key={i} className={styles.agentBubble}>{msg}</div>
-        ))}
+        {/* Área de mensagens — ocupa espaço abaixo do Header da loja */}
+        <div className={styles.messagesArea}>
+          {BOT_MESSAGES.slice(0, visibleMessages).map((msg, i) => (
+            <div key={i} className={styles.agentBubble}>{msg}</div>
+          ))}
 
-        {step === "validating" && (
-          <div className={styles.agentBubble}>
-            <span className={styles.typing}>Enviando SMS para <strong>{phone}</strong>…</span>
-          </div>
-        )}
+          {step === "validating" && (
+            <div className={styles.agentBubble}>
+              <span className={styles.typing}>Enviando SMS para <strong>{phone}</strong>…</span>
+            </div>
+          )}
 
-        {(step === "phone" || step === "validating") && visibleMessages >= BOT_MESSAGES.length && (
-          <div className={styles.userInputArea}>
-            {phoneError && <p className={styles.inputError}>{phoneError}</p>}
-            <div className={styles.inputRow}>
+          {(step === "phone" || step === "validating") && visibleMessages >= BOT_MESSAGES.length && (
+            <div className={styles.userInputArea}>
+              {phoneError && <p className={styles.inputError}>{phoneError}</p>}
+              <div className={styles.inputRow}>
+                <input
+                  ref={inputRef}
+                  type="tel"
+                  placeholder="(11) 99999-9999"
+                  value={phone}
+                  onChange={(e) => { setPhone(formatPhone(e.target.value)); setPhoneError(""); }}
+                  className={styles.phoneInput}
+                  disabled={loading || step === "validating"}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
+                />
+                <button
+                  className={styles.sendBtn}
+                  onClick={handleSendCode}
+                  disabled={!phone.trim() || loading || step === "validating"}
+                >
+                  {loading ? "…" : "→"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal de verificação SMS */}
+        {step === "code_modal" && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.modal}>
+              <div className={styles.modalIcon}>🔐</div>
+              <h3 className={styles.modalTitle}>Verifique seu número</h3>
+              <p className={styles.modalSub}>
+                Código enviado para <strong>{phone}</strong>
+              </p>
+
               <input
-                ref={inputRef}
-                type="tel"
-                placeholder="(11) 99999-9999"
-                value={phone}
-                onChange={(e) => { setPhone(formatPhone(e.target.value)); setPhoneError(""); }}
-                className={styles.phoneInput}
-                disabled={loading || step === "validating"}
-                onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
+                type="text"
+                inputMode="numeric"
+                placeholder="000000"
+                value={code}
+                onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setCodeError(""); }}
+                className={styles.codeInput}
+                disabled={loading}
+                onKeyDown={(e) => e.key === "Enter" && handleVerifyCode()}
+                autoFocus
+                maxLength={6}
               />
+
+              {codeError && <p className={styles.codeError}>{codeError}</p>}
+
+              <div className={styles.checkboxGroup}>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={keepLogged}
+                    onChange={(e) => setKeepLogged(e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  Continuar logado
+                </label>
+                <label className={styles.checkboxLabel}>
+                  <input
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => setAcceptTerms(e.target.checked)}
+                    className={styles.checkbox}
+                  />
+                  Li e aceito os{" "}
+                  <a href="#" className={styles.termsLink} target="_blank" rel="noopener">
+                    Termos de Uso
+                  </a>{" "}
+                  e a{" "}
+                  <a href="https://www.mobilemercado.com.br/declaracao-de-privacidade" className={styles.termsLink} target="_blank" rel="noopener noreferrer">
+                    Política de Privacidade
+                  </a>
+                </label>
+              </div>
+
               <button
-                className={styles.sendBtn}
-                onClick={handleSendCode}
-                disabled={!phone.trim() || loading || step === "validating"}
+                className={styles.confirmBtn}
+                onClick={handleVerifyCode}
+                disabled={code.length !== 6 || !acceptTerms || loading}
               >
-                {loading ? "…" : "→"}
+                {loading ? "Verificando…" : "Confirmar"}
+              </button>
+
+              <button className={styles.resendBtn} onClick={handleResend} disabled={loading}>
+                Reenviar código
               </button>
             </div>
           </div>
         )}
       </div>
-
-      {/* Modal de verificação SMS */}
-      {step === "code_modal" && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalIcon}>🔐</div>
-            <h3 className={styles.modalTitle}>Verifique seu número</h3>
-            <p className={styles.modalSub}>
-              Código enviado para <strong>{phone}</strong>
-            </p>
-
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="000000"
-              value={code}
-              onChange={(e) => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setCodeError(""); }}
-              className={styles.codeInput}
-              disabled={loading}
-              onKeyDown={(e) => e.key === "Enter" && handleVerifyCode()}
-              autoFocus
-              maxLength={6}
-            />
-
-            {codeError && <p className={styles.codeError}>{codeError}</p>}
-
-            <div className={styles.checkboxGroup}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={keepLogged}
-                  onChange={(e) => setKeepLogged(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                Continuar logado
-              </label>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className={styles.checkbox}
-                />
-                Li e aceito os{" "}
-                <a href="#" className={styles.termsLink} target="_blank" rel="noopener">
-                  Termos de Uso
-                </a>{" "}
-                e a{" "}
-                <a href="https://www.mobilemercado.com.br/declaracao-de-privacidade" className={styles.termsLink} target="_blank" rel="noopener noreferrer">
-                  Política de Privacidade
-                </a>
-              </label>
-            </div>
-
-            <button
-              className={styles.confirmBtn}
-              onClick={handleVerifyCode}
-              disabled={code.length !== 6 || !acceptTerms || loading}
-            >
-              {loading ? "Verificando…" : "Confirmar"}
-            </button>
-
-            <button className={styles.resendBtn} onClick={handleResend} disabled={loading}>
-              Reenviar código
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
     </>
   );
 };

@@ -2,7 +2,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/contexts/AuthContext';
-
+import './globals.css';
 const inter = Inter({
   subsets: ['latin'],
   display: 'swap',
