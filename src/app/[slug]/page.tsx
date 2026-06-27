@@ -275,6 +275,7 @@ const AgentePage: React.FC = () => {
   const [recaptchaVisivel, setRecaptchaVisivel] = useState(false);
   const [recaptchaContainerKey, setRecaptchaContainerKey] = useState(0);
   const recaptchaAuthRef = useRef<RecaptchaVerifier | undefined>(undefined);
+  const authSendInFlightRef = useRef(false);
   const authIniciado = useRef(false); // garante que mensagens de auth só são adicionadas uma vez
 
   // --- Endereço salvo pelo agente
@@ -310,6 +311,22 @@ const AgentePage: React.FC = () => {
   const authSmsCooldownLabel = authSmsCooldownMs
     ? `${String(Math.ceil(authSmsCooldownMs / 60000)).padStart(2, '0')} min`
     : '';
+  const AUTH_SEND_COOLDOWN_MS = 60 * 1000;
+  const authCooldownStorageKey = (phone: string) => `auth_sms_cooldown:${phone}`;
+  const readAuthSendCooldownUntil = (phone: string) => {
+    if (typeof window === 'undefined') return 0;
+    const value = window.localStorage.getItem(authCooldownStorageKey(phone));
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const startAuthSendCooldown = (phone: string, durationMs = AUTH_SEND_COOLDOWN_MS) => {
+    const until = Date.now() + durationMs;
+    setAuthCooldownNow(Date.now());
+    setAuthSmsCooldownUntil(until);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(authCooldownStorageKey(phone), String(until));
+    }
+  };
 
   useEffect(() => {
     if (!authSmsCooldownUntil) return;
@@ -1069,6 +1086,28 @@ const AgentePage: React.FC = () => {
       ]);
       return;
     }
+    if (authSendInFlightRef.current) {
+      console.warn('[PhoneAuth] Envio ignorado: ja existe uma tentativa em andamento.');
+      return;
+    }
+    const cooldownUntil = Math.max(authSmsCooldownUntil, readAuthSendCooldownUntil(formatted));
+    if (cooldownUntil > Date.now()) {
+      setAuthCooldownNow(Date.now());
+      setAuthSmsCooldownUntil(cooldownUntil);
+      const segundos = Math.max(1, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setMensagens(prev => [
+        ...prev.filter(m => !['auth-validating', 'auth-phone-error'].includes(m.id)),
+        {
+          id: 'auth-phone-error',
+          role: 'assistant',
+          content: `Aguarde ${segundos < 60 ? `${segundos}s` : authSmsCooldownLabel || '01 min'} antes de solicitar outro codigo.`,
+          timestamp: new Date(),
+        },
+      ]);
+      setAuthStep(options?.resend && authConfirmation ? 'code_modal' : 'phone');
+      return;
+    }
+    authSendInFlightRef.current = true;
     setAuthSending(true);
     setAuthStep('validating');
     const ts = Date.now();
@@ -1097,6 +1136,7 @@ const AgentePage: React.FC = () => {
 
       if (whatsappStatus.enabled) {
         await sendWhatsappAuthCode(authPhone);
+        startAuthSendCooldown(formatted);
         setAuthConfirmation(null);
         clearRecaptchaAuth();
         setRecaptchaVisivel(false);
@@ -1192,6 +1232,7 @@ const AgentePage: React.FC = () => {
         }
       }
       setAuthConfirmation(result);
+      startAuthSendCooldown(formatted);
       setRecaptchaVisivel(false);
       setMensagens(prev => [
         ...prev.filter(m => !['auth-validating', 'auth-code-sent', 'auth-code-card', 'auth-recaptcha-visible'].includes(m.id)),
@@ -1202,8 +1243,7 @@ const AgentePage: React.FC = () => {
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
       if (err.code === 'auth/too-many-requests') {
-        setAuthSmsCooldownUntil(Date.now() + 10 * 60 * 1000);
-        setAuthCooldownNow(Date.now());
+        startAuthSendCooldown(formatted, 10 * 60 * 1000);
       }
       console.error(
         `[PhoneAuth] Erro ao enviar SMS code=${err.code ?? 'sem-code'} message=${err.message ?? 'sem-message'}`,
@@ -1225,6 +1265,7 @@ const AgentePage: React.FC = () => {
         'auth/invalid-app-credential': `O Firebase recusou a credencial do app neste domínio (${window.location.hostname}). Verifique Firebase Auth > Domínios autorizados, restrições da API key e se o login por telefone está habilitado.`,
         'auth/app-not-authorized': `Este domínio (${window.location.hostname}) não está autorizado no Firebase Auth.`,
         'auth/operation-not-allowed': 'Login por telefone não está habilitado no Firebase Auth.',
+        'send-code-cooldown': 'Aguarde um instante antes de solicitar outro código.',
         'whatsapp-send-code-failed': 'Não foi possível enviar o código pelo WhatsApp. Tente novamente.',
         'whatsapp-auth-disabled': 'Autenticação por WhatsApp não está ativa neste ambiente.',
       };
@@ -1256,7 +1297,10 @@ const AgentePage: React.FC = () => {
       setAuthStep(permiteCodigoInterno || (isResend && authConfirmation) ? 'code_modal' : 'phone');
       clearRecaptchaAuth();
       setRecaptchaVisivel(false);
-    } finally { setAuthSending(false); }
+    } finally {
+      authSendInFlightRef.current = false;
+      setAuthSending(false);
+    }
   };
 
   const signInWithPhoneFallbackCode = async () => {
@@ -1529,6 +1573,12 @@ const AgentePage: React.FC = () => {
         pendingOrderConfirmRef.current = true;
         // Estado permanece CONFIRMING_ORDER para o agente confirmar a ação
       } else if (cancelWords.some(w => val === w || val.startsWith(w + ' '))) {
+        registrarCaptura('order_canceled', `${capturaSessionIdRef.current}:order_canceled:${msgUsuario.id}`, {
+          source: 'chat',
+          reason: 'confirmation_cancelled',
+          itens: wCart.length,
+          total: wCart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+        });
         wFlowState    = FLOW_STATES.BROWSING;
         wCustomerData = {};
         setFlowState(wFlowState);

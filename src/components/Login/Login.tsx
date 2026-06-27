@@ -1,7 +1,7 @@
 // components/pages/Login.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./Login.module.css";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -39,6 +39,17 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
   const [error, setError] = useState("");
   const router = useRouter();
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const sendInFlightRef = useRef(false);
+  const SEND_CODE_COOLDOWN_MS = 60 * 1000;
+  const cooldownStorageKey = (phone: string) => `login_sms_cooldown:${phone}`;
+  const readCooldownUntil = (phone: string) => {
+    const value = window.localStorage.getItem(cooldownStorageKey(phone));
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const startCooldown = (phone: string, durationMs = SEND_CODE_COOLDOWN_MS) => {
+    window.localStorage.setItem(cooldownStorageKey(phone), String(Date.now() + durationMs));
+  };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -115,7 +126,9 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
 
   const handlePhoneLogin = async () => {
     if (!phoneNumber.trim()) return;
+    if (sendInFlightRef.current) return;
 
+    sendInFlightRef.current = true;
     setIsLoading(true);
     setError("");
 
@@ -127,6 +140,13 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
         return;
       }
 
+      const cooldownUntil = readCooldownUntil(formattedPhone);
+      if (cooldownUntil > Date.now()) {
+        const seconds = Math.max(1, Math.ceil((cooldownUntil - Date.now()) / 1000));
+        setError(`Aguarde ${seconds}s antes de solicitar outro código.`);
+        return;
+      }
+
       const appVerifier = await setupRecaptcha();
 
       if (!appVerifier) {
@@ -135,6 +155,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       }
 
       const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      startCooldown(formattedPhone);
 
       setConfirmationResult(result);
       setIsCodeSent(true);
@@ -150,6 +171,7 @@ const Login: React.FC<LoginProps> = ({ redirectTo = '/' }) => {
       setError(smsErrorMessage(err.code));
       clearRecaptcha();
     } finally {
+      sendInFlightRef.current = false;
       setIsLoading(false);
     }
   };

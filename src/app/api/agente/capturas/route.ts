@@ -23,13 +23,43 @@ const CAPTURE_COUNTER_FIELD: Record<AgenteCaptureEventType, string> = {
   checkout_started: "checkoutsIniciados",
   checkout_abandoned: "checkoutsAbandonados",
   order_completed: "pedidosConcluidos",
+  order_canceled: "pedidosCancelados",
   payment_error: "errosPagamento",
   minimum_order_block: "bloqueiosPedidoMinimo",
   feedback_submitted: "feedbacksRecebidos",
 };
 
+const GERENCIADOR_PLUS_STATS_COUNTERS: Partial<Record<AgenteCaptureEventType, string[]>> = {
+  site_visit: ["agentAppViewsCount"],
+  order_completed: ["agentNewOrdersCount"],
+  order_canceled: ["agentCanceledOrdersCount"],
+};
+
 function isCaptureEventType(value: unknown): value is AgenteCaptureEventType {
   return typeof value === "string" && value in CAPTURE_COUNTER_FIELD;
+}
+
+function getSaoPauloDateId(date = new Date()): string {
+  const dateParts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+  const getPart = (type: string) => dateParts.find((part) => part.type === type)?.value ?? "";
+  return getPart("day") + "-" + getPart("month") + "-" + getPart("year");
+}
+
+function getEstablishmentStatsRefs(
+  db: FirebaseFirestore.Firestore,
+  companyId: string,
+  dateId: string
+): FirebaseFirestore.DocumentReference[] {
+  return [
+    db.collection("estabelecimentos").doc(companyId).collection("DailyStats").doc(dateId),
+    db.collection("estabelecimentos").doc(companyId).collection("MonthlyStats").doc(dateId),
+    db.collection("estabelecimentos").doc(companyId).collection("Stats").doc("allTime"),
+  ];
 }
 
 function sanitizeEvent(value: unknown): AgenteCaptureEvent | null {
@@ -78,6 +108,11 @@ export async function POST(request: NextRequest) {
       const root = db.collection("AgenteVendas").doc(event.companyId);
       const eventRef = root.collection("capturasDeDados").doc(event.eventId);
       const metricRef = root.collection("metricasDeCapturas").doc("resumo");
+      const statsCounterFields = GERENCIADOR_PLUS_STATS_COUNTERS[event.eventType] ?? [];
+      const dateId = getSaoPauloDateId();
+      const statsRefs = statsCounterFields.length > 0
+        ? getEstablishmentStatsRefs(db, event.companyId, dateId)
+        : [];
 
       await db.runTransaction(async (transaction) => {
         const existing = await transaction.get(eventRef);
@@ -99,6 +134,21 @@ export async function POST(request: NextRequest) {
           atualizadoEm: now,
           [CAPTURE_COUNTER_FIELD[event.eventType]]: admin.firestore.FieldValue.increment(1),
         }, { merge: true });
+
+        if (statsCounterFields.length > 0) {
+          const statsUpdate = statsCounterFields.reduce<Record<string, unknown>>((acc, field) => {
+            acc[field] = admin.firestore.FieldValue.increment(1);
+            return acc;
+          }, {
+            estabelecimentoId: event.companyId,
+            dateId,
+            agentStatsUpdatedAt: now,
+          });
+
+          statsRefs.forEach((ref) => {
+            transaction.set(ref, statsUpdate, { merge: true });
+          });
+        }
       });
 
       return NextResponse.json({ success: true });
@@ -127,24 +177,13 @@ export async function POST(request: NextRequest) {
       const conversationId = metric.conversationId.slice(0, 200);
       const durationMs = Math.max(0, Math.min(30 * 60 * 1000, Math.round(metric.durationMs)));
 
-      const dateParts = new Intl.DateTimeFormat("pt-BR", {
-        timeZone: "America/Sao_Paulo",
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }).formatToParts(new Date());
-      const getPart = (type: string) => dateParts.find((part) => part.type === type)?.value ?? "";
-      const dateId = getPart("day") + "-" + getPart("month") + "-" + getPart("year");
+      const dateId = getSaoPauloDateId();
 
       const companyRoot = db.collection("AgenteVendas").doc(companyId);
       const eventRef = companyRoot.collection("temposResposta").doc(eventId);
       const clientRef = db.collection("AgenteVendas").doc(userId);
       const conversationRef = clientRef.collection("conversas").doc(conversationId);
-      const statsRefs = [
-        db.collection("estabelecimentos").doc(companyId).collection("DailyStats").doc(dateId),
-        db.collection("estabelecimentos").doc(companyId).collection("MonthlyStats").doc(dateId),
-        db.collection("estabelecimentos").doc(companyId).collection("Stats").doc("allTime"),
-      ];
+      const statsRefs = getEstablishmentStatsRefs(db, companyId, dateId);
 
       await db.runTransaction(async (transaction) => {
         const refs = [eventRef, clientRef, conversationRef, ...statsRefs];

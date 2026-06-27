@@ -34,6 +34,137 @@ async function verifyUser(userDocId: string, authHeader: string | null) {
   return userSnap.exists && userSnap.data()?.userAuthId === decoded.uid;
 }
 
+function getSaoPauloDateId(date = new Date()): string {
+  const dateParts = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+  const getPart = (type: string) => dateParts.find((part) => part.type === type)?.value ?? "";
+  return getPart("day") + "-" + getPart("month") + "-" + getPart("year");
+}
+
+function getReferenceId(value: unknown): string {
+  if (!value) return "";
+  if (typeof value === "string") return value.split("/").filter(Boolean).pop() ?? "";
+  if (typeof value === "object") {
+    const maybeRef = value as { id?: unknown; path?: unknown };
+    if (typeof maybeRef.id === "string") return maybeRef.id;
+    if (typeof maybeRef.path === "string") {
+      return maybeRef.path.split("/").filter(Boolean).pop() ?? "";
+    }
+  }
+  return "";
+}
+
+function getCompanyIdFromPedido(pedido: FirebaseFirestore.DocumentData): string {
+  return getReferenceId(pedido.companyReference) ||
+    getReferenceId(pedido.companyRef) ||
+    getReferenceId(pedido.estabelecimentoRef) ||
+    (typeof pedido.companyId === "string" ? pedido.companyId : "") ||
+    (typeof pedido.estabelecimentoId === "string" ? pedido.estabelecimentoId : "");
+}
+
+function isAgentOrder(pedido: FirebaseFirestore.DocumentData): boolean {
+  if (
+    pedido.agentOrder === true ||
+    pedido.isAgentOrder === true ||
+    pedido.createdByAgent === true ||
+    pedido.fromAgent === true
+  ) {
+    return true;
+  }
+
+  const source = [
+    pedido.source,
+    pedido.channel,
+    pedido.origin,
+    pedido.origem,
+    pedido.platform,
+    pedido.purchaseOrigin,
+    pedido.createdBy,
+  ]
+    .map((value) => String(value ?? "").toLowerCase())
+    .join(" ");
+
+  return /(agent|agente|chat|ia)/.test(source);
+}
+
+function getAgentCancelMetricRefs(
+  db: FirebaseFirestore.Firestore,
+  pedido: FirebaseFirestore.DocumentData,
+  pedidoId: string
+) {
+  if (!isAgentOrder(pedido)) return null;
+
+  const companyId = getCompanyIdFromPedido(pedido);
+  if (!companyId) return null;
+
+  const dateId = getSaoPauloDateId();
+  const eventId = `${companyId}:${pedidoId}:order_canceled`.replace(/\//g, "_").slice(0, 500);
+  const root = db.collection("AgenteVendas").doc(companyId);
+
+  return {
+    companyId,
+    dateId,
+    eventId,
+    eventRef: root.collection("capturasDeDados").doc(eventId),
+    metricRef: root.collection("metricasDeCapturas").doc("resumo"),
+    statsRefs: [
+      db.collection("estabelecimentos").doc(companyId).collection("DailyStats").doc(dateId),
+      db.collection("estabelecimentos").doc(companyId).collection("MonthlyStats").doc(dateId),
+      db.collection("estabelecimentos").doc(companyId).collection("Stats").doc("allTime"),
+    ],
+  };
+}
+
+function recordAgentCanceledOrder(
+  transaction: FirebaseFirestore.Transaction,
+  refs: NonNullable<ReturnType<typeof getAgentCancelMetricRefs>>,
+  existing: FirebaseFirestore.DocumentSnapshot,
+  now: FirebaseFirestore.FieldValue,
+  pedidoId: string,
+  userDocId: string,
+  motivo: string,
+  statusAnterior: string
+) {
+  if (existing.exists) return;
+
+  transaction.set(refs.eventRef, {
+    idEvento: refs.eventId,
+    tipoEvento: "order_canceled",
+    estabelecimentoId: refs.companyId,
+    visitanteId: userDocId,
+    sessaoId: `pedido:${pedidoId}`,
+    usuarioId: userDocId,
+    dados: {
+      pedidoId,
+      motivo: motivo || null,
+      statusAnterior,
+      source: "pedido_acao",
+    },
+    criadoEm: now,
+  });
+
+  transaction.set(refs.metricRef, {
+    estabelecimentoId: refs.companyId,
+    atualizadoEm: now,
+    pedidosCancelados: admin.firestore.FieldValue.increment(1),
+  }, { merge: true });
+
+  const statsUpdate = {
+    estabelecimentoId: refs.companyId,
+    dateId: refs.dateId,
+    agentCanceledOrdersCount: admin.firestore.FieldValue.increment(1),
+    agentStatsUpdatedAt: now,
+  };
+
+  refs.statsRefs.forEach((ref) => {
+    transaction.set(ref, statsUpdate, { merge: true });
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const db = getAdminDb();
@@ -74,6 +205,8 @@ export async function POST(request: NextRequest) {
       const paymentProvider = typeof pedido.paymentProvider === "string" ? pedido.paymentProvider : null;
       const statusListAtual = Array.isArray(pedido.statusList) ? pedido.statusList : [];
       const requestRef = pedidoRef.collection("solicitacoesCancelamento").doc();
+      const agentCancelRefs = getAgentCancelMetricRefs(db, pedido, pedidoId);
+      const agentCancelSnap = agentCancelRefs ? await transaction.get(agentCancelRefs.eventRef) : null;
 
       if (isAutomaticCancelStatus(statusAtual)) {
         const novoStatus = "PurchaseStatus.canceled";
@@ -93,6 +226,18 @@ export async function POST(request: NextRequest) {
           pagamento: paymentProvider,
           criadoEm: now,
         });
+        if (agentCancelRefs && agentCancelSnap) {
+          recordAgentCanceledOrder(
+            transaction,
+            agentCancelRefs,
+            agentCancelSnap,
+            now,
+            pedidoId,
+            userDocId,
+            motivo,
+            statusAtual
+          );
+        }
         return {
           status: 200,
           body: {
@@ -124,6 +269,18 @@ export async function POST(request: NextRequest) {
           pagamento: paymentProvider,
           criadoEm: now,
         });
+        if (paymentProvider !== "safrapay" && agentCancelRefs && agentCancelSnap) {
+          recordAgentCanceledOrder(
+            transaction,
+            agentCancelRefs,
+            agentCancelSnap,
+            now,
+            pedidoId,
+            userDocId,
+            motivo,
+            statusAtual
+          );
+        }
         return {
           status: 200,
           body: {

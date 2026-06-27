@@ -121,6 +121,16 @@ Eventos sao registrados por `registrarCapturaDadosAgente` em `src/services/fires
 - Eventos individuais: `AgenteVendas/{companyId}/capturasDeDados`
 - Contadores por mercado: `AgenteVendas/{companyId}/metricasDeCapturas/resumo`
 - Notas e feedbacks: `AgenteVendas/{companyId}/notasEFeedbacks`
+- KPIs do gerenciador plus: `estabelecimentos/{companyId}/Stats/allTime`, `DailyStats/{dd-mm-aaaa}` e `MonthlyStats/{dd-mm-aaaa}`
+
+Eventos que tambem alimentam os KPIs do gerenciador plus:
+
+- `site_visit` incrementa `agentAppViewsCount`.
+- `order_completed` incrementa `agentNewOrdersCount`.
+- `order_canceled` incrementa `agentCanceledOrdersCount`.
+- `response_time` atualiza `agentResponseTimeTotalMs`, `agentResponseTimeCount`, `agentAverageResponseTimeMs` e `agentLastResponseTimeMs`.
+
+Pedidos criados pelo agente devem manter marcadores de origem (`origem: agente_ia`, `source/channel/purchaseOrigin: agent`, `agentOrder: true`, `createdByAgent: true`) para o gerenciador separar App x Agente.
 
 Eventos atuais:
 
@@ -141,6 +151,7 @@ Eventos atuais:
 - `checkout_started`: checkout aberto.
 - `checkout_abandoned`: checkout fechado sem concluir pedido.
 - `order_completed`: pedido concluido.
+- `order_canceled`: pedido cancelado pelo fluxo do agente.
 - `payment_error`: erro de pagamento.
 - `minimum_order_block`: pedido minimo bloqueou finalizacao.
 - `feedback_submitted`: nota ou feedback recebido.

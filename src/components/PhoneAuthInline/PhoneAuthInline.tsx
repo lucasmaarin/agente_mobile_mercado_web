@@ -46,6 +46,17 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [visibleMessages, setVisibleMessages] = useState<number>(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sendInFlightRef = useRef(false);
+  const SEND_CODE_COOLDOWN_MS = 60 * 1000;
+  const cooldownStorageKey = (phoneNumber: string) => `inline_sms_cooldown:${phoneNumber}`;
+  const readCooldownUntil = (phoneNumber: string) => {
+    const value = window.localStorage.getItem(cooldownStorageKey(phoneNumber));
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const startCooldown = (phoneNumber: string, durationMs = SEND_CODE_COOLDOWN_MS) => {
+    window.localStorage.setItem(cooldownStorageKey(phoneNumber), String(Date.now() + durationMs));
+  };
 
   // Anima a entrada das mensagens do agente
   useEffect(() => {
@@ -144,6 +155,14 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
       setPhoneError("Número inválido. Use o formato: (11) 99999-9999");
       return;
     }
+    if (sendInFlightRef.current) return;
+    const cooldownUntil = readCooldownUntil(formatted);
+    if (cooldownUntil > Date.now()) {
+      const seconds = Math.max(1, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setPhoneError(`Aguarde ${seconds}s antes de solicitar outro código.`);
+      return;
+    }
+    sendInFlightRef.current = true;
     setPhoneError("");
     setLoading(true);
     setStep("validating");
@@ -156,6 +175,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
       }
       const verifier = await setupRecaptcha();
       const result = await signInWithPhoneNumber(auth, formatted, verifier);
+      startCooldown(formatted);
       setConfirmation(result);
       setStep("code_modal");
     } catch (e: unknown) {
@@ -169,6 +189,7 @@ const PhoneAuthInline: React.FC<PhoneAuthInlineProps> = () => {
       setStep("phone");
       clearRecaptcha();
     } finally {
+      sendInFlightRef.current = false;
       setLoading(false);
     }
   };

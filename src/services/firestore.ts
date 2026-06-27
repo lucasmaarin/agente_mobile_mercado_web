@@ -47,6 +47,7 @@ export type AgenteCaptureEventType =
   | 'checkout_started'
   | 'checkout_abandoned'
   | 'order_completed'
+  | 'order_canceled'
   | 'payment_error'
   | 'minimum_order_block'
   | 'feedback_submitted';
@@ -548,6 +549,12 @@ export async function createOrder(
     companyImageUrl:  '',
     address,
     productsCart,
+    origem:           'agente_ia',
+    source:           'agent',
+    channel:          'agent',
+    purchaseOrigin:   'agent',
+    agentOrder:       true,
+    createdByAgent:   true,
     price:            cartTotal,
     deliveryPrice:    DELIVERY_PRICE,
     total,
